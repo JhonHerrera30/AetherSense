@@ -40,9 +40,12 @@ public class Device {
 	@Column(unique = true, nullable = false)
 	private String macAddress;
 	
-	@NotBlank
-	@Column(nullable = true)
-	private String emailOwner;
+        @NotBlank
+        @Column(nullable = true)
+        private String emailOwner;
+
+        @Column(nullable = false)
+        private boolean activated = false;
 	
 	@ManyToOne
 	private Project project;
@@ -144,9 +147,17 @@ public class Device {
 	}
 
 	
-	public void setEmailOwner(String emailOwner) {
-		this.emailOwner = emailOwner;
-	}
+        public void setEmailOwner(String emailOwner) {
+                this.emailOwner = emailOwner;
+        }
+
+        public boolean isActivated() {
+                return activated;
+        }
+
+        public void setActivated(boolean activated) {
+                this.activated = activated;
+        }
 
 
 	public Group getGroup() {
