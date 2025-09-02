@@ -1,0 +1,455 @@
+html, body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	font-family: 'Roboto', sans-serif;
+	background-color: #1B263B;
+	color: white;
+	overflow-x: hidden;
+}
+
+/* NAVBAR AZZURRA */
+.navbar {
+	border-bottom: 2px solid rgb(255, 142, 142);
+	background-color: #cc0000;
+	color: white;
+	position: sticky;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 1.5rem;
+	z-index: 10;
+	height: 3em;
+}
+
+#navbar h1 {
+	margin: 0;
+	font-size: 2rem;
+	margin-left: 3rem;
+	color: white;
+}
+
+.nav-left{
+	color:white;
+	text-decoration: none;
+}
+
+.nav-title-link {
+	color: white;
+	text-decoration: none;
+	font-weight: bold;
+	font-size: 2rem;
+}
+
+
+.nav-right {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.home-button {
+	color: white;
+	text-decoration: none;
+	display: flex;
+	align-items: center;
+	margin-right: 2rem;
+}
+
+.icon-home {
+	fill: currentColor;
+	width: 24px;
+	height: 24px;
+}
+
+/* Dropdown base */
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-toggle {
+	background: none;
+	border: none;
+	color: white;
+	font-size: 1rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.dropdown-toggle:focus {
+	outline: none;
+}
+
+/* Icona freccia */
+.dropdown-icon {
+	transition: transform 0.3s;
+}
+
+.dropdown:hover .dropdown-icon {
+	transform: rotate(180deg);
+}
+
+/* Menu */
+.dropdown-menu {
+	display: none;
+	position: absolute;
+	right: 0;
+	top: 2.2rem;
+	background-color: #1B263B;
+	border: 1px solid #cc0000;
+	border-radius: 8px;
+	padding: 0.5rem;
+	z-index: 999;
+	min-width: 120px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu.show {
+	display: block;
+}
+
+.dropdown:hover .dropdown-menu {
+	display: block;
+}
+
+/* Pulsante logout nel menu */
+.dropdown-logout {
+	width: 100%;
+	background: none;
+	border: none;
+	color: white;
+	font-size: 0.95rem;
+	padding: 0.5rem;
+	cursor: pointer;
+	text-align: left;
+	transition: background-color 0.2s;
+}
+
+.dropdown-logout:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+
+.icon-user {
+	width: 24px;
+	height: 24px;
+}
+
+
+/* Container principale */
+.device-details-container {
+	padding: 2rem 4rem;
+	max-width: 900px;
+	margin: 0 auto;
+}
+
+.device-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Giusto margine per evitare padding eccessivo nel titolo */
+.device-header h1 {
+    font-size: 2rem;
+    color: #ff1a1a;
+}
+
+.btn-back {
+    padding: 0.7rem 1.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+    background-color: #cc0000;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    width: auto;
+}
+
+
+.btn-back:hover {
+    background-color: #ff1a1a;
+    transform: scale(1.02);
+}
+
+
+/* Titoli principali */
+.device-details-container h1 {
+	font-size: 2rem;
+	color: #ff1a1a;
+	margin-bottom: 1.5rem;
+	text-align: left;
+}
+
+.device-details-container h2 {
+	font-size: 1.5rem;
+	color: #ff1a1a;
+	margin-top: 2rem;
+	margin-bottom: 1rem;
+}
+
+/* Tabella info e specifiche */
+.device-details-container table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-bottom: 2rem;
+}
+
+.device-details-container table th {
+    width: 160px; /* puoi ridurlo ulteriormente se necessario */
+    white-space: nowrap;
+    text-align: left;
+}
+
+.device-details-container th,
+.device-details-container td {
+	padding: 0.75rem 1rem;
+	border: 1px solid #90a4ae;
+	text-align: left;
+	font-size: 0.95rem;
+}
+
+.device-details-container th {
+	background-color: #324a5f;
+	color: white;
+}
+
+.device-details-container td {
+	background-color: #0d1b2a;
+	color: white;
+}
+
+/* Form modifica */
+
+
+
+.device-form {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	max-width: 400px;
+}
+
+.device-form label {
+	font-weight: bold;
+	margin-bottom: 0.1rem;
+}
+
+.device-form input[type='text'],
+.device-form input[type='number'] {
+	padding: 0.5rem;
+	border-radius: 6px;
+	border: none;
+	background-color: white;
+	color: black;
+	font-size: 1rem;
+	box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.device-form input:focus {
+	outline: none;
+	border: 2px solid rgb(138, 0, 0);
+	box-shadow: 0 0 6px ;
+}
+
+/* Pulsante salva */
+.btn-save {
+	background-color: #2e7d32;
+	color: white;
+	padding: 0.5rem 1rem;
+	border: none;
+	border-radius: 6px;
+	font-weight: bold;
+	cursor: pointer;
+	transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-save:hover {
+	background-color: #1b5e20;
+	transform: scale(1.05);
+}
+
+.card-edit-device {
+    background-color: #0d1b2a;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    margin: 2rem auto;
+    max-width: 500px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.card-edit-device h2 {
+    color: #ff1a1a;
+    text-align: center;
+    font-size: 1.5rem;
+	margin-top:-0.5rem;
+}
+
+.device-form {
+    width: 100%;
+}
+
+.errorform{
+	color: red; 
+}
+
+.success{
+	color: green; 
+}
+.btn-danger {
+    background-color: #e53935;
+    color: white;
+    padding: 0.4rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-danger:hover {
+    background-color: #c62828;
+    transform: scale(1.05);
+}
+
+.add-device-list {
+    margin-top: 1rem;
+    background-color: #0d1b2a;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.3);
+}
+
+.add-device-list ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin: 0 0 1rem 0;
+}
+
+.add-device-list li {
+    margin-bottom: 0.5rem;
+}
+
+.hidden {
+    display: none;
+}
+
+.add-device-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.add-device-list li {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.add-device-list input[type='checkbox'] {
+  margin-right: 0.5rem;
+}
+
+.add-device-list table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.add-device-list th,
+.add-device-list td {
+	padding: 0.75rem 1rem;
+		border: 1px solid #90a4ae;
+		text-align: center;
+		font-size: 0.95rem;
+}
+
+.add-device-list th {
+    background-color: #324a5f;
+}
+
+.add-device-list td {
+    background-color: #0d1b2a;
+}
+
+.alert-success {
+    background-color: #81c784;
+    color: #1b5e20;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+}
+
+.alert-error {
+    background-color: #e57373;
+    color: white;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+}
+
+/* Stile compatto */
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.search-form input[type="text"] {
+    height: 1.5rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    border: none;
+    background-color: white;
+    color: black;
+    font-size: 0.95rem;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+    width: 180px;
+}
+
+.search-wrapper{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.search-form input[type="text"]:focus {
+    outline: none;
+    border: 2px solid #cc0000;
+    box-shadow: 0 0 6px rgb(138, 0, 0);
+}
+
+.search-form button {
+    background-color: #cc0000;
+    border: none;
+    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease;
+}
+
+.search-form button:hover {
+    background-color:rgb(138, 0, 0);
+}
+
+.search-form button svg {
+    display: block;
+}

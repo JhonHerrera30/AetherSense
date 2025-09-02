@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title th:text="'Add Device - ' + ${project.name}">Add Device</title>
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+	<!-- CSS per LTRAD -->
+	<link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/formNewDeviceLtrad.css}" />
+
+	<!-- CSS per progetto FIRE -->
+	<link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/formNewDeviceFire.css}" />
+
+
+	<!-- CSS per progetto VOLCANO -->
+	<link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/formNewDeviceVolcano.css}" />
+
+	<!-- Select2 CSS -->
+	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+	<header id="navbar" class="navbar">
+		<div class="nav-left">
+			<h1><a th:if="${project.id == 1}" th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}"
+					class="nav-title-link">L-TRAD</a></h1>
+			<h1><a th:if="${project.id == 51}" th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}"
+					class="nav-title-link">FIRE</a></h1>
+			<h1><a th:if="${project.id == 101}" th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}"
+					class="nav-title-link"> VOLCANO</a></h1>
+		</div>
+		<div class="nav-right">
+			<div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+				<button type="button" class="dropdown-toggle" id="userDropdown">
+					Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+					<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+						height="16" fill="white">
+						<path d="M7 10l5 5 5-5z" />
+					</svg>
+				</button>
+				<div class="dropdown-menu" id="userDropdownMenu">
+					<form th:action="@{/logout}" method="post" th:csrf="true">
+						<button type="submit" class="dropdown-logout">Logout</button>
+					</form>
+				</div>
+			</div>
+			<a href="/" class="home-button" title="Homepage">
+				<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+					<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+				</svg>
+			</a>
+		</div>
+	</header>
+	<div class="form-container">
+		<div class="back-btn">
+			<a th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}" class="btn-back"
+				title="Back to Devices">
+				⬅ Back
+			</a>
+		</div>
+		<form th:action="@{'/superadmin/newDevice/' + ${project.id}}" th:object="${device}" method="post"
+			class="device-form">
+			<div th:if="${success}" class="alert-success" th:text="${success}"></div>
+			<div class="form-group">
+				<label for="name">Device Name:</label>
+				<span class="errorform" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+				<input type="text" id="name" th:field="*{name}" placeholder="Enter device name" />
+			</div>
+
+			<div class="form-group">
+				<label for="macAddress">MAC Address:</label>
+				<span class="errorform" th:if="${duplicateDeviceError}" th:text="${duplicateDeviceError}"></span>
+				<span class="errorform" th:if="${#fields.hasErrors('macAddress')}" th:errors="*{macAddress}"></span>
+				<input type="text" id="macAddress" th:field="*{macAddress}" placeholder="AA:BB:CC:DD:EE:FF" />
+			</div>
+
+			<div class="form-group">
+				<label for="emailOwner">Owner Email:</label>
+				<span class="errorform" th:if="${#fields.hasErrors('emailOwner')}" th:errors="*{emailOwner}"></span>
+				<input type="email" id="emailOwner" th:field="*{emailOwner}" placeholder="user@example.com" />
+			</div>
+
+			<div class="form-group">
+				<label for="latitude">Latitude:</label>
+				<input type="number" id="latitude" th:field="*{latitude}" step="any" placeholder="41.89" />
+			</div>
+
+			<div class="form-group">
+				<label for="longitude">Longitude:</label>
+				<input type="number" id="longitude" th:field="*{longitude}" step="any" placeholder="12.48" />
+			</div>
+
+			<div class="form-group">
+				<label for="devEui">DevEUI (optional):</label>
+				<input type="text" id="devEui" th:field="*{devEui}" placeholder="DevEUI (if available)" />
+			</div>
+
+			<div class="form-group">
+				<label for="tod">Type of Device:</label>
+				<span class="errorform" th:if="${#fields.hasErrors('tod')}" th:errors="*{tod}"></span>
+				<select id="tod" th:field="*{tod}">
+					<option value="" disabled selected>Select a type</option>
+					<option th:each="tod : ${tods}" th:value="${tod.id}" th:text="${tod.name}">
+					</option>
+				</select>
+			</div>
+
+			<div class="form-buttons">
+				<a class="btn-spec" th:href="@{'/superadmin/formNewTod/' + ${project.id}}">➕ Add new type of device</a>
+				<button type="submit" class="btn-add">Add</button>
+			</div>
+		</form>
+	</div>
+
+	<!-- jQuery (necessario per Select2) -->
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+	<!-- Select2 JS -->
+	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+	<!-- Attivazione Select2 sulla select dei tipi -->
+	<script>
+		$(document).ready(function () {
+			$('#tod').select2({
+				placeholder: "Select a type",
+				allowClear: true,
+				width: '100%'
+			});
+		});
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const toggle = document.getElementById("userDropdown");
+			const menu = document.getElementById("userDropdownMenu");
+
+			toggle.addEventListener("click", function (e) {
+				e.stopPropagation();
+				menu.classList.toggle("show");
+			});
+
+			document.addEventListener("click", function (e) {
+				if (!toggle.contains(e.target)) {
+					menu.classList.remove("show");
+				}
+			});
+		});
+	</script>
+
+</body>
+
+</html>

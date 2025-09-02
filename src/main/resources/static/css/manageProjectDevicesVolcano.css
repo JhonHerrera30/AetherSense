@@ -1,0 +1,431 @@
+/* Impostazioni generali */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #778DA9;
+    color: white;
+    font-family: 'Roboto', sans-serif;
+}
+
+/* Navbar coerente */
+.navbar {
+	border-bottom: 2px solid rgb(255, 191, 128);
+	background-color: #e67e00;
+	color: white;
+	position: sticky;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 1.5rem;
+	z-index: 10;
+	height: 3em;
+}
+
+#navbar h1 {
+	margin: 0;
+	font-size: 2rem;
+	margin-left: 3rem;
+	color: white;
+}
+
+.nav-left{
+	color:white;
+	text-decoration: none;
+	margin-left: -2rem;
+}
+
+.nav-title-link {
+	color: white;
+	text-decoration: none;
+	font-weight: bold;
+	font-size: 2rem;
+}
+
+.nav-right {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.home-button {
+	color: white;
+	text-decoration: none;
+	display: flex;
+	align-items: center;
+	margin-right: 2rem;
+}
+
+.icon-home {
+	fill: currentColor;
+	width: 24px;
+	height: 24px;
+}
+
+/* Dropdown */
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-toggle {
+	background: none;
+	border: none;
+	color: white;
+	font-size: 1rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.dropdown-toggle:focus {
+	outline: none;
+}
+
+.dropdown-icon {
+	transition: transform 0.3s;
+}
+
+.dropdown:hover .dropdown-icon {
+	transform: rotate(180deg);
+}
+
+.dropdown-menu {
+	display: none;
+	position: absolute;
+	right: 0;
+	top: 2.2rem;
+	background-color: #1B263B;
+	border: 1px solid #e67e00;
+	border-radius: 8px;
+	padding: 0.5rem;
+	z-index: 999;
+	min-width: 120px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu.show {
+	display: block;
+}
+
+.dropdown:hover .dropdown-menu {
+	display: block;
+}
+
+.dropdown-logout {
+	width: 100%;
+	background: none;
+	border: none;
+	color: white;
+	font-size: 0.95rem;
+	padding: 0.5rem;
+	cursor: pointer;
+	text-align: left;
+	transition: background-color 0.2s;
+}
+
+.dropdown-logout:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+.icon-user {
+	width: 24px;
+	height: 24px;
+}
+
+/* Dropdown */
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-toggle {
+	background: none;
+	border: none;
+	color: white;
+	font-size: 1rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.dropdown-toggle:focus {
+	outline: none;
+}
+
+.dropdown-icon {
+	transition: transform 0.3s;
+}
+
+.dropdown:hover .dropdown-icon {
+	transform: rotate(180deg);
+}
+
+.dropdown-menu {
+	display: none;
+	position: absolute;
+	right: 0;
+	top: 2.2rem;
+	background-color: #1B263B;
+	border: 1px solid #e67e00;
+	border-radius: 8px;
+	padding: 0.5rem;
+	z-index: 999;
+	min-width: 120px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu.show {
+	display: block;
+}
+
+.dropdown:hover .dropdown-menu {
+	display: block;
+}
+
+.dropdown-logout {
+	width: 100%;
+	background: none;
+	border: none;
+	color: white;
+	font-size: 0.95rem;
+	padding: 0.5rem;
+	cursor: pointer;
+	text-align: left;
+	transition: background-color 0.2s;
+}
+
+.dropdown-logout:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+.icon-user {
+	width: 24px;
+	height: 24px;
+}
+
+/* Layout principale: sinistra gestione dispositivi, destra mappa */
+.main-layout {
+	display: flex;
+	height: calc(100vh - 3em);
+	overflow: hidden;
+}
+
+.devices-panel {
+    width: 80%;
+    background-color: #1B263B;
+    padding: 1.5rem 2rem;
+    box-shadow: inset -1px 0 5px rgba(0, 0, 0, 0.3);
+    display: block;
+	overflow-y: auto; /* attiva lo scroll verticale */
+	overflow-x: hidden; /* opzionale per evitare scroll orizzontale */
+}
+
+/* Mappa */
+#map {
+	width: 60%;
+	height: 100%;
+	z-index:1;
+	/* previene scroll interni */
+}
+
+/* Titoli */
+.h1 {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-top: 0;
+}
+
+/* Pulsanti azione generali */
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-icon {
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+}
+
+
+/* Pulsante modifica (solo icona) */
+.btn-edit {
+    background-color: #e67e00;
+    color: white;
+}
+.btn-edit:hover {
+    background-color: #e67e00;
+    transform: scale(1.05);
+}
+
+/* Pulsante elimina (solo icona) */
+.btn-delete {
+    background-color: #e53935;
+    color: white;
+}
+.btn-delete:hover {
+    background-color: #c62828;
+    transform: scale(1.05);
+}
+
+/* Pulsante aggiungi nuovo (testo centrato) */
+.btn-add {
+    background-color: #2e7d32;
+    color: white;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-flex;            /* usa flex */
+    align-items: center;             /* centratura verticale */
+    justify-content: center;         /* centratura orizzontale */
+    gap: 0.5rem;
+}
+.btn-add:hover {
+    background-color: #1b5e20;
+    transform: scale(1.03);
+}
+
+/* Pulsante torna alla home (testo centrato) */
+.btn-back {
+    background-color: #546e7a;
+    color: white;
+    margin-top: 2rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-flex;            /* usa flex */
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+.btn-back:hover {
+    background-color: #455a64;
+    transform: scale(1.03);
+}
+
+
+/* Messaggio successo */
+.alert-success {
+    background-color: #81c784;
+    border: 1px solid #66bb6a;
+    padding: 0.75rem;
+    border-radius: 5px;
+    color: #1b5e20;
+    margin-bottom: 1rem;
+}
+
+/* Tabella */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    min-width: 600px;
+	margin-bottom: 6rem; 
+}
+
+th, td {
+    padding: 0.75rem;
+    border: 1px solid #90a4ae;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    font-size: 0.95rem;
+}
+
+th {
+    background-color: #0d1b2a;
+    color: white;
+}
+
+td {
+    background-color: #324a5f;
+}
+
+/* Colonna Azioni */
+td:last-child {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.title-with-search {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;	
+	padding-top: 2rem;
+
+}
+
+.title-with-search h2 {
+	margin-top:2rem;
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+/* Stile compatto */
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.search-form input[type="text"] {
+    height: 1.5rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    border: none;
+    background-color: white;
+    color: black;
+    font-size: 0.95rem;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+    width: 180px;
+}
+
+.search-form input[type="text"]:focus {
+    outline: none;
+    border: 2px solid #e67e00;
+    box-shadow: 0 0 6px rgb(213, 117, 0);
+}
+
+.search-form button {
+    background-color: #e67e00;
+    border: none;
+    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease;
+}
+
+.search-form button:hover {
+    background-color: rgb(213, 117, 0);
+}
+
+.search-form button svg {
+    display: block;
+}
+
+.top-bar{
+	display: flex;
+	justify-content: space-between;
+}

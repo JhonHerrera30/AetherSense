@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>L-TRAD – Home</title>
+	<link rel="stylesheet" th:href="@{/css/ltradHome.css}" />
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<header id="navbar" class="navbar">
+		<div class="nav-left">
+			<h1>L-TRAD</h1>
+		</div>
+		<div class="nav-right">
+			<div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+				<button type="button" class="dropdown-toggle" id="userDropdown">
+					Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+					<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+						height="16" fill="white">
+						<path d="M7 10l5 5 5-5z" />
+					</svg>
+				</button>
+				<div class="dropdown-menu" id="userDropdownMenu">
+					<form th:action="@{/logout}" method="post" th:csrf="true">
+						<button type="submit" class="dropdown-logout">Logout</button>
+					</form>
+				</div>
+			</div>
+			<a href="/" class="home-button" title="Homepage">
+				<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+					<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+				</svg>
+			</a>
+		</div>
+		</div>
+	</header>
+
+	<div class="image-grid">
+		<img class="street-light" src="/img/ltradHome.png">
+		<img class="sensor" src="/img/sen5x.png">
+	</div>
+
+	<main class="main-text">
+
+		<section>
+			<h2>💡 L-TRAD – Smart Lighting and Environmental Monitoring</h2>
+			<p><strong>L-TRAD</strong> (Lightning Technical Replacement Aerial Device) is an innovative system for
+				managing public lighting,
+				designed to make cities safer, more sustainable, and more efficient.</p>
+
+			<p>Each streetlamp is equipped with an advanced <strong>SEN55 sensor</strong>, capable of detecting
+				<em>malfunctions in real time</em> and transmitting environmental data such as:
+			</p>
+
+			<ul>
+				<li>Particulate Matter: PM1.0, PM2.5, PM10</li>
+				<li>Temperature and Relative Humidity</li>
+				<li>VOC and NOx Index</li>
+			</ul>
+
+			<p>The collected data is transmitted using <strong>LoRa</strong> technology, enabling <em>long-range and
+					low-power</em> wireless communication, ideal for distributed urban environments.</p>
+
+			<p>This system enables:</p>
+			<ul>
+				<li><strong>Automatic fault detection</strong> and lamp replacement</li>
+				<li><strong>Continuous urban air quality monitoring</strong></li>
+				<li><strong>Seamless integration</strong> with smart city infrastructures</li>
+			</ul>
+
+			<p>Faulty lamps are efficiently replaced using a dedicated automated mechanism—<em>potentially involving
+					drones</em> for rapid intervention.</p>
+		</section>
+	</main>
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const toggle = document.getElementById("userDropdown");
+			const menu = document.getElementById("userDropdownMenu");
+
+			toggle.addEventListener("click", function (e) {
+				e.stopPropagation();
+				menu.classList.toggle("show");
+			});
+
+			// Chiudi il menu cliccando altrove
+			document.addEventListener("click", function (e) {
+				if (!toggle.contains(e.target)) {
+					menu.classList.remove("show");
+				}
+			});
+		});
+	</script>
+
+</body>
+
+</html>

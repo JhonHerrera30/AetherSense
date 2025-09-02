@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Manage Groups</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+	<meta name="_csrf" th:content="${_csrf.token}" />
+	<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+	
+	<!-- CSS per LTRAD -->
+	<link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/manageGroupsLtrad.css}"/> 
+
+	<!-- CSS per progetto FIRE -->
+	<link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/manageGroupsFire.css}" />
+
+
+	<!-- CSS per progetto VOLCANO -->
+	<link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/manageGroupsVolcano.css}" />
+
+</head>
+
+<body>
+	<header id="navbar" class="navbar">
+		<div class="nav-left">
+		    <h1><a th:if="${project.id == 1}" th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link">L-TRAD</a></h1>
+			<h1><a th:if="${project.id == 51}" th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link">FIRE</a></h1>
+			<h1><a th:if="${project.id == 101}" th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link">VOLCANO</a></h1>
+
+		</div>
+				<div class="nav-right">
+					<div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+						<button type="button" class="dropdown-toggle" id="userDropdown">
+							Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+							<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+								height="16" fill="white">
+								<path d="M7 10l5 5 5-5z" />
+							</svg>
+						</button>
+						<div class="dropdown-menu" id="userDropdownMenu">
+							<form th:action="@{/logout}" method="post" th:csrf="true">
+								<button type="submit" class="dropdown-logout">Logout</button>
+							</form>
+						</div>
+					</div>
+					<a href="/" class="home-button" title="Homepage">
+						<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+							<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+						</svg>
+					</a>
+				</div>
+				</div>
+			</header>
+
+<div class="device-details-container">
+    <div class="device-header">
+        <h1>Manage Groups</h1>
+        <a th:href="@{'/admin/group/' + ${project.id}}" class="btn-back">← Back to Map</a>
+    </div>
+	<div th:if="${success}" class="alert-success" th:text="${success}"></div>
+	<div th:if="${error}" class="alert-error" th:text="${error}"></div>
+	<div th:if="${errorSameName}" class="alert-error" th:text="${errorSameName}"></div>
+    <!-- Sezione: Crea nuovo gruppo -->
+    <div class="card-edit-device">
+        <h2>Create New Group</h2>
+        <form th:action="@{'/group/create/' + ${project.id}}" method="post" class="device-form">
+            <label for="groupName">Group Name:</label>
+            <input type="text" id="groupName" name="groupName" required />
+            <button type="submit" class="btn-save">Create Group</button>
+        </form>
+    </div>
+	<div class="search-wrapper">
+	<form th:action="@{'/manageGroups/' + ${project.id}}" method="get" class="search-form">
+						<input type="text" name="groupName" placeholder="Search by name..." th:value="${param.groupName}" />
+						<button type="submit" title="Search">
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 24 24">
+								<circle cx="11" cy="11" r="8" stroke="white" stroke-width="2" fill="none"/>
+								<line x1="17" y1="17" x2="22" y2="22" stroke="white" stroke-width="2"/>
+							</svg>
+		</button>
+	</form>
+	</div>
+    <!-- Sezione: Gruppi esistenti -->
+    <div th:if="${#lists.isEmpty(groups)}">
+        <p>You have no groups yet.</p>
+    </div>
+
+    <div th:each="group : ${groups}" class="card-edit-device">
+        <h2 th:text="${group.name}">Group Name</h2>
+
+        <!-- Azioni -->
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+			<form th:action="@{'/group/delete/' + ${project.id} + '/' + ${group.id}}" method="post">
+			    <button type="submit" class="btn-danger">Delete Group</button>
+			</form>
+        </div>
+
+        <!-- Dispositivi nel gruppo -->
+		<table style="margin-top: 1rem;">
+		    <thead>
+		        <tr>
+		            <th>Device Name</th>
+		            <th>MAC Address</th>
+					<th>Type of Device</th>
+		            <th>Actions</th>
+		        </tr>
+		    </thead>
+		    <tbody>
+				<tr th:each="device : ${group.devices}">
+				    <td th:text="${device.name}">Device Name</td>
+				    <td th:text="${device.macAddress}">MAC</td>
+				    <td th:text="${device.tod != null ? device.tod.name : 'N/A'}">Type</td> <!-- Spostata sopra -->
+				    <td>
+				        <form th:action="@{'/group/' + ${project.id} + '/' + ${group.id} + '/removeDevice/' + ${device.macAddress}}" 
+				              method="post" th:csrf="true">
+				            <button type="submit" class="btn-icon btn-delete" title="Remove from Group">🗑️</button>
+				        </form>
+				    </td>
+				</tr>
+		        <tr th:if="${#lists.isEmpty(group.devices)}">
+		            <td colspan="4">No devices assigned to this group.</td>
+		        </tr>
+		    </tbody>
+		</table>
+		<button type="button" class="btn-save toggle-add-list" 
+		        th:attr="data-group-id=${group.id}">
+		    Add Devices
+		</button>
+
+		<!-- DIV CON ID -->
+		<div th:attr="id='add-list-' + ${group.id}" class="add-device-list hidden"></div>
+    </div>
+</div>
+<script>
+document.querySelectorAll('.toggle-add-list').forEach(button => {
+    button.addEventListener('click', async () => {
+        const groupId = button.getAttribute('data-group-id');
+        const container = document.getElementById('add-list-' + groupId);
+
+        // Se già visibile, nascondi e svuota
+        if (!container.classList.contains('hidden')) {
+            container.classList.add('hidden');
+            container.innerHTML = '';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/groups/${groupId}/available-devices`);
+            if (!response.ok) throw new Error('Errore nella chiamata REST');
+
+            const devices = await response.json();
+
+			if (devices.length === 0) {
+			    container.innerHTML = '<p>No devices available to add.</p>';
+			} else {
+			    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
+
+			    let html = '<table><thead><tr><th>Name</th><th>MAC</th><th>Type</th><th>Actions</th></tr></thead><tbody>';
+
+			    devices.forEach(device => {
+			        html += `
+			            <tr>
+			                <td>${device.name}</td>
+			                <td>${device.macAddress}</td>
+			                <td>${device.tod || 'N/A'}</td>
+			                <td>
+			                    <form method="post" action="/group/${groupId}/add-device/${device.macAddress}">
+			                        <input type="hidden" name="_csrf" value="${csrfToken}" />
+			                        <button type="submit" class="btn-save">➕ Add</button>
+			                    </form>
+			                </td>
+			            </tr>
+			        `;
+			    });
+
+			    html += '</tbody></table>';
+			    container.innerHTML = html;
+			}
+
+
+            container.classList.remove('hidden');
+
+        } catch (error) {
+            container.innerHTML = `<p style="color: red;">Error loading devices</p>`;
+            container.classList.remove('hidden');
+        }
+    });
+});
+</script>
+
+<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const toggle = document.getElementById("userDropdown");
+			const menu = document.getElementById("userDropdownMenu");
+
+			toggle.addEventListener("click", function (e) {
+				e.stopPropagation();
+				menu.classList.toggle("show");
+			});
+
+			document.addEventListener("click", function (e) {
+				if (!toggle.contains(e.target)) {
+					menu.classList.remove("show");
+				}
+			});
+		});
+	</script>
+
+</body>
+</html>

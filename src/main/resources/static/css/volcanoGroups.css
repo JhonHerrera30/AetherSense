@@ -1,0 +1,499 @@
+html, body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	background-color: #778DA9;
+	color: white;
+	font-family: 'Roboto', sans-serif;
+	/* resta qui per bloccare lo scroll generale */
+}
+
+/* NAVBAR */
+.navbar {
+	border-bottom: 2px solid #ffc266;
+	background-color: #e67e00;
+	color: white;
+	position: sticky;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 1.5rem;
+	z-index: 2;
+	height: 3em;
+}
+
+.nav-left{
+	color:white;
+	text-decoration: none;
+	margin-left:3rem;
+}
+
+.nav-title-link {
+	color: white;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+
+navbar h1 {
+	margin: 0;
+	font-size: 2rem;
+	margin-left: 3rem;
+	color: white;
+}
+
+
+.nav-right {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.home-button {
+	color: white;
+	text-decoration: none;
+	display: flex;
+	align-items: center;
+	margin-right: 2rem;
+}
+
+.icon-home {
+	fill: currentColor;
+	width: 24px;
+	height: 24px;
+}
+
+/* Dropdown base */
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-toggle {
+	background: none;
+	border: none;
+	color: white;
+	font-size: 1rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.dropdown-toggle:focus {
+	outline: none;
+}
+
+/* Icona freccia */
+.dropdown-icon {
+	transition: transform 0.3s;
+}
+
+.dropdown:hover .dropdown-icon {
+	transform: rotate(180deg);
+}
+
+/* Menu */
+.dropdown-menu {
+	display: none;
+	position: absolute;
+	right: 0;
+	top: 2.2rem;
+	background-color: #1B263B;
+	border: 1px solid #e67e00;
+	border-radius: 8px;
+	padding: 0.5rem;
+	z-index: 999;
+	min-width: 120px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu.show {
+	display: block;
+}
+
+.dropdown:hover .dropdown-menu {
+	display: block;
+}
+
+/* Pulsante logout nel menu */
+.dropdown-logout {
+	width: 100%;
+	background: none;
+	border: none;
+	color: white;
+	font-size: 0.95rem;
+	padding: 0.5rem;
+	cursor: pointer;
+	text-align: left;
+	transition: background-color 0.2s;
+}
+
+.dropdown-logout:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+
+.icon-user {
+	width: 24px;
+	height: 24px;
+}
+
+
+/* Titoli */
+.h1 {
+	text-align: center;
+	margin-top: 0.5rem;
+	font-size:1.5rem;
+	margin-left:2rem;
+}
+
+
+.h2 {
+	margin-top: 0.5em;
+	font-size: 1.5rem;
+}
+
+.main-layout {
+	display: flex;
+	height: calc(100vh - 3em); /* altezza totale meno la navbar */
+	overflow: hidden;
+}
+
+.group-panel {
+	font-size: 90%;
+	width: 40%;
+	background-color: #0b1a2f;
+	padding: 1.5rem 2rem;
+	box-shadow: inset -1px 0 5px rgba(0, 0, 0, 0.3);
+	height: 100%;
+	overflow-y: auto; /* attiva lo scroll verticale */
+	overflow-x: hidden; /* opzionale per evitare scroll orizzontale */
+}
+
+
+.groups {
+	font-size: 1.2rem;
+}
+
+/* Colonna destra - mappa fissa */
+#map {
+	width: 60%;
+	height: 100%;
+	overflow: hidden;
+	z-index: 1;
+}
+
+/* Form di selezione */
+.group-select {
+	text-align: center;
+	margin: 1rem auto;
+}
+
+.group-select label {
+	font-size: 1.1rem;
+	margin-right: 0.5rem;
+}
+
+.group-select input {
+	padding: 0.5rem 1rem;
+	border-radius: 8px;
+	border: none;
+	background-color: white;
+	color: black;
+	font-size: 1rem;
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+	transition: border 0.3s ease;
+}
+
+.group-select input:focus {
+	outline: none;
+	border: 2px solid white;
+}
+
+/* Lista gruppi */
+
+details summary {
+	cursor: pointer;
+	font-weight: bold;
+	padding: 5px 0;
+}
+
+details[open] summary {
+	color: white;
+}
+
+.device-list {
+	padding-left: 2.3rem;
+	list-style-type: disc;
+	font-size: 1rem;
+}
+
+/* Pop-up Leaflet */
+.leaflet-popup-content {
+	font-family: 'Roboto', sans-serif;
+	font-size: 14px;
+	color: black;
+	background-color: white;
+	padding: 8px;
+}
+
+.leaflet-popup-content-wrapper {
+	background: rgb(255, 255, 255);
+	border: 2px solid #e67e00;
+	border-radius: 10px;
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+}
+
+.leaflet-popup-tip {
+	background: #e67e00;
+}
+
+/* Disattiva vecchia classe se presente */
+.main-content {
+	display: none;
+}
+
+.title-with-search {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;	
+	padding-top: 2rem;
+
+}
+
+.title-with-search h2 {
+	margin-top:2rem;
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+/* Stile compatto */
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.search-form input[type="text"] {
+    height: 1.5rem;
+    padding: 0.3rem 0.8rem;
+    border-radius: 6px;
+    border: none;
+    background-color: white;
+    color: black;
+    font-size: 0.95rem;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.25);
+    width: 180px;
+}
+
+.search-form input[type="text"]:focus {
+    outline: none;
+    border: 2px solid #e67e00;
+    box-shadow: 0 0 6px rgb(213, 117, 0);
+}
+
+.search-form button {
+    background-color: #e67e00;
+    border: none;
+    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease;
+}
+
+.search-form button:hover {
+    background-color: rgb(213, 117, 0);
+}
+
+.search-form button svg {
+    display: block;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+.edit-icon {
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.edit-icon:hover {
+  background-color: rgb(213, 117, 0);
+}
+
+/* Tabella dispositivi nella colonna sinistra */
+.group-panel table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    min-width: 100%;
+	margin-bottom: 6rem;
+}
+
+.group-panel th,
+.group-panel td {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #90a4ae;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    font-size: 90%;
+	
+}
+
+.group-panel th {
+    background-color: #0d1b2a;
+    color: white;
+}
+
+.group-panel td {
+    background-color: #324a5f;
+    color: white;
+}
+
+/* Colonna azioni: pulsante icona */
+.group-panel td:last-child {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+.group-wrapper ul{
+	list-style-type: none;
+	padding-left: 0;
+	margin-bottom: 2rem;
+}
+
+/* Pulsante icona edit */
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-icon {
+    width: 2.2rem;
+    height: 2.2rem;
+    padding: 0;
+}
+
+.btn-edit {
+   background-color: #e67e00;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #ffc266;
+    transform: scale(1.05);
+}
+
+
+/*MODIFICHE*/
+
+/* Accessibilità: testo solo per screen reader */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* Bottoni azione aggiuntivi */
+.btn-primary {
+  background-color: #e67e00;
+  color: #fff;
+}
+.btn-primary:hover { background-color: rgb(189, 104, 0); }
+
+.btn-assign {
+  background-color: #2e7d32; /* verde */
+  color: white;
+}
+.btn-assign:hover { background-color: #256628; transform: scale(1.05); }
+
+.btn-danger {
+  background-color: #c62828; /* rosso */
+  color: white;
+}
+.btn-danger:hover { background-color: #ab2222; transform: scale(1.05); }
+
+/* Modal generica */
+/* Modal: nascosta di default */
+.modal {
+  display: none;                 /* <— chiusa al load */
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: none;
+  place-items: center;
+  z-index: 1000;
+}
+.modal.show {                    /* <— la apriamo aggiungendo .show */
+  display: grid;
+}
+
+.modal-dialog {
+  width: min(520px, 92vw);
+  background: #0b1a2f;
+  border: 1px solid #e67e00;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4);
+}
+.modal-header, .modal-body { padding: 1rem 1.25rem; }
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #1f3b5b;
+}
+.modal-close {
+  background: transparent; color: #fff; border: none;
+  font-size: 1.5rem; line-height: 1; cursor: pointer;
+}
+.modal-body label { display:block; margin-bottom:.4rem; }
+.modal-body select {
+  width: 100%; padding: .55rem .7rem; border-radius: 8px; border: 1px solid #90a4ae;
+  background: #fff; color: #000;
+}
+.modal-actions {
+  margin-top: 1rem; display: flex; gap: .6rem; justify-content: flex-end;
+}
+.form-row { margin-top: .4rem; }
+
+/* Evita scroll della pagina quando la modale è aperta */
+.no-scroll { overflow: hidden; }
+
+/* Allineamento pulsanti in colonna Azioni (resta invariato) */
+.group-panel td:last-child {
+  display: flex; justify-content: center; align-items: center; gap: .5rem;
+}
+
+/* Rende i bottoni-icona più leggibili */
+.btn-icon svg { display:block; }
+
+/* solo il bottone Assign */
+.btn-assign svg { stroke:rgb(0, 0, 0); fill:none; stroke-width: 2; }
+.btn-assign svg .plus { stroke-width:2; } /* 2.6–3 rende il + bello visibile */

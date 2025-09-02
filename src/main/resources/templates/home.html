@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes">
+	<title>AetherSense - 4Spark Sensor Platform</title>
+	<link rel="stylesheet" th:href="@{/css/home1.css}">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<header id="navbar">
+		<div class="nav-left">
+			<h1>AetherSense</h1>
+		</div>
+		<div class="nav-right">
+			<div class="auth-nav">
+				<!-- Utente autenticato -->
+				<div sec:authorize="isAuthenticated()" class="auth-user">
+					<span class="username">Hi, <strong th:text="${user.visibleUsername}">utente</strong></span>
+					<form th:action="@{/logout}" method="post" th:csrf="true" class="logout-form">
+						<button type="submit" class="icon-button" title="Logout">
+							<svg xmlns="http://www.w3.org/2000/svg" class="icon-user" viewBox="0 0 24 24"
+								fill="currentColor" width="24" height="24">
+								<path
+									d="M16 13v-2H7v-3l-5 4 5 4v-3zM20 3h-8v2h8v14h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
+							</svg>
+						</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</header>
+
+	<section class="hero">
+		<video class="hero_video" autoplay muted loop playsinline preload="auto">
+			<source th:src="@{/videos/Homepage1.mp4}" type="video/mp4" poster="/img/poster.png">
+		</video>
+		<div class="hero_overlay">
+			<h1>AetherSense</h1>
+			<p class="subtitle"> 4Spark Sensor Platform</p>
+			<p>The intelligent platform for monitoring and analyzing environmental data in real time via LoRaWAN
+				network, 4G module, and Wi-Fi.</p>
+			<button onclick="document.getElementById('info').scrollIntoView({behavior: 'smooth'});">Learn More</button>
+		</div>
+	</section>
+
+	<section class="projects">
+		
+	    <button class="project-box ltrad"
+	        th:data-href="@{'/access?projectId=' + ${ltrad.id}}"
+	        onclick="window.location.href=this.dataset.href">
+	        <h3>L-TRAD</h3>
+	        <p>Technical replacement system for public lighting using drones</p>
+	    </button>
+
+	    <button class="project-box fire"
+	        th:data-href="@{'/access?projectId=' + ${fire.id}}"
+	        onclick="window.location.href=this.dataset.href">
+	        <h3>FIRE</h3>
+	        <p>Environmental monitoring and forest fire prevention</p>
+	    </button>
+
+	    <button class="project-box volcano"
+	        th:data-href="@{'/access?projectId=' + ${volcano.id}}"
+	        onclick="window.location.href=this.dataset.href">
+	        <h3>VOLCANO</h3>
+	        <p>Monitoring volcanic activity and geothermal parameters</p>
+	    </button>
+		
+	</section>
+	
+	<section id="info" class="features-section">
+	    <div class="feature-box ltrad">
+	        <h2>L-TRAD</h2>
+	        <p>
+	            💡 Smart system for managing public lighting with real-time fault detection and air quality monitoring
+	            (Particulate, VOC, NOx) via SEN55 sensors and LoRa communication. Automated replacement with aerial
+	            devices.
+	        </p>
+	        <a class="btn-discover"
+	           th:href="@{/project/{id}/info(id=${ltrad.id})}">
+	           Learn more
+	        </a>
+	    </div>
+
+	    <div class="feature-box fire">
+	        <h2>FIRE</h2>
+	        <p>
+	            🔥 Smart monitoring system for forests and rural areas. Detects early fire signs like temperature
+	            anomalies, sending real-time alerts via LoRaWAN for fast emergency response.
+	        </p>
+	        <a class="btn-discover"
+	           th:href="@{/project/{id}/info(id=${fire.id})}">
+	           Learn more
+	        </a>
+	    </div>
+
+	    <div class="feature-box volcano">
+	        <h2>VOLCANO</h2>
+	        <p>
+	            🌋 Advanced volcanic activity monitoring system using seismic, thermal, and gas sensors. Predicts
+	            eruptions and supports evacuation planning with real-time alerts.
+	        </p>
+	        <a class="btn-discover"
+	           th:href="@{/project/{id}/info(id=${volcano.id})}">
+	           Learn more
+	        </a>
+	    </div>
+	</section>
+	
+	<section class="contact">
+		<p>Interested in our projects? <a href="https://www.4spark.it/" target="_blank">Contact us</a>.</p>
+	</section>
+
+	<footer>
+		<p>&copy; 2025 - 4Spark Sensor Platform</p>
+	</footer>
+
+</body>
+
+</html>

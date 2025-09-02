@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>FIRE – Home</title>
+	<link rel="stylesheet" th:href="@{/css/fireHome.css}" />
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<header id="navbar" class="navbar">
+		<div class="nav-left">
+			<h1>FIRE</h1>
+		</div>
+		<div class="nav-right">
+			<div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+				<button type="button" class="dropdown-toggle" id="userDropdown">
+					Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+					<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+						height="16" fill="white">
+						<path d="M7 10l5 5 5-5z" />
+					</svg>
+				</button>
+				<div class="dropdown-menu" id="userDropdownMenu">
+					<form th:action="@{/logout}" method="post" th:csrf="true">
+						<button type="submit" class="dropdown-logout">Logout</button>
+					</form>
+				</div>
+			</div>
+			<a href="/" class="home-button" title="Homepage">
+				<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+					<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+				</svg>
+			</a>
+		</div>
+	</header>
+
+	<div class="image-grid">
+		<img class="woods" src="/img/fireHome.png">
+		<img class="rak" src="/img/rakFire.png">
+	</div>
+
+	<main class="main-text">
+		
+
+		<section>
+			<h2>🔥 FIRE – Forest Intelligence & Rapid Emergency</h2>
+			<p><strong>FIRE</strong> is a cutting-edge wildfire prevention and detection system designed to monitor forests and rural areas in real time.</p>
+			
+			<p>It integrates a network of environmental sensors capable of detecting early fire indicators such as temperature anomalies</p>
+
+			<p>The data is transmitted via <strong>LoRaWAN</strong> to ensure wide coverage even in remote locations.</p>
+
+			<p>Thanks to FIRE, authorities can:</p>
+			<ul>
+				<li>Receive real-time fire alerts</li>
+				<li>Coordinate rapid interventions</li>
+				<li>Reduce environmental and economic damages</li>
+			</ul>
+		</section>
+	</main>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const toggle = document.getElementById("userDropdown");
+			const menu = document.getElementById("userDropdownMenu");
+
+			toggle.addEventListener("click", function (e) {
+				e.stopPropagation();
+				menu.classList.toggle("show");
+			});
+
+			document.addEventListener("click", function (e) {
+				if (!toggle.contains(e.target)) {
+					menu.classList.remove("show");
+				}
+			});
+		});
+	</script>
+</body>
+
+</html>

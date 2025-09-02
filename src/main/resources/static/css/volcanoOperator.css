@@ -1,0 +1,332 @@
+html, body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	background-color: #778DA9;
+	color: white;
+	font-family: 'Roboto', sans-serif;
+}
+
+/* NAVBAR AMBRA VOLCANO */
+.navbar {
+	border-bottom: 2px solid #ffc266;
+	background-color: #e67e00;
+	color: white;
+	position: sticky;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 1.5rem;
+	z-index: 2;
+	height: 3em;
+}
+
+.nav-left {
+	color: white;
+	text-decoration: none;
+	margin-left: 3rem;
+}
+
+.nav-title-link {
+	color: white;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+navbar h1 {
+	margin: 0;
+	font-size: 2rem;
+	margin-left: 3rem;
+	color: white;
+}
+
+.nav-right {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.home-button {
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  margin-right: 2rem;
+  background-color: #e67e00;
+  border-style: none;
+}
+
+.icon-home {
+	fill: currentColor;
+	width: 24px;
+	height: 24px;
+}
+
+/* Dropdown base */
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-toggle {
+	background: none;
+	border: none;
+	color: white;
+	font-size: 1rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.dropdown-toggle:focus {
+	outline: none;
+}
+
+/* Icona freccia */
+.dropdown-icon {
+	transition: transform 0.3s;
+}
+
+.dropdown:hover .dropdown-icon {
+	transform: rotate(180deg);
+}
+
+/* Menu */
+.dropdown-menu {
+	display: none;
+	position: absolute;
+	right: 0;
+	top: 2.2rem;
+	background-color: #1B263B;
+	border: 1px solid #e67e00;
+	border-radius: 8px;
+	padding: 0.5rem;
+	z-index: 999;
+	min-width: 120px;
+	box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.dropdown-menu.show {
+	display: block;
+}
+
+.dropdown:hover .dropdown-menu {
+	display: block;
+}
+
+/* Pulsante logout nel menu */
+.dropdown-logout {
+	width: 100%;
+	background: none;
+	border: none;
+	color: white;
+	font-size: 0.95rem;
+	padding: 0.5rem;
+	cursor: pointer;
+	text-align: left;
+	transition: background-color 0.2s;
+}
+
+.dropdown-logout:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+.icon-user {
+	width: 24px;
+	height: 24px;
+}
+
+/* Titoli */
+.h1 {
+	text-align: center;
+	margin-top: 0.5rem;
+	font-size: 1.5rem;
+	margin-left: 2rem;
+}
+
+.h2 {
+	margin-top: 0.5em;
+	font-size: 1.5rem;
+}
+
+/* Layout principale */
+.main-layout {
+	display: flex;
+	height: calc(100vh - 3em);
+	overflow: hidden;
+}
+
+.group-panel {
+	width: 40%;
+	background-color: #0b1a2f;
+	padding: 1.5rem 2rem;
+	box-shadow: inset -1px 0 5px rgba(0, 0, 0, 0.3);
+	height: 100%;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+.groups {
+	font-size: 1.2rem;
+}
+
+/* Colonna mappa */
+#map {
+	width: 60%;
+	height: 100%;
+	overflow: hidden;
+	z-index: 1;
+}
+
+/* Lista gruppi */
+details summary {
+	cursor: pointer;
+	font-weight: bold;
+	padding: 5px 0;
+}
+
+details[open] summary {
+	color: white;
+}
+
+.device-list {
+	padding-left: 2.3rem;
+	list-style-type: disc;
+	font-size: 1rem;
+}
+
+/* Pop-up Leaflet */
+.leaflet-popup-content {
+	font-family: 'Roboto', sans-serif;
+	font-size: 14px;
+	color: black;
+	background-color: white;
+	padding: 8px;
+}
+
+.leaflet-popup-content-wrapper {
+	background: white;
+	border: 2px solid #e67e00;
+	border-radius: 10px;
+	box-shadow: 0 0 8px rgba(0, 0, 0, 0.4);
+}
+
+.leaflet-popup-tip {
+	background: #e67e00;
+}
+
+/* Barra ricerca */
+.title-with-search {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 1rem;
+	padding-top: 2rem;
+}
+
+.title-with-search h2 {
+	margin-top: 2rem;
+	margin: 0;
+	font-size: 1.4rem;
+}
+
+.search-form {
+	display: flex;
+	align-items: center;
+	gap: 0.4rem;
+}
+
+.search-form input[type="text"] {
+	height: 1.5rem;
+	padding: 0.3rem 0.8rem;
+	border-radius: 6px;
+	border: none;
+	background-color: white;
+	color: black;
+	font-size: 0.95rem;
+	box-shadow: 0 0 4px rgba(0,0,0,0.25);
+	width: 180px;
+}
+
+.search-form input[type="text"]:focus {
+	outline: none;
+	border: 2px solid #e67e00;
+	box-shadow: 0 0 6px rgba(213, 117, 0);
+}
+
+.search-form button {
+	background-color: #e67e00;
+	border: none;
+	border-radius: 6px;
+	padding: 0.35rem 0.5rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+	transition: background-color 0.2s ease;
+}
+
+.search-form button:hover {
+	background-color: rgb(213, 117, 0);
+}
+
+.search-form button svg {
+	display: block;
+}
+
+/* Sezione titolo */
+.section-title {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0;
+	font-size: 1.4rem;
+}
+
+.edit-icon {
+	color: white;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.2rem;
+	border-radius: 4px;
+	transition: background-color 0.2s ease;
+}
+
+.edit-icon:hover {
+	background-color: rgb(213, 117, 0);
+}
+
+/* Tabella dispositivi */
+.group-panel table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 1rem;
+	min-width: 100%;
+	margin-bottom: 6rem;
+}
+
+.group-panel th,
+.group-panel td {
+	padding: 0.6rem 0.8rem;
+	border: 1px solid #90a4ae;
+	text-align: center;
+	vertical-align: middle;
+	white-space: nowrap;
+	font-size: 0.9rem;
+}
+
+.group-panel th {
+	background-color: #0d1b2a;
+	color: white;
+}
+
+.group-panel td {
+	background-color: #324a5f;
+	color: white;
+}

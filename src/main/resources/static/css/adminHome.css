@@ -1,0 +1,478 @@
+/*home1.css*/
+
+/* Base */
+html {
+	overflow-x: hidden;
+	max-width: 100%;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	font-family: 'Roboto', sans-serif;
+	scroll-behavior: smooth;
+	font-size: 16px;
+	color: #fff;
+	background: black;
+	overflow: hidden;
+}
+
+/* NAVBAR */
+#navbar {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 1.5rem;
+	background-color:#1B263B;
+	border-bottom: 3px solid #0D1B2A;  
+	/*border-bottom: 3px solid #3B4C6B;
+	background-color: #1C2541;*/
+	/*background: linear-gradient(to bottom, #1c1c1c, #2e2e2e);*/
+	z-index: 2;
+	height: 3em;
+
+}
+
+.nav-left {
+	margin-left: 3rem;
+}
+
+.nav-center {
+	flex-grow: 1;
+	margin-left: 10em;
+}
+
+.nav-right {
+	margin-right: 3em;
+}
+
+.nav-button {
+	background: transparent;
+	border: 2px solid #fff;
+	color: #fff;
+	padding: 0.5rem 1rem;
+	border-radius: 20px;
+	text-decoration: none;
+	font-size: 0.95rem;
+	transition: background-color 0.3s;
+}
+
+.nav-button:hover {
+	background-color: rgba(255, 255, 255, 0.2);
+}
+
+.icon-button {
+	color: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.3rem;
+	border-radius: 50%;
+	transition: background-color 0.3s;
+}
+
+.icon-button:hover {
+	color: #00BFFF;
+}
+
+/* HERO */
+.hero {
+	position: relative;
+	width: 100vw;
+	min-height: 90vh;
+	/* altezza fluida */
+	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* video a sfondo viewport-wide */
+.hero_video {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: center;
+	z-index: 0;
+	will-change: transform;
+	backface-visibility: hidden;
+	transform: translateZ(0);
+
+}
+
+/* overlay centrato */
+.hero_overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+	padding: 1rem;
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index: 1;
+	
+}
+
+/* Tipografia fluida */
+.hero_overlay h1 {
+	margin: 0;
+	font-size: clamp(2rem, 8vw, 4rem);
+}
+
+.hero_overlay p.subtitle {
+	font-size: clamp(1rem, 3vw, 1.25rem);
+	margin: 0.5rem 0;
+}
+
+.hero_overlay p:not(.subtitle) {
+	font-size: clamp(1rem, 2.5vw, 1.2rem);
+	margin: 1rem 0;
+}
+
+.hero_overlay button {
+	margin-top: 1rem;
+	font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+	padding: clamp(0.5em, 1.2vw, 0.7em) clamp(0.8em, 2vw, 1.2em);
+	border: none;
+	background-color: #fff;
+	color: #000;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background-color 0.3s;
+}
+
+.hero_overlay button:hover {
+	background-color: #d4eaff;
+}
+
+/* PROJECTS: grid responsive */
+.projects {
+	display: grid;
+	gap: 1rem;
+	padding: 4rem 1rem;
+	background-color: #1B263B;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.project-box {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	background-color:#0D1B2A;
+	/* grigio di default */
+	color: #fff;
+	border: none;
+	border-top: 5px solid transparent;
+	border-radius: 10px;
+	padding: 2rem;
+	text-align: center;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+	font-family: inherit;
+
+}
+
+
+.project-box.ltrad {
+	border-top-color: #007bff;
+}
+
+.project-box.fire {
+	border-top-color: #cc0000;
+}
+
+.project-box.volcano {
+	border-top-color: #e67e00;
+}
+
+
+.project-box h3 {
+	margin-bottom: 1rem;
+	font-size: 1.2rem;
+}
+
+.project-box p {
+	font-size: 1rem;
+	line-height: 1.5;
+}
+
+.project-box button {
+	margin-top: 1rem;
+	padding: 0.5rem 1.2rem;
+	background: #000;
+	color: #fff;
+	border: none;
+	border-radius: 5px;
+	cursor: pointer;
+	transition: background-color 0.3s;
+}
+
+.project-box button:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* INFO SECTION */
+/* INFO SECTION */
+.features-section {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 2rem;
+	padding: 3rem 2rem;
+	background-color: #0b1a2f;
+}
+
+.feature-box {
+	flex: 1 1 300px;
+	background-color: #1B263B;
+	border: 1px solid #2f3e55;
+	border-radius: 12px;
+	padding: 1.5rem;
+	color: white;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	transition: transform 0.3s ease;
+	max-width: 400px;
+}
+
+.feature-box:hover {
+	transform: translateY(-5px);
+}
+
+.feature-box h2 {
+	color: #00bfff;
+	margin-bottom: 1rem;
+	font-size: 1.5rem;
+	text-align: center;
+}
+
+.feature-box.ltrad h2 {
+	color: #00bfff;
+}
+.feature-box.fire h2 {
+	color: #cc0000;
+}
+.feature-box.volcano h2 {
+	color: #e67e00;
+}
+
+.feature-box p {
+	text-align: justify;
+	line-height: 1.5;
+	font-size: 1rem;
+}
+
+/* NAV AUTH SECTION */
+.auth-nav {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.auth-user {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.auth-user .username {
+	font-size: 0.95rem;
+	color: #fff;
+}
+
+.logout-form {
+	margin: 0;
+}
+
+.logout-form .icon-button {
+	background: none;
+	border: none;
+	cursor: pointer;
+}
+
+
+
+/* FOOTER */
+footer {
+	text-align: center;
+	padding: 1rem;
+	background-color: #0D1B2A;
+	color: #fff;
+}
+/* NAVBAR - autenticazione */
+.auth-nav {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.admin-greeting {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: #fff;
+}
+
+.admin-greeting .logout a {
+	color: #fff;
+	text-decoration: underline;
+	font-size: 0.9rem;
+}
+
+
+.admin-greeting svg {
+	width: 24px;
+	height: 24px;
+	fill: #fff;
+}
+
+
+
+/* adminHome.css – solo regole specifiche per la pagina admin */
+
+/* Etichetta "Admin" accanto al titolo */
+.admin-label {
+	font-size: 0.6em;
+	color: #00BFFF;
+}
+
+/* Saluto dell’amministratore con icona */
+.admin-greeting {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	color: white;
+	font-size: 1rem;
+}
+
+
+/* Sezione 'Manage Projects' */
+.projects-manager {
+	padding: 1rem 1rem 1rem 1rem;
+	background-color: #1B263B;
+}
+
+/* Titolo "Manage projects" */
+.admin-title {
+	text-align: center;
+	color: white;
+	margin: 1rem auto 1rem auto;
+	font-size: 2rem;
+	width: 100%;
+}
+
+/* Stile uniforme per il link di logout */
+.logout a {
+	color: white;
+	text-decoration: none;
+	font-family: 'Roboto', sans-serif;
+	font-size: 1rem;
+	font-weight: normal;
+	padding-left: 2rem;
+	padding-right: 3rem;
+}
+
+.logout a:hover {
+	text-decoration: underline;
+	color: #00BFFF;
+}
+
+
+/* Contenitore dei box progetto */
+.projects {
+	display: grid;
+	gap: 2rem;
+	grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+	padding-top: 1rem;
+}
+
+
+.admin-buttons {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-top: 1rem;
+}
+
+#ltrad-btn {
+	background-color: #1B263B;
+	color: white;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	padding: 0.75rem;
+	font-size: 0.95rem;
+	cursor: pointer;
+	transition: background-color 0.2s, transform 0.2s;
+}
+
+#ltrad-btn:hover {
+	color: white;
+	background-color: #007bff;
+	transform: scale(1.02);
+}
+
+#fire-btn {
+	background-color: #1B263B;
+	color: white;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	padding: 0.75rem;
+	font-size: 0.95rem;
+	cursor: pointer;
+	transition: background-color 0.2s, transform 0.2s;
+}
+
+#fire-btn:hover {
+	color: white;
+	background-color:#cc0000;
+	transform: scale(1.02);
+}
+
+#volcano-btn {
+	background-color: #1B263B;
+	color: white;
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	padding: 0.75rem;
+	font-size: 0.95rem;
+	cursor: pointer;
+	transition: background-color 0.2s, transform 0.2s;
+}
+
+#volcano-btn:hover {
+	color: white;
+	background-color:#e67e00;
+	transform: scale(1.02);
+}
+
+.contact {
+	text-align: center;
+	background-color: #0b1a2f;
+	color: white;
+	padding: 0.5rem 0.5rem;
+	font-size: 1.2rem;
+	
+}
+
+.contact a {
+	color: #00bfff;
+	font-weight: bold;
+	text-decoration: none;
+	transition: color 0.3s ease;
+}
+
+.contact a:hover {
+	color: #0099cc;
+	text-decoration: underline;
+}

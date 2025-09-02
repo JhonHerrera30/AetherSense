@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title th:text="'Add Type of Device - ' + ${project.name}">Add Type of Device</title>
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+	<!-- CSS per LTRAD -->
+	<link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/formNewDeviceLtrad.css}" />
+
+	<!-- CSS per progetto FIRE -->
+	<link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/formNewDeviceFire.css}" />
+
+	<!-- CSS per progetto VOLCANO -->
+	<link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/formNewDeviceVolcano.css}" />
+</head>
+
+<body>
+
+	<header id="navbar" class="navbar">
+		<div class="nav-left">
+			<h1><a th:if="${project.id == 1}" th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}"
+					class="nav-title-link">L-TRAD</a></h1>
+			<h1><a th:if="${project.id == 51}" th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}"
+					class="nav-title-link">FIRE</a></h1>
+			<h1><a th:if="${project.id == 101}" th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}"
+					class="nav-title-link"> VOLCANO</a></h1>
+		</div>
+		<div class="nav-right">
+			<div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+				<button type="button" class="dropdown-toggle" id="userDropdown">
+					Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+					<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+						height="16" fill="white">
+						<path d="M7 10l5 5 5-5z" />
+					</svg>
+				</button>
+				<div class="dropdown-menu" id="userDropdownMenu">
+					<form th:action="@{/logout}" method="post" th:csrf="true">
+						<button type="submit" class="dropdown-logout">Logout</button>
+					</form>
+				</div>
+			</div>
+			<a href="/" class="home-button" title="Homepage">
+				<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+					<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+				</svg>
+			</a>
+		</div>
+	</header>
+	<div class="form-container">
+		<div class="back-btn">
+				<a th:href="@{'/superadmin/formNewDevice/' + ${project.id}}" class="btn-back" title="Back to Devices">
+				    ⬅ Back
+				</a>
+			</div>
+		<form th:action="@{'/superadmin/newTod/' + ${project.id}}" th:object="${tod}" method="post" class="device-form">
+			<div th:if="${success}" class="alert-success" th:text="${success}"></div>
+			<div th:if="${deleted}" class="alert-success" th:text="${deleted}"></div>
+			<div th:if="${notDeleted}" class="alert-error" th:text="${notDeleted}"></div>
+
+
+			<div class="form-group">
+				<label for="name">Type Name:</label>
+				<span class="errorform" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+				<input type="text" id="name" th:field="*{name}" placeholder="Enter type of device name" />
+			</div>
+
+			<div class="form-group">
+				<label>Specifications:</label>
+				<span class="errorform" th:if="${noSpecsSelected}" th:text="${noSpecsSelected}"></span>
+				<span class="errorform" th:if="${#fields.hasErrors('specs')}" th:errors="*{specs}"></span>
+
+				<div class="checkbox-group">
+					<div th:each="spec : ${specs}" class="spec-row">
+						<label>
+							<input type="checkbox" th:field="*{specs}" th:value="${spec.id}" />
+							<span th:text="${spec.measurement} + ' [' + ${spec.unitOfMeasurement} + '] - ' + ${spec.component}"></span>
+						</label>
+						<a th:href="@{'/superadmin/deleteSpec/' + ${project.id} + '/' + ${spec.id}}" class="delete-icon" title="Delete">
+							🗑️
+						</a>
+					</div>
+				</div>
+			</div>
+
+			<div class="form-buttons">
+				<a class="btn-spec" th:href="@{'/superadmin/formNewSpec/' + ${project.id}}">➕ Add new specification</a>
+				<button type="submit" class="btn-add">Add</button>
+			</div>
+		</form>
+	</div>
+
+</body>
+
+</html>

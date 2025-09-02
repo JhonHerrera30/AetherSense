@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>Device Details</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+	<!-- CSS per LTRAD -->
+	<link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/updateDeviceLtrad.css}"/> 
+
+	<!-- CSS per progetto FIRE -->
+	<link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/updateDeviceFire.css}" />
+
+
+	<!-- CSS per progetto VOLCANO -->
+	<link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/updateDeviceVolcano.css}" />
+	
+</head>
+
+<body>
+	<header id="navbar" class="navbar">
+		<div class="nav-left">
+		    <h1><a th:if="${project.id == 1}" th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link">L-TRAD</a></h1>
+			<h1><a th:if="${project.id == 51}" th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link">FIRE</a></h1>
+			<h1><a th:if="${project.id == 101}" th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link">VOLCANO</a></h1>
+
+		</div>
+			<div class="nav-right">
+				<div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+					<button type="button" class="dropdown-toggle" id="userDropdown">
+						Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+						<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+							height="16" fill="white">
+							<path d="M7 10l5 5 5-5z" />
+						</svg>
+					</button>
+					<div class="dropdown-menu" id="userDropdownMenu">
+						<form th:action="@{/logout}" method="post" th:csrf="true">
+							<button type="submit" class="dropdown-logout">Logout</button>
+						</form>
+					</div>
+				</div>
+				<a href="/" class="home-button" title="Homepage">
+					<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+						<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+					</svg>
+				</a>
+			</div>
+			</div>
+		</header>
+
+    <div class="main-layout">
+        <div class="device-details-container">
+			<div class="device-header">
+					<h1>Device Info</h1>
+				    <a th:href="@{'/admin/group/' + ${project.id}}" class="btn-back">← Back to Map</a>
+			</div>
+            <!-- Informazioni generali -->
+            <table>
+                <tr>
+                    <th>MAC Address</th>
+                    <td th:text="${device.macAddress}"></td>
+                </tr>
+                <tr>
+                    <th>Owner Email</th>
+                    <td th:text="${device.emailOwner}"></td>
+                </tr>
+                <tr>
+                    <th>DevEUI</th>
+                    <td th:text="${device.devEui} ?: 'N/A'"></td>
+                </tr>
+                <tr>
+                    <th>Group</th>
+                    <td th:text="${device.group?.name} ?: 'N/A'"></td>
+                </tr>
+                <tr>
+                    <th>Type</th>
+                    <td th:text="${device.tod.name}"></td>
+                </tr>
+            </table>
+
+            <!-- Specifiche del tipo -->
+			<h2 style="margin-top: 2rem;">Specifications</h2>
+			<table>
+			    <thead>
+			        <tr>
+			            <th>Component</th>
+			            <th>Measurement</th>
+			            <th>Unit</th>
+			        </tr>
+			    </thead>
+			    <tbody>
+			        <tr th:each="spec : ${device.tod.specs}">
+			            <td th:text="${spec.component}">Component</td>
+			            <td th:text="${spec.measurement}">Measurement</td>
+			            <td th:text="${spec.unitOfMeasurement}">Unit</td>
+			        </tr>
+			    </tbody>
+			</table>
+
+            <!-- Form di modifica -->
+			<div class="card-edit-device">
+			    <h2>Edit Device</h2>
+				<span class="success" th:if="${success}" th:text="${success}"></span>
+			    <form th:action="@{'/updateDevice/' + ${project.id} + '/' + ${device.macAddress}}" method="post" class="device-form">
+			        
+					<label for="name">Name:</label>
+					<span class="errorform" th:if="${error}" th:text="${error}"></span>
+			        <input type="text" id="name" name="name" th:value="${device.name}" required />
+
+			        <label for="latitude">Latitude:</label>
+			        <input type="number" step="any" id="latitude" name="latitude" th:value="${device.latitude}" required />
+
+			        <label for="longitude">Longitude:</label>
+			        <input type="number" step="any" id="longitude" name="longitude" th:value="${device.longitude}" required />
+
+			        <button type="submit" class="btn-save">Save Changes</button>
+			    </form>
+			</div>
+        </div>
+    </div>
+	
+	<script>
+			document.addEventListener("DOMContentLoaded", function () {
+				const toggle = document.getElementById("userDropdown");
+				const menu = document.getElementById("userDropdownMenu");
+
+				toggle.addEventListener("click", function (e) {
+					e.stopPropagation();
+					menu.classList.toggle("show");
+				});
+
+				document.addEventListener("click", function (e) {
+					if (!toggle.contains(e.target)) {
+						menu.classList.remove("show");
+					}
+				});
+			});
+		</script>
+</body>
+</html>

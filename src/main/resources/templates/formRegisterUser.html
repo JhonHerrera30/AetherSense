@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Login</title>
+	<link rel="stylesheet" th:href="@{/css/formRegisterUser.css}">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<div id="navbar">
+		<h1>AetherSense</h1>
+		<a class="home-button" href="/" title="Home">
+			<svg class="icon-home" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+				<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+			</svg>
+		</a>
+	</div>
+
+	<div class="register-wrapper">
+		<form class="register-form" th:action="@{/register}" method="post">
+			<h2>New User Registration</h2>
+			<div th:object="${user}">
+				<label>Name</label>
+				<span class="errorform" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+				<input type="text" th:field="*{name}" />
+
+				<label>Surname</label>
+				<span class="errorform" th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></span>
+				<input type="text" th:field="*{surname}" />
+
+				<label>Date of Birth</label>
+				<span class="errorform" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></span>
+				<input type="date" th:field="*{dateOfBirth}" />
+
+				<label>Phone Number</label>
+				<span class="errorform" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></span>
+				<input type="text" th:field="*{phoneNumber}" />
+			</div>
+			<!-- Altri campi restano uguali, ma usa *{} anzichÃ© ${} per i th:field -->
+			<div th:object="${credentials}">
+
+				<label>Email</label>
+				<span class="errorform" th:if="${emailAlreadyInUse}" th:text="${emailAlreadyInUse}"></span>
+				<span class="errorform" th:if="${noDevicesYet}" th:text="${noDevicesYet}"></span>
+				<span class="errorform" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+				<input type="email" th:field="*{email}" />
+
+				<label>Username</label>
+				<span class="errorform" th:if="${usernameAlreadyInUse}" th:text="${usernameAlreadyInUse}"></span>
+				<span class="errorform" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+				<input type="text" th:field="*{username}" />
+
+				<label>Password</label>
+				<span class="errorform" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+				<input type="password" th:field="*{password}" />
+
+				<label>Confirm Password</label>
+				<span class="errorform" th:if="${passwordMismatchError}" th:text="${passwordMismatchError}"></span>
+				<input type="password" name="confirmPassword" />
+
+				<div>
+					<label for="projectId">Project</label>
+					<select class="project" name="projectId" id="projectId">
+					<option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"
+						th:selected="${p.id == projectId}">
+					</option>
+					</select>
+				</div>
+			</div>
+			<div class="registerButton">
+				<button type="submit">Sign Up</button>
+			</div>
+
+			<a th:href="@{/login}">Already have an account?</a>
+		</form>
+	</div>
+</body>
+
+</html>

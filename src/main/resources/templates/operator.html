@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+	<title th:text="${project.name} + ' – Operator Map'">Operator Map</title>
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+
+	<!-- CSS per LTRAD -->
+	<link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/ltradOperator.css}" />
+	<!-- CSS per FIRE -->
+	<link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/fireOperator.css}" />
+	<!-- CSS per VOLCANO -->
+	<link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/volcanoOperator.css}" />
+
+	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+</head>
+
+<body>
+	<header id="navbar" class="navbar">
+		<div class="nav-left">
+			<h1>
+				<a th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link"
+					th:text="${project.name}">PROJECT</a>
+			</h1>
+		</div>
+		<div class="nav-right">
+			<div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+				<button type="button" class="dropdown-toggle" id="userDropdown">
+					Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+					<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+						height="16" fill="white">
+						<path d="M7 10l5 5 5-5z" />
+					</svg>
+				</button>
+				<div class="dropdown-menu" id="userDropdownMenu">
+					<form th:action="@{/logout}" method="post" th:csrf="true">
+						<button type="submit" class="dropdown-logout">Logout</button>
+					</form>
+				</div>
+			</div>
+			<!--a href="/" class="home-button" title="Homepage"-->
+			<form th:action="@{/logout}" method="post" th:csrf="true">
+				<button type="submit" class="home-button" title="Logout and back to home">
+					<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+						<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+					</svg>
+				</button>
+			</form>
+			<!--/a-->
+		</div>
+	</header>
+
+	<div class="main-layout">
+		<!-- Colonna sinistra -->
+		<div class="group-panel">
+			<h1 class="group-container">Select a group to focus the map</h1>
+			<div class="title-with-search">
+				<h2 class="section-title">Groups</h2>
+				<form th:action="@{'/operator/' + ${project.id}}" method="get" class="search-form">
+					<input type="text" name="groupName" placeholder="Search..." th:value="${param.groupName}" />
+					<button type="submit" title="Search">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 24 24">
+							<circle cx="11" cy="11" r="8" stroke="white" stroke-width="2" fill="none" />
+							<line x1="17" y1="17" x2="22" y2="22" stroke="white" stroke-width="2" />
+						</svg>
+					</button>
+				</form>
+			</div>
+			<div id="groups-wrapper">
+				<div th:if="${groups.isEmpty()}">No groups available</div>
+				<ul>
+					<li th:each="group : ${groups}">
+						<details class="groups">
+							<summary th:text="${group.name}" th:attr="data-group-name=${group.name}">Group</summary>
+							<ul class="device-list"></ul>
+						</details>
+					</li>
+				</ul>
+			</div>
+
+			<div class="title-with-search">
+				<h2>Your Devices on Map</h2>
+				<form th:action="@{'/operator/' + ${project.id}}" method="get" class="search-form">
+					<input type="text" name="deviceInfo" placeholder="Search by name or MAC..."
+						th:value="${param.deviceInfo}" />
+					<button type="submit" title="Search">
+						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 24 24">
+							<circle cx="11" cy="11" r="8" stroke="white" stroke-width="2" fill="none" />
+							<line x1="17" y1="17" x2="22" y2="22" stroke="white" stroke-width="2" />
+						</svg>
+					</button>
+				</form>
+			</div>
+
+			<div id="user-devices-wrapper">
+				<div th:if="${devices.isEmpty()}">No positioned devices</div>
+				<table>
+					<thead>
+						<tr>
+							<th scope="col">Name</th>
+							<th scope="col">Mac Address</th>
+							<th scope="col">Type</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="device : ${devices}">
+							<td th:text="${device.name}">Name</td>
+							<td th:text="${device.macAddress}">Mac</td>
+							<td th:text="${device.tod}">Type</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<!-- Mappa -->
+		<div id="map"></div>
+	</div>
+
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+		let initialDevices = [[${devices}]];
+		/*]]>*/
+
+		let map = L.map('map').setView([41.89, 12.48], 12);
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			attribution: '&copy; OpenStreetMap contributors'
+		}).addTo(map);
+
+		let markerByMac = new Map();
+		let allLatLngs = [];
+
+		initialDevices.forEach(function (d) {
+			const latlng = [d.latitude, d.longitude];
+			allLatLngs.push(latlng);
+			const marker = L.marker(latlng).addTo(map);
+			const popupContent = "Device: " + d.name + "<br>" +
+				"MacAddress: " + d.macAddress + "<br>" +
+				"Latitude: " + d.latitude + "<br>" +
+				"Longitude: " + d.longitude;
+			marker.bindPopup(popupContent);
+			marker.on("mouseover", function () {this.openPopup();});
+			marker.on("mouseout", function () {this.closePopup();});
+			markerByMac.set(d.macAddress, marker);
+		});
+
+		if (allLatLngs.length > 0) {
+			const bounds = L.latLngBounds(allLatLngs);
+			map.fitBounds(bounds, {padding: [30, 30]});
+		}
+
+		function fetchAndDisplayDevices(groupName) {
+			fetch('/api/groups/name/' + encodeURIComponent(groupName) + '/devices')
+				.then(response => response.json())
+				.then(devices => {
+					if (devices.length > 0) {
+						const bounds = L.latLngBounds(devices.map(d => [d.latitude, d.longitude]));
+						map.fitBounds(bounds, {padding: [20, 20]});
+					}
+					document.querySelectorAll(`summary[data-group-name="${groupName}"]`).forEach(summary => {
+						const details = summary.parentElement;
+						const ul = details.querySelector('.device-list');
+						ul.innerHTML = '';
+						devices.forEach(device => {
+							const li = document.createElement('li');
+							li.textContent = `${device.name} (${device.macAddress})`;
+							ul.appendChild(li);
+						});
+					});
+				});
+		}
+
+		document.querySelectorAll("summary[data-group-name]").forEach(summary => {
+			summary.addEventListener("click", () => {
+				const groupName = summary.getAttribute("data-group-name");
+				fetchAndDisplayDevices(groupName);
+			});
+		});
+	</script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const toggle = document.getElementById("userDropdown");
+			const menu = document.getElementById("userDropdownMenu");
+			toggle.addEventListener("click", function (e) {
+				e.stopPropagation(); menu.classList.toggle("show");
+			});
+			document.addEventListener("click", function (e) {
+				if (!toggle.contains(e.target)) {menu.classList.remove("show");}
+			});
+		});
+	</script>
+
+</body>
+
+</html>

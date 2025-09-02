@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Registration Successful</title>
+	<link rel="stylesheet" th:href="@{/css/registrationSuccessful.css}">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<div class="container section">
+		<div class="success-form">
+			<h1>Registration Successful</h1>
+			<p class="success-message">Your account has been created successfully.</p>
+			<div class="loginButton">
+				<a th:href="@{'/access?projectId=' + ${projectId}}">
+					<button type="button">Go to Login</button>
+				</a>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>
