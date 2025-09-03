@@ -128,83 +128,69 @@
 				</form>
 			</div>
 
-			<div id="user-devices-wrapper">
-				<div th:if="${devices.isEmpty()}">You don't have any devices</div>
-				<table>
-					<thead>
-						<tr>
-							<th scope="col">Name</th>
-							<th scope="col">Mac Address</th>
-							<th scope="col">Type of device</th>
-							<th scope="col">Operator</th>
-							<th scope="col">Actions</th>
+                          <div id="user-devices-wrapper">
+                                  <div th:if="${devices.isEmpty()}">You don't have any devices</div>
+                                  <table>
+                                          <thead>
+                                                  <tr>
+                                                          <th scope="col">Name</th>
+                                                          <th scope="col">Mac Address</th>
+                                                          <th scope="col">Type of device</th>
+                                                          <th scope="col">Operator</th>
+                                                          <th scope="col">Actions</th>
 
-						</tr>
-					</thead>
-					<tbody>
-						<tr th:each="device : ${devices}">
-							<td th:text="${device.name}">Name</td>
-							<td th:text="${device.macAddress}">Mac Address</td>
-							<td th:text="${device.tod}">Mac Address</td>
-							<td>
-								<span th:if="${device.operator != null}" th:text="${device.operator}">Operator</span>
+                                                  </tr>
+                                          </thead>
+                                          <tbody>
+                                                  <tr th:each="device : ${devices}">
+                                                          <td th:text="${device.name}">Name</td>
+                                                          <td th:text="${device.macAddress}">Mac Address</td>
+                                                          <td th:text="${device.tod}">Mac Address</td>
+                                                          <td>
+                                                                  <span th:if="${device.operator != null}" th:text="${device.operator}">Operator</span>
+                                                          </td>
+                                                          <td>
+                                                                  <!-- Edit (icona a matita) -->
+                                                                  <a th:href="@{'/device/' + ${project.id} + '/' + ${device.macAddress}}"
+                                                                          class="btn-action btn-edit btn-icon" title="Edit Device" aria-label="Edit device">
+                                                                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"
+                                                                                  aria-hidden="true">
+                                                                                  <path
+                                                                                          d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0L15.13 4.12l3.75 3.75 1.83-1.83z" />
+                                                                          </svg>
+                                                                  </a>
 
-								<!-- Quando non c'è operator, mostra il bottone Assign -->
-								<button type="button" th:if="${device.operator == null}"
-								  class="btn-action btn-assign btn-icon" title="Assign operator"
-								  th:attr="data-mac=${device.macAddress}" data-open-assign>
+                                                                  <!-- Remove operator (solo se c'è già un operator) -->
+                                                                  <button th:if="${device.operator != null}"
+                                                                          class="btn-action btn-danger btn-icon"
+                                                                          title="Remove operator" aria-label="Remove operator"
+                                                                          th:attr="data-mac=${device.macAddress}"
+                                                                          data-remove-operator>
+                                                                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                                                                              <path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1z" />
+                                                                              <path d="M9 9h6v10H9z" opacity=".35" />
+                                                                          </svg>
+                                                                  </button>
+                                                          </td>
 
-								  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-								       width="20" height="20" stroke-linecap="round" stroke-linejoin="round">
-								    <!-- utente -->
-								    <circle cx="8" cy="7" r="4"/>
-								    <path d="M2 21v-2a7 7 0 0 1 12 0v2"/>
-								    <!-- + più grosso e leggermente spostato a destra -->
-								    <g class="plus" transform="translate(1,0)">
-								      <path d="M19 8v6"/>
-								      <path d="M16 11h6"/>
-								    </g>
-								  </svg>
-
-								  <span class="sr-only">Assign operator</span>
-								</button>
-							</td>
-							<td>
-								<!-- Edit (icona a matita) -->
-								<a th:href="@{'/device/' + ${project.id} + '/' + ${device.macAddress}}"
-									class="btn-action btn-edit btn-icon" title="Edit Device" aria-label="Edit device">
-									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18"
-										aria-hidden="true">
-										<path
-											d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0L15.13 4.12l3.75 3.75 1.83-1.83z" />
-									</svg>
-								</a>
-
-								<!-- Delete operator (solo se c'è già un operator) -->
-								<form th:if="${device.operator != null}"
-								      th:action="@{/admin/removeOperator/{macAddress}/{projectId}(
-								                     macAddress=${device.macAddress},
-								                     projectId=${project.id})}"
-								      method="post" class="inline-form">
-
-								    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-
-								    <button type="submit" class="btn-action btn-danger btn-icon"
-								            title="Delete operator" aria-label="Delete operator">
-								        <!-- svg invariato -->
-								        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-								            <path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1z" />
-								            <path d="M9 9h6v10H9z" opacity=".35" />
-								        </svg>
-								    </button>
-								</form>
-							</td>
-
-						</tr>
-					</tbody>
-				</table>
-			</div>
-		</div>
+                                                  </tr>
+                                          </tbody>
+                                  </table>
+                          </div>
+                          <div th:if="${user.admin != null}" id="operator-table-wrapper">
+                                  <h2>Operators</h2>
+                                  <table id="operators-table">
+                                          <thead>
+                                                  <tr>
+                                                          <th scope="col">Username</th>
+                                                          <th scope="col">Email</th>
+                                                          <th scope="col">Authorized</th>
+                                                  </tr>
+                                          </thead>
+                                          <tbody></tbody>
+                                  </table>
+                          </div>
+                  </div>
 
 		<!-- Mappa a destra -->
 		<div id="map"></div>
@@ -307,12 +293,15 @@
 		document.addEventListener('DOMContentLoaded', function () {
 			const PROJECT_ID = /*[[${project.id}]]*/ 0;
 
-			const LIST_OP_URL = `/api/projects/${PROJECT_ID}/operators`;
-			const ASSIGN_OP_URL = ({mac, opId}) =>
-				`/admin/selectOperator/${encodeURIComponent(mac)}/${opId}/${PROJECT_ID}`;
-			// oppure la tua variante opId=0:
-			const REMOVE_OP_URL = ({mac}) =>
-			  `/admin/removeOperator/${encodeURIComponent(mac)}/${PROJECT_ID}`;
+                        const LIST_OP_URL = `/api/projects/${PROJECT_ID}/operators`;
+                        const ASSIGN_OP_URL = ({mac, opId}) =>
+                                `/admin/selectOperator/${encodeURIComponent(mac)}/${opId}/${PROJECT_ID}`;
+                        // oppure la tua variante opId=0:
+                        const REMOVE_OP_URL = ({mac}) =>
+                          `/admin/removeOperator/${encodeURIComponent(mac)}/${PROJECT_ID}`;
+                        const ADMIN_ID = /*[[${user.admin != null ? user.admin.id : 0}]]*/ 0;
+                        const AUTH_OP_URL = (opId) => `/api/admin/${ADMIN_ID}/authorize/${opId}`;
+                        const AUTHORIZED_OPS = /*[[${authorizedOperators != null ? authorizedOperators.![id] : {}}]]*/ [];
 
 			const modal = document.getElementById('assignOperatorModal');
 			const form = document.getElementById('assignOperatorForm');
@@ -355,18 +344,18 @@
 			}
 
 			// === Event delegation per click su pulsanti nella tabella ===
-			document.addEventListener('click', function (e) {
-				const assignBtn = e.target.closest('[data-open-assign]');
-				if (assignBtn) {
-					e.preventDefault();
-					handleOpenAssign(assignBtn.getAttribute('data-mac'));
-					return;
-				}
-				const removeBtn = e.target.closest('[data-remove-operator]');
-				if (removeBtn) {
-					e.preventDefault();
-					const mac = removeBtn.getAttribute('data-mac');
-					if (!confirm('Remove operator from this device?')) return;
+                        document.addEventListener('click', function (e) {
+                                const assignBtn = e.target.closest('[data-open-assign]');
+                                if (assignBtn) {
+                                        e.preventDefault();
+                                        handleOpenAssign(assignBtn.getAttribute('data-mac'));
+                                        return;
+                                }
+                                const removeBtn = e.target.closest('[data-remove-operator]');
+                                if (removeBtn) {
+                                        e.preventDefault();
+                                        const mac = removeBtn.getAttribute('data-mac');
+                                        if (!confirm('Remove operator from this device?')) return;
 
 					// POST via form per includere CSRF
 					const f = document.createElement('form');
@@ -378,16 +367,57 @@
 						t.type = 'hidden'; t.name = '_csrf'; t.value = csrf.value;
 						f.appendChild(t);
 					}
-					document.body.appendChild(f);
-					f.submit();
-				}
-			});
+                                        document.body.appendChild(f);
+                                        f.submit();
+                                }
+                        });
 
-			// submit Assign
-			form.addEventListener('submit', function (e) {
-				e.preventDefault();
-				const opId = select.value;
-				if (!currentMac || !opId) return;
+                        async function renderOperators() {
+                                const table = document.getElementById('operators-table');
+                                if (!table) return;
+                                try {
+                                        const res = await fetch(LIST_OP_URL, {headers: {'Accept': 'application/json'}});
+                                        if (!res.ok) throw new Error('load operators failed');
+                                        const ops = await res.json();
+                                        const tbody = table.querySelector('tbody');
+                                        tbody.innerHTML = '';
+                                        ops.forEach(o => {
+                                                const tr = document.createElement('tr');
+                                                const nameTd = document.createElement('td');
+                                                nameTd.textContent = o.visibleUsername || '';
+                                                const emailTd = document.createElement('td');
+                                                emailTd.textContent = o.email;
+                                                const authTd = document.createElement('td');
+                                                const cb = document.createElement('input');
+                                                cb.type = 'checkbox';
+                                                cb.checked = AUTHORIZED_OPS.includes(o.id);
+                                                cb.addEventListener('change', () => toggleAuthorization(o.id, cb.checked));
+                                                authTd.appendChild(cb);
+                                                tr.appendChild(nameTd);
+                                                tr.appendChild(emailTd);
+                                                tr.appendChild(authTd);
+                                                tbody.appendChild(tr);
+                                        });
+                                } catch (err) {
+                                        console.error(err);
+                                }
+                        }
+
+                        function toggleAuthorization(opId, enable) {
+                                const csrf = document.querySelector('input[name="_csrf"]');
+                                fetch(AUTH_OP_URL(opId), {
+                                        method: enable ? 'POST' : 'DELETE',
+                                        headers: csrf ? {'X-CSRF-TOKEN': csrf.value} : {}
+                                }).catch(err => console.error(err));
+                        }
+
+                        renderOperators();
+
+                        // submit Assign
+                        form.addEventListener('submit', function (e) {
+                                e.preventDefault();
+                                const opId = select.value;
+                                if (!currentMac || !opId) return;
 
 				const f = document.createElement('form');
 				f.method = 'post';
