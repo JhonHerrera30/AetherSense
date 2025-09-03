@@ -304,13 +304,16 @@ public class DeviceController {
 	@PostMapping("/admin/removeOperator/{macAddress}/{projectId}")
 	public String removeOperatorfromDevice(@PathVariable ("projectId") Long projectId, @PathVariable ("macAddress") String macAddress, 
 										 RedirectAttributes ra) {
-		Device d = deviceService.findByMacAddress(macAddress);
-		
-		d.setOperator(null);
-		deviceService.save(d);
-		ra.addFlashAttribute("successMessage", "Operator removed.");
-		return "redirect:/admin/group/"+projectId;
-	}
+                Device d = deviceService.findByMacAddress(macAddress);
+
+                d.setOperator(null);
+                d.setLatitude(null);
+                d.setLongitude(null);
+                d.setActivated(false);
+                deviceService.save(d);
+                ra.addFlashAttribute("successMessage", "Operator removed.");
+                return "redirect:/admin/group/"+projectId;
+        }
 	
 	public void loadDeviceDTO(List<Device> devices, Model model) {
 		List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getName(), d.getMacAddress(),
