@@ -10,9 +10,6 @@ insert into app_user(id, name, surname, date_of_birth, phone_number)values(2, 'F
 insert into app_user(id, name, surname, date_of_birth, phone_number)values(3, 'Luca', 'Bussi', '2003-09-17', '3315988152');
 insert into app_user(id, name, surname, date_of_birth, phone_number)values(4, 'Jhon', 'Herrera', '2004-01-30', '3887258823');
 
-insert into app_user(id, name, surname, date_of_birth, phone_number)values(5, 'Flaminia', 'Balduini', '2003-10-16', '3737397589');
-insert into app_user(id, name, surname, date_of_birth, phone_number)values(6, 'Luca', 'Bussi', '2003-09-17', '3315988152');
-insert into app_user(id, name, surname, date_of_birth, phone_number)values(7, 'Jhon', 'Herrera', '2004-01-30', '3887258823');
 
 -- 3. Credenziali (devono esistere gli utenti e il progetto)
 insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(1, 1, 1, 'fbalduini@icloud.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'SUPERADMIN', 'mimi16|SUPERADMIN', 'mimi16');
@@ -26,9 +23,12 @@ insert into admin(id, credentials_id) values (1, 2);   -- LTRAD_ADMIN
 insert into admin(id, credentials_id) values (2, 3);   -- FIRE_ADMIN
 insert into admin(id, credentials_id) values (3, 4);   -- VOLCANO_ADMIN
 
-insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(5, 1, 5, 'flaminia.balduini@fastwebnet.it','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'LTRAD_OPERATOR', 'Flaminia|LTRAD', 'Flaminia');
-insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(6, 51, 6, 'lucabussi03@gmail.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'FIRE_OPERATOR', 'Luca|FIRE', 'Luca');
-insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(7, 101, 7, 'jhonherrera30@icloud.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'VOLCANO_OPERATOR', 'Jhon|VOLCANO', 'Jhon');
+insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(5, 1, null, 'flaminia.balduini@fastwebnet.it','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'LTRAD_OPERATOR', 'Flaminia|LTRAD', 'Flaminia');
+insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(6, 51, null, 'lucabussi03@gmail.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'FIRE_OPERATOR', 'Luca|FIRE', 'Luca');
+insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(7, 101, null, 'jhonherrera30@icloud.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'VOLCANO_OPERATOR', 'Jhon|VOLCANO', 'Jhon');
+insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(8, 1, null, 'giulia.rossi@example.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'LTRAD_OPERATOR', 'Giulia|LTRAD', 'Giulia');
+insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(9, 51, null, 'marco.verdi@example.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'FIRE_OPERATOR', 'Marco|FIRE', 'Marco');
+insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(10, 101, null, 'carlos.gomez@example.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'VOLCANO_OPERATOR', 'Carlos|VOLCANO', 'Carlos');
 
 -- 4. Gruppi (devono esistere le credentials, e il progetto)
 insert into app_group(credentials_id, id, project_id, name)values (2, 1, 1, 'Roma');
