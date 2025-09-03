@@ -1,5 +1,6 @@
 package it.sensorplatform.controller.rest;
 
+import it.sensorplatform.model.Admin;
 import it.sensorplatform.model.Credentials;
 import it.sensorplatform.model.Project;
 import it.sensorplatform.service.CredentialsService;
@@ -17,21 +18,34 @@ public class OperatorControllerRest {
     @Autowired private ProjectService projectService;
 
     // Semplice DTO per il browser (non è un'entità!)
-    public record OperatorDTO(Long id, String visibleUsername, String email) {}
+    public record OperatorDTO(Long id, String visibleUsername, String email, boolean authorized) {}
 
     @GetMapping("/{projectId}/operators")
     public List<OperatorDTO> listOperators(@PathVariable Long projectId) {
         Project p = projectService.getProjectById(projectId);
 
-        String role;
-        if ("LTRAD".equals(p.getName()))       role = Credentials.LTRAD_OPERATOR_ROLE;
-        else if ("FIRE".equals(p.getName()))   role = Credentials.FIRE_OPERATOR_ROLE;
-        else if ("VOLCANO".equals(p.getName()))role = Credentials.VOLCANO_OPERATOR_ROLE;
+        String adminRole;
+        if ("LTRAD".equals(p.getName()))       adminRole = Credentials.LTRAD_ADMIN_ROLE;
+        else if ("FIRE".equals(p.getName()))   adminRole = Credentials.FIRE_ADMIN_ROLE;
+        else if ("VOLCANO".equals(p.getName()))adminRole = Credentials.VOLCANO_ADMIN_ROLE;
         else throw new IllegalArgumentException("Unknown project: " + p.getName());
 
-        return credentialsService.findByRoleAndProjectId(role, projectId)
+        Credentials adminCredentials = credentialsService.findByRoleAndProjectId(adminRole, projectId)
                 .stream()
-                .map(c -> new OperatorDTO(c.getId(), c.getVisibleUsername(), c.getEmail()))
+                .findFirst()
+                .orElseThrow();
+        Admin admin = adminCredentials.getAdmin();
+
+        List<Credentials> authorized = admin.getAuthorizedOperators() != null ?
+                admin.getAuthorizedOperators() : List.of();
+
+        return (admin.getOperators() != null ? admin.getOperators() : List.of())
+                .stream()
+                .map(c -> new OperatorDTO(
+                        c.getId(),
+                        c.getVisibleUsername(),
+                        c.getEmail(),
+                        authorized.contains(c)))
                 .toList();
     }
 }
