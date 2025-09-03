@@ -30,6 +30,14 @@ insert into credentials(id, project_id, user_id, email, password, role, username
 insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(9, 51, null, 'marco.verdi@example.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'FIRE_OPERATOR', 'Marco|FIRE', 'Marco');
 insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(10, 101, null, 'carlos.gomez@example.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'VOLCANO_OPERATOR', 'Carlos|VOLCANO', 'Carlos');
 
+-- 3c. Associazione operatori-admin (employer)
+update credentials set employer_id = 1 where email = 'flaminia.balduini@fastwebnet.it';
+update credentials set employer_id = 1 where email = 'giulia.rossi@example.com';
+update credentials set employer_id = 2 where email = 'lucabussi03@gmail.com';
+update credentials set employer_id = 2 where email = 'marco.verdi@example.com';
+update credentials set employer_id = 3 where email = 'jhonherrera30@icloud.com';
+update credentials set employer_id = 3 where email = 'carlos.gomez@example.com';
+
 -- 4. Gruppi (devono esistere le credentials, e il progetto)
 insert into app_group(credentials_id, id, project_id, name)values (2, 1, 1, 'Roma');
 insert into app_group(credentials_id, id, project_id, name)values (2, 2, 1, 'Milano');
