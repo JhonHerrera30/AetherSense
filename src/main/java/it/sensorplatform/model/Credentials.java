@@ -11,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
@@ -51,17 +52,39 @@ public class Credentials {
 	@Column(nullable = true)
 	private String visibleUsername;
 	
-	@OneToMany
-	private List<Device> device;
+        @OneToMany
+        private List<Device> device;
+
+        @OneToOne(mappedBy = "credentials")
+        private Admin admin;
+
+        @ManyToOne
+        private Admin employer;
 	
 	
 	public List<Device> getDevice() {
 		return device;
 	}
 
-	public void setDevice(List<Device> device) {
-		this.device = device;
-	}
+        public void setDevice(List<Device> device) {
+                this.device = device;
+        }
+
+        public Admin getAdmin() {
+                return admin;
+        }
+
+        public void setAdmin(Admin admin) {
+                this.admin = admin;
+        }
+
+        public Admin getEmployer() {
+                return employer;
+        }
+
+        public void setEmployer(Admin employer) {
+                this.employer = employer;
+        }
 
 	public User getUser() {
 		return user;
