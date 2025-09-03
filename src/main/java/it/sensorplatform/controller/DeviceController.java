@@ -1,10 +1,12 @@
 package it.sensorplatform.controller;
 
 import it.sensorplatform.dto.DeviceDTO;
+import it.sensorplatform.model.Admin;
 import it.sensorplatform.model.Credentials;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.Project;
 import it.sensorplatform.model.User;
+import it.sensorplatform.service.AdminService;
 import it.sensorplatform.service.CredentialsService;
 import it.sensorplatform.service.DeviceService;
 import it.sensorplatform.service.ProjectService;
@@ -36,8 +38,11 @@ public class DeviceController {
 	@Autowired
 	private ProjectService projectService;
 
-	@Autowired
-	private CredentialsService credentialsService;
+        @Autowired
+        private CredentialsService credentialsService;
+
+        @Autowired
+        private AdminService adminService;
 
 	@GetMapping("/superadmin/manageProjectDevices/{projectId}")
 	public String manageProjectDevices(@PathVariable("projectId") Long projectId,
@@ -230,12 +235,13 @@ public class DeviceController {
 		boolean error = false;
 		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		Credentials userCredentials = credentialsService.getCredentials(userDetails.getUsername());
-		model.addAttribute("user", userCredentials);
-		model.addAttribute("projectId", projectId);
-		Project project = projectService.getProjectById(projectId);
-		String email = credentials.getEmail();
-		String username = credentials.getUsername();
-		String projectName = project.getName();
+                model.addAttribute("user", userCredentials);
+                model.addAttribute("projectId", projectId);
+                Project project = projectService.getProjectById(projectId);
+                Admin admin = adminService.getAdmin(userCredentials.getAdmin().getId());
+                String email = credentials.getEmail();
+                String username = credentials.getUsername();
+                String projectName = project.getName();
 		credentials.setVisibleUsername(username);
 		username = username + "|" + projectName;
 		
@@ -266,12 +272,15 @@ public class DeviceController {
 			if (project.getName().equals("FIRE")) {
 				credentials.setRole(Credentials.FIRE_OPERATOR_ROLE);
 			}
-			if (project.getName().equals("VOLCANO")) {
-				credentials.setRole(Credentials.VOLCANO_OPERATOR_ROLE);
-			}
-			credentialsService.saveCredentials(credentials);
-			model.addAttribute("project", project);
-			model.addAttribute("successMessage", "New operator created succesfully");
+                        if (project.getName().equals("VOLCANO")) {
+                                credentials.setRole(Credentials.VOLCANO_OPERATOR_ROLE);
+                        }
+                        credentials.setEmployer(admin);
+                        Credentials savedCredentials = credentialsService.saveCredentials(credentials);
+                        admin.getOperators().add(savedCredentials);
+                        adminService.saveAdmin(admin);
+                        model.addAttribute("project", project);
+                        model.addAttribute("successMessage", "New operator created succesfully");
 
 			return "redirect:/admin/group/" + projectId;
 		}
