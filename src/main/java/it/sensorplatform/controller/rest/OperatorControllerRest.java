@@ -39,7 +39,7 @@ public class OperatorControllerRest {
         List<Credentials> authorized = admin.getAuthorizedOperators() != null ?
                 admin.getAuthorizedOperators() : List.of();
 
-        return (admin.getOperators() != null ? admin.getOperators() : List.of())
+        return (admin.getOperators() != null ? admin.getOperators() : List.<Credentials>of())
                 .stream()
                 .map(c -> new OperatorDTO(
                         c.getId(),
