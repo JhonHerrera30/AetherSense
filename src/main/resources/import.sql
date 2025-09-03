@@ -21,6 +21,11 @@ insert into credentials(id, project_id, user_id, email, password, role, username
 insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(3, 51, 3, 'luca.bussi@outlook.it','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'FIRE_ADMIN', 'kuca|FIRE', 'kuca');
 insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(4, 101, 4, 'jhon30.herrera@gmail.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'VOLCANO_ADMIN', 'jem|VOLCANO', 'jem');
 
+-- 3b. Associazione admin-credentials
+insert into admin(id, credentials_id) values (1, 2);   -- LTRAD_ADMIN
+insert into admin(id, credentials_id) values (2, 3);   -- FIRE_ADMIN
+insert into admin(id, credentials_id) values (3, 4);   -- VOLCANO_ADMIN
+
 insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(5, 1, 5, 'flaminia.balduini@fastwebnet.it','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'LTRAD_OPERATOR', 'Flaminia|LTRAD', 'Flaminia');
 insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(6, 51, 6, 'lucabussi03@gmail.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'FIRE_OPERATOR', 'Luca|FIRE', 'Luca');
 insert into credentials(id, project_id, user_id, email, password, role, username, visible_username)values(7, 101, 7, 'jhonherrera30@icloud.com','$2a$10$cHSpwVdP8S33zR6PHIfvs.g9TZl6QbhHX9KTayP/91cxVScdb/c.W', 'VOLCANO_OPERATOR', 'Jhon|VOLCANO', 'Jhon');
@@ -100,6 +105,7 @@ insert into type_of_device_specs(specs_id, type_of_device_id)values(14, 2)
 -- 6. Reset sequenze
 SELECT setval('app_user_seq', (SELECT MAX(id) FROM app_user));
 SELECT setval('credentials_seq', (SELECT MAX(id) FROM credentials));
+SELECT setval('admin_seq', (SELECT MAX(id) FROM admin));
 SELECT setval('app_group_seq', (SELECT MAX(id) FROM app_group));
 SELECT setval('device_seq', (SELECT MAX(id) FROM device));
 SELECT setval('type_of_device_seq', (SELECT MAX(id) FROM type_of_device));
