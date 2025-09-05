@@ -135,10 +135,11 @@ public class DeviceController {
 		return "superadmin/formUpdateDevice.html";
 	}
 
-	@PostMapping("/superadmin/updateDevice/{projectId}/{macAddress}")
-	public String adminUpdateDevice(@PathVariable("projectId") Long projectId,
-			@PathVariable("macAddress") String macAddress, @RequestParam String name, @RequestParam Double latitude,
-			@RequestParam Double longitude, RedirectAttributes redirectAttributes) {
+        @PostMapping("/superadmin/updateDevice/{projectId}/{macAddress}")
+        public String adminUpdateDevice(@PathVariable("projectId") Long projectId,
+                        @PathVariable("macAddress") String macAddress, @RequestParam String name,
+                        @RequestParam(required = false) Double latitude, @RequestParam(required = false) Double longitude,
+                        RedirectAttributes redirectAttributes) {
 
 		if (name == null || name.trim().isEmpty()) {
 			redirectAttributes.addFlashAttribute("error", "Device name is required.");
@@ -153,17 +154,24 @@ public class DeviceController {
 			return "redirect:/superadmin/manageProjectDevices/" + projectId;
 		}
 
-		// Aggiorna solo i campi modificabili
-		device.setName(name);
-		device.setLatitude(latitude);
-		device.setLongitude(longitude);
+                // Aggiorna solo i campi modificabili
+                device.setName(name);
+                if (latitude != null && longitude != null) {
+                        device.setLatitude(latitude);
+                        device.setLongitude(longitude);
+                        device.setStatus("activated");
+                } else {
+                        device.setLatitude(null);
+                        device.setLongitude(null);
+                        device.setStatus("deactivated");
+                }
 
-		// Salvataggio
-		deviceService.save(device);
+                // Salvataggio
+                deviceService.save(device);
 
-		redirectAttributes.addFlashAttribute("success", "Device updated successfully.");
-		return "redirect:/superadmin/manageProjectDevices/" + projectId;
-	}
+                redirectAttributes.addFlashAttribute("success", "Device updated successfully.");
+                return "redirect:/superadmin/manageProjectDevices/" + projectId;
+        }
 
 	@PostMapping("/superadmin/deleteDevice/{projectId}/{macAddress}")
 	public String deleteDevice(@PathVariable("projectId") Long projectId, @PathVariable("macAddress") String macAddress,
@@ -187,9 +195,10 @@ public class DeviceController {
 		return "updateDevice";
 	}
 
-	@PostMapping("/updateDevice/{projectId}/{macAddress}")
-	public String updateDevice(@PathVariable Long projectId, @PathVariable String macAddress, @RequestParam String name,
-			@RequestParam Double latitude, @RequestParam Double longitude, RedirectAttributes redirectAttributes) {
+        @PostMapping("/updateDevice/{projectId}/{macAddress}")
+        public String updateDevice(@PathVariable Long projectId, @PathVariable String macAddress, @RequestParam String name,
+                        @RequestParam(required = false) Double latitude, @RequestParam(required = false) Double longitude,
+                        RedirectAttributes redirectAttributes) {
 
 		if (name == null || name.trim().isEmpty()) {
 			redirectAttributes.addFlashAttribute("error", "Device name is required.");
@@ -204,17 +213,24 @@ public class DeviceController {
 			return "redirect:/device/" + projectId + "/" + macAddress;
 		}
 
-		// Aggiorna solo i campi modificabili
-		device.setName(name);
-		device.setLatitude(latitude);
-		device.setLongitude(longitude);
+                // Aggiorna solo i campi modificabili
+                device.setName(name);
+                if (latitude != null && longitude != null) {
+                        device.setLatitude(latitude);
+                        device.setLongitude(longitude);
+                        device.setStatus("activated");
+                } else {
+                        device.setLatitude(null);
+                        device.setLongitude(null);
+                        device.setStatus("deactivated");
+                }
 
-		// Salvataggio
-		deviceService.save(device);
+                // Salvataggio
+                deviceService.save(device);
 
-		redirectAttributes.addFlashAttribute("success", "Device updated successfully.");
-		return "redirect:/device/" + projectId + "/" + macAddress;
-	}
+                redirectAttributes.addFlashAttribute("success", "Device updated successfully.");
+                return "redirect:/device/" + projectId + "/" + macAddress;
+        }
 
 	@GetMapping("/admin/formRegisterOperator/{projectId}")
 	public String formRegisterOperator(@PathVariable Long projectId, Model model) {
