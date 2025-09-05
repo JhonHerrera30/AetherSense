@@ -25,13 +25,11 @@ public class Device {
 	@Column(nullable = false)
 	private String name;
 	
-	@NotNull
-	@Column(nullable = true)
-	private Double latitude;
-	
-	@NotNull
-	@Column(nullable = true)
-	private Double longitude;
+        @Column(nullable = true)
+        private Double latitude;
+
+        @Column(nullable = true)
+        private Double longitude;
 	
 	@Column(nullable = true, unique = true)
 	private String devEui;
