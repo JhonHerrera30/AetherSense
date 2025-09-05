@@ -16,10 +16,12 @@ import it.sensorplatform.model.Credentials;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.Group;
 import it.sensorplatform.model.Project;
+import it.sensorplatform.model.Admin;
 import it.sensorplatform.service.CredentialsService;
 import it.sensorplatform.service.DeviceService;
 import it.sensorplatform.service.GroupService;
 import it.sensorplatform.service.ProjectService;
+import it.sensorplatform.service.AdminService;
 
 
 import static it.sensorplatform.model.Credentials.SUPERADMIN_ROLE;
@@ -48,11 +50,14 @@ public class GroupController {
 	@Autowired
 	private CredentialsService credentialsService;
 
-	@Autowired
-	private ProjectService projectService;
+@Autowired
+private ProjectService projectService;
 
-	@Autowired
-	private DeviceService deviceService;
+@Autowired
+private DeviceService deviceService;
+
+@Autowired
+private AdminService adminService;
 
 	@GetMapping(value = "/admin/group/{id}")
 	public String group(@PathVariable("id") Long projectId,
@@ -67,16 +72,22 @@ public class GroupController {
 			model.addAttribute("fire", this.projectService.getProjectByName("FIRE"));
 			model.addAttribute("volcano", this.projectService.getProjectByName("VOLCANO"));
 			return "admin/adminHome";
-		} else {
-			Project project = this.projectService.getProjectById(projectId);
-			
-			//List<Credentials> operators = credentialsService.findOperatorsByProject(project);
-			//model.addAttribute("operators", operators);
-			
-			Set<Group> groups;
-			if (groupName != null && !groupName.isEmpty()) {
-				groups = groupService.findByNameStartingWithIgnoreCaseAndCredentials(groupName, credentials);
-			} else {
+                } else {
+                        Project project = this.projectService.getProjectById(projectId);
+
+                        //List<Credentials> operators = credentialsService.findOperatorsByProject(project);
+                        //model.addAttribute("operators", operators);
+
+                        Admin admin = credentials.getAdmin();
+                        if (admin != null) {
+                                admin = this.adminService.getAdmin(admin.getId());
+                                model.addAttribute("authorizedOperators", admin.getAuthorizedOperators());
+                        }
+
+                        Set<Group> groups;
+                        if (groupName != null && !groupName.isEmpty()) {
+                                groups = groupService.findByNameStartingWithIgnoreCaseAndCredentials(groupName, credentials);
+                        } else {
 				groups = groupService.findAllByCredentials(credentials);
 			}
 			Set<Device> devices = deviceService.findAllByEmailAndProjectId(credentials.getEmail(), projectId);
