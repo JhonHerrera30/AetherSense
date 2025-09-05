@@ -137,6 +137,7 @@
                                                           <th scope="col">Mac Address</th>
                                                           <th scope="col">Type of device</th>
                                                           <th scope="col">Operator</th>
+                                                          <th scope="col">Activated</th>
                                                           <th scope="col">Actions</th>
 
                                                   </tr>
@@ -149,6 +150,7 @@
                                                           <td>
                                                                   <span th:if="${device.operator != null}" th:text="${device.operator}">Operator</span>
                                                           </td>
+                                                          <td th:text="${device.activated}"></td>
                                                           <td>
                                                                   <!-- Edit (icona a matita) -->
                                                                   <a th:href="@{'/device/' + ${project.id} + '/' + ${device.macAddress}}"
