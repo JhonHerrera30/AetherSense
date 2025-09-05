@@ -9,21 +9,23 @@ public class DeviceDTO {
 	private String macAddress;
 	private Double longitude;
 	private Double latitude;
-	private String emailOwner;
-	private String devEui;
-	private String tod;
-	private String operator;
-	
-	public DeviceDTO(String name, String macAddress, String emailOwner, String devEui, Double longitude, Double latitude, String tod, String operator) {
-		this.name = name;
-		this.macAddress = macAddress;
-		this.emailOwner=emailOwner;
-		this.devEui=devEui;
-		this.longitude = longitude;
-		this.latitude = latitude;
-		this.tod=tod;
-		this.operator=operator;
-	}
+        private String emailOwner;
+        private String devEui;
+        private String tod;
+        private String operator;
+        private boolean activated;
+
+        public DeviceDTO(String name, String macAddress, String emailOwner, String devEui, Double longitude, Double latitude, String tod, String operator, boolean activated) {
+                this.name = name;
+                this.macAddress = macAddress;
+                this.emailOwner=emailOwner;
+                this.devEui=devEui;
+                this.longitude = longitude;
+                this.latitude = latitude;
+                this.tod=tod;
+                this.operator=operator;
+                this.activated = activated;
+        }
 
 	public String getEmailOwner() {
 		return emailOwner;
@@ -77,18 +79,26 @@ public class DeviceDTO {
 		return tod;
 	}
 
-	public void setTod(String tod) {
-		this.tod = tod;
-	}
-	
+        public void setTod(String tod) {
+                this.tod = tod;
+        }
 
-	public String getOperator() {
-		return operator;
-	}
 
-	public void setOperator(String operator) {
-		this.operator = operator;
-	}
+        public String getOperator() {
+                return operator;
+        }
+
+        public void setOperator(String operator) {
+                this.operator = operator;
+        }
+
+        public boolean isActivated() {
+                return activated;
+        }
+
+        public void setActivated(boolean activated) {
+                this.activated = activated;
+        }
 
 	@Override
 	public int hashCode() {

@@ -33,7 +33,7 @@ public class GroupControllerRest {
     public List<DeviceDTO> getDevicesByGroupId(@PathVariable("groupId") Long groupId) {
         List<Device> devices = groupService.findGroupById(groupId).getDevices();
         return devices.stream()
-                .map(d -> new DeviceDTO(d.getName(), d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername()))
+                .map(d -> new DeviceDTO(d.getName(), d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.isActivated()))
                 .collect(Collectors.toList());
     }
     
@@ -43,7 +43,7 @@ public class GroupControllerRest {
 		Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
         List<Device> devices = groupService.findGroupByNameAndCredentials(groupName, credentials).getDevices();
         return devices.stream()
-                .map(d -> new DeviceDTO(d.getName(), d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername()))
+                .map(d -> new DeviceDTO(d.getName(), d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.isActivated()))
                 .collect(Collectors.toList());
     }
     
@@ -62,7 +62,8 @@ public class GroupControllerRest {
                 device.getLongitude(),
                 device.getLatitude(),
                 device.getTod() != null ? device.getTod().getName() : null,
-                device.getVisibleUsername()
+                device.getVisibleUsername(),
+                device.isActivated()
             ))
             .toList();
     }

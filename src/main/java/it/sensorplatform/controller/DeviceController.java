@@ -316,10 +316,10 @@ public class DeviceController {
         }
 	
 	public void loadDeviceDTO(List<Device> devices, Model model) {
-		List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getName(), d.getMacAddress(),
-				d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername()))
-				.collect(Collectors.toList());
-		Collections.sort(deviceDTOs, new Comparator<DeviceDTO>() {
+                List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getName(), d.getMacAddress(),
+                                d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.isActivated()))
+                                .collect(Collectors.toList());
+                Collections.sort(deviceDTOs, new Comparator<DeviceDTO>() {
 
 			@Override
 			public int compare(DeviceDTO d1, DeviceDTO d2) {
