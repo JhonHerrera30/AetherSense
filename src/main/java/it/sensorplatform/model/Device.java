@@ -12,7 +12,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 
 @Entity
@@ -42,8 +41,8 @@ public class Device {
         @Column(nullable = true)
         private String emailOwner;
 
-        @Column(nullable = false)
-        private boolean activated = false;
+        @Column(name="status")
+        private String status = "deactivated";
 	
 	@ManyToOne
 	private Project project;
@@ -149,12 +148,12 @@ public class Device {
                 this.emailOwner = emailOwner;
         }
 
-        public boolean isActivated() {
-                return activated;
+        public String getStatus() {
+                return status;
         }
 
-        public void setActivated(boolean activated) {
-                this.activated = activated;
+        public void setStatus(String status) {
+                this.status = status;
         }
 
 

@@ -13,9 +13,9 @@ public class DeviceDTO {
         private String devEui;
         private String tod;
         private String operator;
-        private boolean activated;
+        private String status;
 
-        public DeviceDTO(String name, String macAddress, String emailOwner, String devEui, Double longitude, Double latitude, String tod, String operator, boolean activated) {
+        public DeviceDTO(String name, String macAddress, String emailOwner, String devEui, Double longitude, Double latitude, String tod, String operator, String status) {
                 this.name = name;
                 this.macAddress = macAddress;
                 this.emailOwner=emailOwner;
@@ -24,7 +24,7 @@ public class DeviceDTO {
                 this.latitude = latitude;
                 this.tod=tod;
                 this.operator=operator;
-                this.activated = activated;
+                this.status = status;
         }
 
 	public String getEmailOwner() {
@@ -92,12 +92,12 @@ public class DeviceDTO {
                 this.operator = operator;
         }
 
-        public boolean isActivated() {
-                return activated;
+        public String getStatus() {
+                return status;
         }
 
-        public void setActivated(boolean activated) {
-                this.activated = activated;
+        public void setStatus(String status) {
+                this.status = status;
         }
 
 	@Override
