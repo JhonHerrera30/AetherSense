@@ -45,7 +45,7 @@ class PacketServiceTests {
 
         assertEquals(PacketService.Result.NEW_DEVICE, res);
         Device saved = deviceRepository.findByMacAddress("AA:BB:CC").orElseThrow();
-        assertFalse(saved.isActivated());
+        assertEquals("deactivated", saved.getStatus());
         assertEquals(project.getId(), saved.getProject().getId());
     }
 
@@ -59,7 +59,7 @@ class PacketServiceTests {
         device.setName("d1");
         device.setMacAddress("AA:DD:EE");
         device.setEmailOwner("");
-        device.setActivated(false);
+        device.setStatus("deactivated");
         device.setLatitude(0d);
         device.setLongitude(0d);
         device.setProject(project);
@@ -84,7 +84,7 @@ class PacketServiceTests {
         device.setName("d1");
         device.setMacAddress("AA:FF:00");
         device.setEmailOwner("");
-        device.setActivated(false);
+        device.setStatus("deactivated");
         device.setLatitude(0d);
         device.setLongitude(0d);
         device.setProject(project);
@@ -100,7 +100,7 @@ class PacketServiceTests {
         assertEquals(PacketService.Result.ACTIVATION, res);
 
         Device updated = deviceRepository.findByMacAddress("AA:FF:00").orElseThrow();
-        assertTrue(updated.isActivated());
+        assertEquals("activated", updated.getStatus());
         assertEquals(45.0, updated.getLatitude());
         assertEquals(7.0, updated.getLongitude());
     }

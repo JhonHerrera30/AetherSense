@@ -50,7 +50,7 @@ public class PacketService {
             device.setMacAddress(packet.getMacAddress());
             device.setName(packet.getMacAddress());
             device.setEmailOwner("");
-            device.setActivated(false);
+            device.setStatus("deactivated");
             device.setLatitude(packet.getLatitude() != null ? packet.getLatitude() : 0d);
             device.setLongitude(packet.getLongitude() != null ? packet.getLongitude() : 0d);
             if (packet.getProjectId() != null) {
@@ -65,7 +65,7 @@ public class PacketService {
 
         if (packet.isActivation()) {
             // Case 3: activation packet -> update flags and location
-            device.setActivated(true);
+            device.setStatus("activated");
             if (packet.getLatitude() != null) device.setLatitude(packet.getLatitude());
             if (packet.getLongitude() != null) device.setLongitude(packet.getLongitude());
             deviceRepository.save(device);

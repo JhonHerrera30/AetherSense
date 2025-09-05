@@ -309,7 +309,7 @@ public class DeviceController {
                 d.setOperator(null);
                 d.setLatitude(null);
                 d.setLongitude(null);
-                d.setActivated(false);
+                d.setStatus("deactivated");
                 deviceService.save(d);
                 ra.addFlashAttribute("successMessage", "Operator removed.");
                 return "redirect:/admin/group/"+projectId;
@@ -317,7 +317,7 @@ public class DeviceController {
 	
 	public void loadDeviceDTO(List<Device> devices, Model model) {
                 List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getName(), d.getMacAddress(),
-                                d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.isActivated()))
+                                d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))
                                 .collect(Collectors.toList());
                 Collections.sort(deviceDTOs, new Comparator<DeviceDTO>() {
 
