@@ -108,10 +108,10 @@
 			        <input type="text" id="name" name="name" th:value="${device.name}" required />
 
 			        <label for="latitude">Latitude:</label>
-			        <input type="number" step="any" id="latitude" name="latitude" th:value="${device.latitude}" required />
+                                <input type="number" step="any" id="latitude" name="latitude" th:value="${device.latitude}" />
 
 			        <label for="longitude">Longitude:</label>
-			        <input type="number" step="any" id="longitude" name="longitude" th:value="${device.longitude}" required />
+                                <input type="number" step="any" id="longitude" name="longitude" th:value="${device.longitude}" />
 
 			        <button type="submit" class="btn-save">Save Changes</button>
 			    </form>

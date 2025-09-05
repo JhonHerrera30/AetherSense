@@ -131,19 +131,21 @@
 		let markerByMac = new Map();
 		let allLatLngs = [];
 
-		initialDevices.forEach(function (d) {
-			const latlng = [d.latitude, d.longitude];
-			allLatLngs.push(latlng);
-			const marker = L.marker(latlng).addTo(map);
-			const popupContent = "Device: " + d.name + "<br>" +
-				"MacAddress: " + d.macAddress + "<br>" +
-				"Latitude: " + d.latitude + "<br>" +
-				"Longitude: " + d.longitude;
-			marker.bindPopup(popupContent);
-			marker.on("mouseover", function () {this.openPopup();});
-			marker.on("mouseout", function () {this.closePopup();});
-			markerByMac.set(d.macAddress, marker);
-		});
+                initialDevices.forEach(function (d) {
+                        if (d.latitude != null && d.longitude != null) {
+                                const latlng = [d.latitude, d.longitude];
+                                allLatLngs.push(latlng);
+                                const marker = L.marker(latlng).addTo(map);
+                                const popupContent = "Device: " + d.name + "<br>" +
+                                        "MacAddress: " + d.macAddress + "<br>" +
+                                        "Latitude: " + d.latitude + "<br>" +
+                                        "Longitude: " + d.longitude;
+                                marker.bindPopup(popupContent);
+                                marker.on("mouseover", function () {this.openPopup();});
+                                marker.on("mouseout", function () {this.closePopup();});
+                                markerByMac.set(d.macAddress, marker);
+                        }
+                });
 
 		if (allLatLngs.length > 0) {
 			const bounds = L.latLngBounds(allLatLngs);
@@ -154,10 +156,11 @@
 			fetch('/api/groups/name/' + encodeURIComponent(groupName) + '/devices')
 				.then(response => response.json())
 				.then(devices => {
-					if (devices.length > 0) {
-						const bounds = L.latLngBounds(devices.map(d => [d.latitude, d.longitude]));
-						map.fitBounds(bounds, {padding: [20, 20]});
-					}
+                                        const validDevices = devices.filter(d => d.latitude != null && d.longitude != null);
+                                        if (validDevices.length > 0) {
+                                                const bounds = L.latLngBounds(validDevices.map(d => [d.latitude, d.longitude]));
+                                                map.fitBounds(bounds, {padding: [20, 20]});
+                                        }
 					document.querySelectorAll(`summary[data-group-name="${groupName}"]`).forEach(summary => {
 						const details = summary.parentElement;
 						const ul = details.querySelector('.device-list');
