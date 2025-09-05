@@ -304,7 +304,6 @@
                           `/admin/removeOperator/${encodeURIComponent(mac)}/${PROJECT_ID}`;
                         const ADMIN_ID = /*[[${user.admin != null ? user.admin.id : 0}]]*/ 0;
                         const AUTH_OP_URL = (opId) => `/api/admin/${ADMIN_ID}/authorize/${opId}`;
-                        const AUTHORIZED_OPS = /*[[${authorizedOperators != null ? authorizedOperators.![id] : {}}]]*/ [];
 
 			const modal = document.getElementById('assignOperatorModal');
 			const form = document.getElementById('assignOperatorForm');
@@ -393,7 +392,7 @@
                                                 const authTd = document.createElement('td');
                                                 const cb = document.createElement('input');
                                                 cb.type = 'checkbox';
-                                                cb.checked = AUTHORIZED_OPS.includes(o.id);
+                                                cb.checked = o.authorized;
                                                 cb.addEventListener('change', () => toggleAuthorization(o.id, cb.checked));
                                                 authTd.appendChild(cb);
                                                 tr.appendChild(nameTd);
