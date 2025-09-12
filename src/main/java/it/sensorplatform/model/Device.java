@@ -37,7 +37,6 @@ public class Device {
 	@Column(unique = true, nullable = false)
 	private String macAddress;
 	
-        @NotBlank
         @Column(nullable = true)
         private String emailOwner;
 
