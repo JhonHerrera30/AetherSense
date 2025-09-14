@@ -11,7 +11,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.validation.constraints.NotBlank;
 
 
 @Entity
@@ -20,9 +19,8 @@ public class Device {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 	
-	@NotBlank
-	@Column(nullable = false)
-	private String name;
+        @Column(nullable = true)
+        private String name;
 	
         @Column(nullable = true)
         private Double latitude;
@@ -33,9 +31,8 @@ public class Device {
 	@Column(nullable = true, unique = true)
 	private String devEui;
 	
-	@NotBlank
-	@Column(unique = true, nullable = false)
-	private String macAddress;
+        @Column(unique = true, nullable = false)
+        private String macAddress;
 	
         @Column(nullable = true)
         private String emailOwner;

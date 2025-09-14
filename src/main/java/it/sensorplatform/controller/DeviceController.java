@@ -66,61 +66,15 @@ public class DeviceController {
 		return "superadmin/manageProjectDevices.html";
 	}
 
-	@GetMapping("/superadmin/formNewDevice/{projectId}")
-	public String formNewDevice(@PathVariable("projectId") Long projectId, Model model) {
-		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
-		model.addAttribute("user", credentials);
-		Project project = projectService.getProjectById(projectId);
-		Device device = new Device();
-		device.setProject(project);
-		model.addAttribute("device", device);
-		model.addAttribute("project", project);
-		model.addAttribute("tods", project.getTods());
-		return "superadmin/formNewDevice.html";
-	}
-
-	@PostMapping("/superadmin/newDevice/{projectId}")
-	public String saveDevice(@Valid @ModelAttribute("device") Device device, BindingResult bindingResult,
-			@PathVariable("projectId") Long projectId, Model model, RedirectAttributes redirectAttributes) {
-
-		Project project = projectService.getProjectById(projectId);
-		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
-		model.addAttribute("user", credentials);
-
-		if (bindingResult.hasErrors()) {
-			device.setProject(project);
-			model.addAttribute("device", device);
-			model.addAttribute("project", project);
-			model.addAttribute("tods", project.getTods());
-			return "superadmin/formNewDevice.html";
-		}
-
-		if (device.getTod() == null) {
-			device.setProject(project);
-			model.addAttribute("device", device);
-			model.addAttribute("project", project);
-			model.addAttribute("tods", project.getTods());
-			model.addAttribute("noTodSelected", "Please choose a type of device.");
-			return "superadmin/formNewDevice.html";
-		}
-
-		if (deviceService.existsByMacAddress(device.getMacAddress())) {
-			model.addAttribute("device", device);
-			model.addAttribute("project", project);
-			model.addAttribute("tods", project.getTods());
-			model.addAttribute("duplicateDeviceError", "A device with this MAC Address already exists");
-			return "superadmin/formNewDevice.html";
-		}
-		device.setProject(project);
-		deviceService.saveDevice(device);
-		redirectAttributes.addFlashAttribute("successMessage", "Device added successfully!");
-		List<Device> devices = new ArrayList<>(deviceService.findAllByProjectId(projectId));
-		this.loadDeviceDTO(devices, model);
-		model.addAttribute("project", project);
-		return "redirect:/superadmin/manageProjectDevices/" + projectId;
-	}
+        @GetMapping("/superadmin/formNewDevice/{projectId}")
+        public String formNewDevice(@PathVariable("projectId") Long projectId, Model model) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                model.addAttribute("user", credentials);
+                Project project = projectService.getProjectById(projectId);
+                model.addAttribute("project", project);
+                return "superadmin/deviceNotifications.html";
+        }
 
 	@GetMapping("/superadmin/formUpdateDevice/{projectId}/{macAddress}")
 	public String formUpdateDevice(@PathVariable("projectId") Long projectId,

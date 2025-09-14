@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'New Device Notifications - ' + ${project.name}">Notifications</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/formNewDeviceLtrad.css}" />
+    <link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/formNewDeviceFire.css}" />
+    <link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/formNewDeviceVolcano.css}" />
+</head>
+<body>
+<header id="navbar" class="navbar">
+    <div class="nav-left">
+        <h1><a th:if="${project.id == 1}" th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}" class="nav-title-link">L-TRAD</a></h1>
+        <h1><a th:if="${project.id == 51}" th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}" class="nav-title-link">FIRE</a></h1>
+        <h1><a th:if="${project.id == 101}" th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}" class="nav-title-link"> VOLCANO</a></h1>
+    </div>
+    <div class="nav-right">
+        <div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+            <button type="button" class="dropdown-toggle" id="userDropdown">
+                Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+                <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="white">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg>
+            </button>
+            <div class="dropdown-menu" id="userDropdownMenu">
+                <form th:action="@{/logout}" method="post" th:csrf="true">
+                    <button type="submit" class="dropdown-logout">Logout</button>
+                </form>
+            </div>
+        </div>
+        <a href="/" class="home-button" title="Homepage">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+        </a>
+    </div>
+</header>
+<div class="form-container">
+    <div class="back-btn">
+        <a th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}" class="btn-back" title="Back to Devices">⬅ Back</a>
+    </div>
+    <div id="notification-list"></div>
+</div>
+<script th:inline="javascript">
+/*<![CDATA[*/
+    const projectId = [[${project.id}]];
+/*]]>*/
+    const container = document.getElementById('notification-list');
+    const notifications = new Map();
+
+    function renderNotification(n) {
+        let box = document.getElementById('notif-' + n.key);
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'notif-' + n.key;
+            box.className = 'notification-box';
+            box.innerHTML = `<p><strong>${n.macAddress ? n.macAddress : ''}${n.devEui ? '/' + n.devEui : ''}</strong></p>
+                             <p class="time"></p>
+                             <button class="btn-add" onclick="addDevice('${n.key}')">Add</button>`;
+            container.appendChild(box);
+        }
+        box.dataset.timestamp = Date.parse(n.timestamp);
+    }
+
+    function updateTimes() {
+        const now = Date.now();
+        document.querySelectorAll('.notification-box').forEach(box => {
+            const ts = parseInt(box.dataset.timestamp);
+            const diff = Math.floor((now - ts) / 1000);
+            box.querySelector('.time').textContent = diff + 's ago';
+        });
+    }
+    setInterval(updateTimes, 1000);
+
+    function addDevice(key) {
+        fetch(`/api/notifications/${projectId}/${key}/add`, {method:'POST'})
+            .then(() => { window.location.href = `/superadmin/manageProjectDevices/${projectId}`; });
+    }
+
+    const evtSource = new EventSource(`/api/notifications/stream/${projectId}`);
+    evtSource.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        notifications.set(data.key, data);
+        renderNotification(data);
+    };
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toggle = document.getElementById("userDropdown");
+        const menu = document.getElementById("userDropdownMenu");
+        toggle.addEventListener("click", function (e) {
+            e.stopPropagation();
+            menu.classList.toggle("show");
+        });
+        document.addEventListener("click", function (e) {
+            if (!toggle.contains(e.target)) {
+                menu.classList.remove("show");
+            }
+        });
+    });
+</script>
+</body>
+</html>
