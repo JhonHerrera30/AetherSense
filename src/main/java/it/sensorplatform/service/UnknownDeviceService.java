@@ -42,6 +42,18 @@ public class UnknownDeviceService {
     public SseEmitter subscribe(Long projectId) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
         emitters.computeIfAbsent(projectId, k -> new CopyOnWriteArrayList<>()).add(emitter);
+
+        Map<String, UnknownDeviceNotification> map = notifications.get(projectId);
+        if (map != null && !map.isEmpty()) {
+            for (UnknownDeviceNotification notification : map.values()) {
+                try {
+                    emitter.send(SseEmitter.event().name("unknown-device").data(notification));
+                } catch (Exception e) {
+                    emitter.complete();
+                }
+            }
+        }
+
         emitter.onCompletion(() -> emitters.get(projectId).remove(emitter));
         emitter.onTimeout(() -> emitters.get(projectId).remove(emitter));
         return emitter;
