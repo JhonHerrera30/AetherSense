@@ -21,8 +21,10 @@ public class PacketControllerRest {
 
     @PostMapping
     public ResponseEntity<PacketService.Result> handle(@RequestBody PacketDTO packet) {
-        PacketService.Result result = packetService.handlePacket(packet);
-        return ResponseEntity.ok(result);
-    }
+    System.out.println("Received packet: " + packet);
+    PacketService.Result result = packetService.handlePacket(packet);
+    return ResponseEntity.ok(result);
+}
+
 }
 
