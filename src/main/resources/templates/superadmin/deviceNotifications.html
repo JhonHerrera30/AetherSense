@@ -80,11 +80,11 @@
     }
 
     const evtSource = new EventSource(`/api/notifications/stream/${projectId}`);
-    evtSource.onmessage = function(e) {
+    evtSource.addEventListener('unknown-device', e => {
         const data = JSON.parse(e.data);
         notifications.set(data.key, data);
         renderNotification(data);
-    };
+    });
 </script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
