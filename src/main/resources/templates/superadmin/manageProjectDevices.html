@@ -76,32 +76,17 @@
 			<thead>
 				<tr>
 					<th scope="col">Name</th>
-					<th scope="col">Mac Address</th>
-					<th scope="col">Owner Email</th>
-					<th scope="col">Type Of Device</th>
-					<th scope="col">Actions</th>
+                                        <th scope="col">Mac Address/DevEui</th>
+                                        <th scope="col">Owner Email</th>
+                                        <th scope="col">Type Of Device</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr th:each="device : ${devices}">
 					<td th:text="${device.name}">Name</td>
-					<td th:text="${device.macAddress}">Mac Address</td>
-					<td th:text="${device.emailOwner}">Email</td>
-					<td th:text="${device.tod}">Type Of Device</td>
-					<td>
-						<!-- Edit button -->
-						<a th:href="@{'/superadmin/formUpdateDevice/' + ${project.id} + '/' + ${device.macAddress}}" 
-						   class="btn-action btn-edit btn-icon" title="Edit">
-						   ✏️
-						</a>
-
-						<!-- Delete button -->
-						<form th:action="@{'/superadmin/deleteDevice/' + ${project.id} + '/' + ${device.macAddress}}" method="post" style="display:inline;">
-						   <button type="submit" class="btn-action btn-delete btn-icon" title="Delete">
-						     🗑️
-						   </button>
-						</form>
-					</td>
+                                        <td th:text="${device.macAddress != null ? (device.devEui != null ? device.macAddress + '/' + device.devEui : device.macAddress) : device.devEui}">Mac Address</td>
+                                        <td th:text="${device.emailOwner}">Email</td>
+                                        <td th:text="${device.tod}">Type Of Device</td>
 				</tr>
 			</tbody>
 		</table>
@@ -133,7 +118,7 @@
 
                         const marker = L.marker(latlng).addTo(map);
                         const popupContent = "Device: " + d.name + "<br>" +
-                                "MacAddress: " + d.macAddress + "<br>" +
+                                "MacAddress/DevEui: " + (d.macAddress ? d.macAddress : "") + (d.devEui ? '/' + d.devEui : "") + "<br>" +
                                 "Latitude: " + d.latitude + "<br>" +
                                 "Longitude: " + d.longitude;
 
@@ -141,7 +126,7 @@
                         marker.on("mouseover", function () { this.openPopup(); });
                         marker.on("mouseout", function () { this.closePopup(); });
 
-                        markerByMac.set(d.macAddress, marker);
+                        markerByMac.set(d.macAddress ? d.macAddress : d.devEui, marker);
                 }
         });
 

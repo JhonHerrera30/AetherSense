@@ -14,9 +14,12 @@ public interface DeviceRepository extends CrudRepository<Device, Long>{
 	
 	public Set<Device> findAllByEmailOwnerAndProjectId(String email, Long id);
 
-	public Set<Device> findAllByProjectId(Long projectId);
+        public Set<Device> findAllByProjectId(Long projectId);
 
-	public Optional<Device> findByMacAddress(String macAddress);
+        public Optional<Device> findByMacAddress(String macAddress);
+        public Optional<Device> findByDevEui(String devEui);
+
+        public boolean existsByDevEui(String devEui);
 	
 	public Set<Device> findByNameStartingWithIgnoreCase(String deviceInfo);
 

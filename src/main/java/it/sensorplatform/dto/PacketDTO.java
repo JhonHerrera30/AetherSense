@@ -9,6 +9,8 @@ import java.util.Map;
 public class PacketDTO {
 
     private String macAddress;
+    private String devEui;
+    private String typeOfDevice;
     private Long projectId;
     private boolean activation;
     private Double latitude;
@@ -21,6 +23,22 @@ public class PacketDTO {
 
     public void setMacAddress(String macAddress) {
         this.macAddress = macAddress;
+    }
+
+    public String getDevEui() {
+        return devEui;
+    }
+
+    public void setDevEui(String devEui) {
+        this.devEui = devEui;
+    }
+
+    public String getTypeOfDevice() {
+        return typeOfDevice;
+    }
+
+    public void setTypeOfDevice(String typeOfDevice) {
+        this.typeOfDevice = typeOfDevice;
     }
 
     public Long getProjectId() {

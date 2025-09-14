@@ -2,9 +2,7 @@ package it.sensorplatform.service;
 
 import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.model.Device;
-import it.sensorplatform.model.Project;
 import it.sensorplatform.repository.DeviceRepository;
-import it.sensorplatform.repository.ProjectRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -22,15 +20,15 @@ import java.util.Optional;
 public class PacketService {
 
     private final DeviceRepository deviceRepository;
-    private final ProjectRepository projectRepository;
     private final IngestService ingestService;
+    private final UnknownDeviceService unknownDeviceService;
 
     public PacketService(DeviceRepository deviceRepository,
-                         ProjectRepository projectRepository,
-                         IngestService ingestService) {
+                         IngestService ingestService,
+                         UnknownDeviceService unknownDeviceService) {
         this.deviceRepository = deviceRepository;
-        this.projectRepository = projectRepository;
         this.ingestService = ingestService;
+        this.unknownDeviceService = unknownDeviceService;
     }
 
     public enum Result { NEW_DEVICE, ACTIVATION, DATA }
@@ -39,25 +37,20 @@ public class PacketService {
      * Process an incoming packet according to device/project state.
      */
     public Result handlePacket(PacketDTO packet) {
-        if (packet.getMacAddress() == null || packet.getMacAddress().isBlank()) {
-            throw new IllegalArgumentException("macAddress is required");
+        if ((packet.getMacAddress() == null || packet.getMacAddress().isBlank()) &&
+                (packet.getDevEui() == null || packet.getDevEui().isBlank())) {
+            throw new IllegalArgumentException("macAddress or devEui is required");
         }
 
-        Optional<Device> existing = deviceRepository.findByMacAddress(packet.getMacAddress());
+        Optional<Device> existing = Optional.empty();
+        if (packet.getMacAddress() != null && !packet.getMacAddress().isBlank()) {
+            existing = deviceRepository.findByMacAddress(packet.getMacAddress());
+        }
+        if (existing.isEmpty() && packet.getDevEui() != null && !packet.getDevEui().isBlank()) {
+            existing = deviceRepository.findByDevEui(packet.getDevEui());
+        }
         if (existing.isEmpty()) {
-            // Case 1: device not present -> register
-            Device device = new Device();
-            device.setMacAddress(packet.getMacAddress());
-            device.setName(packet.getMacAddress());
-            device.setEmailOwner("");
-            device.setStatus("deactivated");
-            device.setLatitude(packet.getLatitude() != null ? packet.getLatitude() : 0d);
-            device.setLongitude(packet.getLongitude() != null ? packet.getLongitude() : 0d);
-            if (packet.getProjectId() != null) {
-                Project p = projectRepository.findById(packet.getProjectId()).orElse(null);
-                device.setProject(p);
-            }
-            deviceRepository.save(device);
+            unknownDeviceService.notify(packet);
             return Result.NEW_DEVICE;
         }
 
