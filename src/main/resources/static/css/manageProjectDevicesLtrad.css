@@ -239,6 +239,32 @@ navbar h1 {
     transform: scale(1.03);
 }
 
+.btn-assign-owner {
+    background-color: #ff9800;
+    color: #1B263B;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-assign-owner:hover {
+    background-color: #fb8c00;
+    transform: scale(1.03);
+}
+
+.btn-assign-owner:disabled,
+.btn-assign-owner.btn-disabled {
+    background-color: #546e7a;
+    color: #d0d7de;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+}
+
 /* Pulsante torna alla home (testo centrato) */
 .btn-back {
     background-color: #546e7a;
@@ -266,6 +292,15 @@ navbar h1 {
     padding: 0.75rem;
     border-radius: 5px;
     color: #1b5e20;
+    margin-bottom: 1rem;
+}
+
+.alert-error {
+    background-color: #e57373;
+    border: 1px solid #c62828;
+    padding: 0.75rem;
+    border-radius: 5px;
+    color: #ffffff;
     margin-bottom: 1rem;
 }
 
@@ -357,4 +392,172 @@ td:last-child {
 .top-bar a,
 .top-bar form {
     align-self: flex-start;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    display: none;
+    z-index: 20;
+}
+
+.modal-overlay.show {
+    display: block;
+}
+
+.modal-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    background-color: #0d1b2a;
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: min(90%, 640px);
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45);
+    display: none;
+    z-index: 25;
+    transition: transform 0.2s ease;
+}
+
+.modal-container.ltrad {
+    border: 2px solid #007bff;
+}
+
+.modal-container.show {
+    display: block;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #ffffff;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 1.8rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.modal-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0.5rem;
+}
+
+.modal-table th,
+.modal-table td {
+    border: 1px solid #324a5f;
+    padding: 0.6rem 0.75rem;
+    text-align: left;
+}
+
+.modal-table th {
+    background-color: #10243d;
+    color: #ffffff;
+}
+
+.modal-table td {
+    background-color: #1a2f46;
+    color: #ffffff;
+}
+
+.checkbox-cell {
+    text-align: center;
+}
+
+.checkbox-cell input {
+    transform: scale(1.1);
+    cursor: pointer;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-row label {
+    font-weight: bold;
+}
+
+.select-input,
+.form-row input[type="email"] {
+    background-color: #10243d;
+    border: 1px solid #324a5f;
+    border-radius: 6px;
+    padding: 0.55rem 0.75rem;
+    color: #ffffff;
+}
+
+.select-input:disabled,
+.select-input.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.form-row input[type="email"]::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.empty-modal-message {
+    text-align: center;
+    font-size: 1rem;
+    background-color: #1a2f46;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+.btn-save-modal {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.6rem 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-save-modal:hover {
+    background-color: #005bb5;
+}
+
+.btn-save-modal:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }

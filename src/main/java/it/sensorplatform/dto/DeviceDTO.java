@@ -5,17 +5,19 @@ import java.util.Objects;
 
 public class DeviceDTO {
 	
-	private String name;
-	private String macAddress;
-	private Double longitude;
-	private Double latitude;
+        private Long id;
+        private String name;
+        private String macAddress;
+        private Double longitude;
+        private Double latitude;
         private String emailOwner;
         private String devEui;
         private String tod;
         private String operator;
         private String status;
 
-        public DeviceDTO(String name, String macAddress, String emailOwner, String devEui, Double longitude, Double latitude, String tod, String operator, String status) {
+        public DeviceDTO(Long id, String name, String macAddress, String emailOwner, String devEui, Double longitude, Double latitude, String tod, String operator, String status) {
+                this.id = id;
                 this.name = name;
                 this.macAddress = macAddress;
                 this.emailOwner=emailOwner;
@@ -27,9 +29,17 @@ public class DeviceDTO {
                 this.status = status;
         }
 
-	public String getEmailOwner() {
-		return emailOwner;
-	}
+        public Long getId() {
+                return id;
+        }
+
+        public void setId(Long id) {
+                this.id = id;
+        }
+
+        public String getEmailOwner() {
+                return emailOwner;
+        }
 
 	public void setEmailOwner(String emailOwner) {
 		this.emailOwner = emailOwner;
@@ -100,22 +110,26 @@ public class DeviceDTO {
                 this.status = status;
         }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(macAddress);
-	}
+        public boolean isEmailOwnerMissing() {
+                return this.emailOwner == null || this.emailOwner.trim().isEmpty();
+        }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+        @Override
+        public int hashCode() {
+                return Objects.hash(id, macAddress);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+                if (this == obj)
 			return true;
 		if (obj == null)
 			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		DeviceDTO other = (DeviceDTO) obj;
-		return Objects.equals(macAddress, other.macAddress);
-	}
+                if (getClass() != obj.getClass())
+                        return false;
+                DeviceDTO other = (DeviceDTO) obj;
+                return Objects.equals(id, other.id) && Objects.equals(macAddress, other.macAddress);
+        }
 	
 	
 	

@@ -5,11 +5,13 @@ import it.sensorplatform.model.Admin;
 import it.sensorplatform.model.Credentials;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.Project;
+import it.sensorplatform.model.Superadmin;
 import it.sensorplatform.model.User;
 import it.sensorplatform.service.AdminService;
 import it.sensorplatform.service.CredentialsService;
 import it.sensorplatform.service.DeviceService;
 import it.sensorplatform.service.ProjectService;
+import it.sensorplatform.service.SuperadminService;
 import it.sensorplatform.util.MacAddressUtils;
 import jakarta.validation.Valid;
 
@@ -19,6 +21,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.util.StringUtils;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -45,27 +48,90 @@ public class DeviceController {
         @Autowired
         private AdminService adminService;
 
+        @Autowired
+        private SuperadminService superadminService;
+
 	@GetMapping("/superadmin/manageProjectDevices/{projectId}")
 	public String manageProjectDevices(@PathVariable("projectId") Long projectId,
 			@RequestParam(value = "deviceQuery", required = false) String deviceQuery, Model model) {
 		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
 		model.addAttribute("user", credentials);
-		Project project = projectService.getProjectById(projectId);
-		Set<Device> devicesFiltred;
-		if (deviceQuery != null && !deviceQuery.isEmpty()) {
-			devicesFiltred = deviceService.findByNameStartingWithIgnoreCase(deviceQuery);
-			devicesFiltred.addAll(deviceService.findByMacAddressStartingWithIgnoreCase(deviceQuery));
-			devicesFiltred.addAll(deviceService.findByEmailOwnerStartingWithIgnoreCase(deviceQuery));
+                Project project = projectService.getProjectById(projectId);
+                Superadmin superadmin = superadminService.findByCredentials(credentials);
+                Set<Device> devicesFiltred;
+                if (deviceQuery != null && !deviceQuery.isEmpty()) {
+                        devicesFiltred = deviceService.findByNameStartingWithIgnoreCase(deviceQuery);
+                        devicesFiltred.addAll(deviceService.findByMacAddressStartingWithIgnoreCase(deviceQuery));
+                        devicesFiltred.addAll(deviceService.findByEmailOwnerStartingWithIgnoreCase(deviceQuery));
 			devicesFiltred.addAll(deviceService.findByTod_NameStartingWithIgnoreCase(deviceQuery));
 		} else {
 			devicesFiltred = deviceService.findAllByProjectId(projectId);
 		}
-		List<Device> devices = new ArrayList<>(devicesFiltred);
-		this.loadDeviceDTO(devices, model);
-		model.addAttribute("project", project);
-		return "superadmin/manageProjectDevices.html";
-	}
+                List<Device> devices = new ArrayList<>(devicesFiltred);
+                this.loadDeviceDTO(devices, model);
+                model.addAttribute("adminEmails",
+                                superadmin != null ? superadmin.getAdminEmails() : Collections.emptyList());
+                model.addAttribute("project", project);
+                model.addAttribute("superadmin", superadmin);
+                return "superadmin/manageProjectDevices.html";
+        }
+
+        @PostMapping("/superadmin/assignEmailOwner/{projectId}")
+        public String assignEmailOwner(@PathVariable("projectId") Long projectId,
+                        @RequestParam(value = "selectedDeviceIds", required = false) List<Long> selectedDeviceIds,
+                        @RequestParam(value = "existingEmail", required = false) String existingEmail,
+                        @RequestParam(value = "newEmail", required = false) String newEmail,
+                        RedirectAttributes redirectAttributes) {
+
+                if (selectedDeviceIds == null || selectedDeviceIds.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Select at least one device without an owner.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
+
+                String emailToAssign = null;
+                if (StringUtils.hasText(newEmail)) {
+                        emailToAssign = newEmail.trim();
+                } else if (StringUtils.hasText(existingEmail)) {
+                        emailToAssign = existingEmail.trim();
+                }
+
+                if (!StringUtils.hasText(emailToAssign)) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Provide an email address to assign to the selected devices.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
+
+                List<Device> devicesToUpdate = selectedDeviceIds.stream().distinct().map(deviceService::findById)
+                                .collect(Collectors.toList());
+
+                if (devicesToUpdate.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Unable to locate the selected devices.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
+
+                devicesToUpdate.forEach(device -> {
+                        device.setEmailOwner(emailToAssign);
+                        deviceService.save(device);
+                });
+
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                Superadmin superadmin = superadminService.findByCredentials(credentials);
+                if (superadmin != null) {
+                        superadmin.addAdminEmail(emailToAssign);
+                        superadminService.save(superadmin);
+                }
+
+                redirectAttributes.addFlashAttribute("successMessage",
+                                devicesToUpdate.size() == 1
+                                                ? "Email owner assigned to 1 device."
+                                                : "Email owner assigned to " + devicesToUpdate.size() + " devices.");
+
+                return "redirect:/superadmin/manageProjectDevices/" + projectId;
+        }
 
         @GetMapping("/superadmin/formNewDevice/{projectId}")
         public String formNewDevice(@PathVariable("projectId") Long projectId, Model model) {
@@ -295,12 +361,16 @@ public class DeviceController {
         }
 	
 	public void loadDeviceDTO(List<Device> devices, Model model) {
-                List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getName(), d.getMacAddress(),
-                                d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))
+                List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getId(), d.getName(),
+                                d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(),
+                                d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))
                                 .collect(Collectors.toList());
                 Comparator<DeviceDTO> cmp = Comparator.comparing(DeviceDTO::getEmailOwner,
                                 Comparator.nullsFirst(String::compareTo));
                 Collections.sort(deviceDTOs, cmp);
-		model.addAttribute("devices", deviceDTOs);
-	}
+                model.addAttribute("devices", deviceDTOs);
+                List<DeviceDTO> devicesWithoutOwner = deviceDTOs.stream().filter(DeviceDTO::isEmailOwnerMissing)
+                                .collect(Collectors.toList());
+                model.addAttribute("devicesWithoutOwner", devicesWithoutOwner);
+        }
 }
