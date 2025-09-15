@@ -37,6 +37,7 @@ public class PacketService {
      * Process an incoming packet according to device/project state.
      */
     public Result handlePacket(PacketDTO packet) {
+        System.out.println("PacketService.handlePacket - processing packet: " + packet);
         if ((packet.getMacAddress() == null || packet.getMacAddress().isBlank()) &&
                 (packet.getDevEui() == null || packet.getDevEui().isBlank())) {
             throw new IllegalArgumentException("macAddress or devEui is required");
@@ -50,6 +51,7 @@ public class PacketService {
             existing = deviceRepository.findByDevEui(packet.getDevEui());
         }
         if (existing.isEmpty()) {
+            System.out.println("PacketService.handlePacket - device not found, notifying UnknownDeviceService");
             unknownDeviceService.notify(packet);
             return Result.NEW_DEVICE;
         }
@@ -57,6 +59,7 @@ public class PacketService {
         Device device = existing.get();
 
         if (packet.isActivation()) {
+            System.out.println("PacketService.handlePacket - activation packet for device: " + device.getId());
             // Case 3: activation packet -> update flags and location
             device.setStatus("activated");
             if (packet.getLatitude() != null) device.setLatitude(packet.getLatitude());
@@ -65,6 +68,7 @@ public class PacketService {
             return Result.ACTIVATION;
         }
 
+        System.out.println("PacketService.handlePacket - forwarding data to IngestService for device: " + device.getMacAddress());
         // Case 2: normal data packet -> forward metrics to ingest service
         Map<String, Object> payload = packet.getPayload();
         ingestService.process(device.getMacAddress(), device.getDevEui(), Instant.now(), payload);
