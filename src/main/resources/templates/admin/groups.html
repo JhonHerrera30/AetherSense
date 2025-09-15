@@ -145,7 +145,7 @@
                                           <tbody>
                                                   <tr th:each="device : ${devices}">
                                                           <td th:text="${device.name}">Name</td>
-                                                          <td th:text="${device.macAddress}">Mac Address</td>
+                                                          <td th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">Mac Address</td>
                                                           <td th:text="${device.tod}">Mac Address</td>
                                                           <td>
                                                                   <span th:if="${device.operator != null}" th:text="${device.operator}">Operator</span>
@@ -209,9 +209,13 @@
 			attribution: '&copy; OpenStreetMap contributors'
 		}).addTo(map);
 
-		let markerByMac = new Map();
+                let markerByMac = new Map();
 
                 let allLatLngs = [];
+
+                function formatMac(mac) {
+                        return mac ? mac.replace(/.{2}(?!$)/g, '$&:') : '';
+                }
 
                 initialDevices.forEach(function (d) {
                         const latlng = [d.latitude, d.longitude];
@@ -219,7 +223,7 @@
 
                         const marker = L.marker(latlng).addTo(map);
                         const popupContent = "Device: " + d.name + "<br>" +
-                                "MacAddress: " + d.macAddress + "<br>" +
+                                "MacAddress: " + formatMac(d.macAddress) + "<br>" +
                                 "Latitude: " + d.latitude + "<br>" +
                                 "Longitude: " + d.longitude;
 
@@ -256,7 +260,7 @@
                                                 ul.innerHTML = '';
                                                 validDevices.forEach(device => {
                                                         const li = document.createElement('li');
-                                                        li.textContent = `${device.name} (${device.macAddress})`;
+                                                        li.textContent = `${device.name} (${formatMac(device.macAddress)})`;
                                                         ul.appendChild(li);
                                                 });
                                         });
