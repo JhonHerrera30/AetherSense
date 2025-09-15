@@ -88,7 +88,8 @@ public class NotificationControllerRest {
         }
 
         String normalizedDevEui = MacAddressUtils.normalize(notif.getDevEui());
-        if (deviceRepository.existsByMacAddress(macAddress) || deviceRepository.existsByDevEui(normalizedDevEui)) {
+        if (deviceRepository.existsByMacAddress(macAddress)
+                || (normalizedDevEui != null && deviceRepository.existsByDevEui(normalizedDevEui))) {
             logger.warn("Device with MAC {} or DevEUI {} already exists", macAddress, notif.getDevEui());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
