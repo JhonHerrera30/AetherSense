@@ -131,7 +131,12 @@
 </div>
 <script>
 function formatMac(mac) {
-    return mac ? mac.replace(/.{2}(?!$)/g, '$&:') : '';
+    if (!mac) {
+        return '';
+    }
+    const cleaned = mac.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+    const pairs = cleaned.match(/.{1,2}/g);
+    return pairs ? pairs.join(':') : '';
 }
 document.querySelectorAll('.toggle-add-list').forEach(button => {
     button.addEventListener('click', async () => {
