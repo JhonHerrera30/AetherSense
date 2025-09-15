@@ -31,7 +31,7 @@ public class Device {
 	@Column(nullable = true, unique = true)
 	private String devEui;
 	
-        @Column(unique = true, nullable = false)
+        @Column(unique = true, nullable = true)
         private String macAddress;
 	
         @Column(nullable = true)
@@ -208,3 +208,4 @@ public class Device {
 		return null;
 	}
 }
+
