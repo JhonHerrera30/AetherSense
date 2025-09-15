@@ -18,12 +18,13 @@ public class UnknownDeviceService {
 
     public void notify(PacketDTO packet) {
         String mac = MacAddressUtils.normalize(packet.getMacAddress());
-        String key = mac != null && !mac.isBlank() ? mac : packet.getDevEui();
+        String devEui = MacAddressUtils.normalize(packet.getDevEui());
+        String key = mac != null && !mac.isBlank() ? mac : devEui;
         System.out.println("UnknownDeviceService.notify - unknown device key: " + key + ", project: " + packet.getProjectId());
         UnknownDeviceNotification notification = new UnknownDeviceNotification(
                 key,
                 mac,
-                packet.getDevEui(),
+                devEui,
                 packet.getProjectId(),
                 packet.getTypeOfDevice(),
                 packet.getPayload(),
@@ -65,6 +66,7 @@ public class UnknownDeviceService {
     }
 
     public UnknownDeviceNotification consume(Long projectId, String key) {
+        key = MacAddressUtils.normalize(key);
         Map<String, UnknownDeviceNotification> map = notifications.get(projectId);
         if (map == null) return null;
         return map.remove(key);
