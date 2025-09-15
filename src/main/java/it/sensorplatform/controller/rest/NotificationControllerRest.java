@@ -10,6 +10,7 @@ import it.sensorplatform.repository.ProjectRepository;
 import it.sensorplatform.repository.TypeOfDeviceRepository;
 import it.sensorplatform.service.SpecService;
 import it.sensorplatform.service.UnknownDeviceService;
+import it.sensorplatform.util.MacAddressUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -78,13 +79,14 @@ public class NotificationControllerRest {
             typeOfDeviceRepository.save(tod);
         }
 
-        String macAddress = notif.getMacAddress();
+        String macAddress = MacAddressUtils.normalize(notif.getMacAddress());
         if (macAddress == null || macAddress.isBlank()) {
-            macAddress = notif.getDevEui();
+            macAddress = MacAddressUtils.normalize(notif.getDevEui());
             logger.info("MAC address missing; using DevEUI {} as MAC address", macAddress);
         }
 
-        if (deviceRepository.existsByMacAddress(macAddress) || deviceRepository.existsByDevEui(notif.getDevEui())) {
+        String normalizedDevEui = MacAddressUtils.normalize(notif.getDevEui());
+        if (deviceRepository.existsByMacAddress(macAddress) || deviceRepository.existsByDevEui(normalizedDevEui)) {
             logger.warn("Device with MAC {} or DevEUI {} already exists", macAddress, notif.getDevEui());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
@@ -92,7 +94,7 @@ public class NotificationControllerRest {
         logger.info("Creating device with MAC {} and DevEUI {}", macAddress, notif.getDevEui());
         Device device = new Device();
         device.setMacAddress(macAddress);
-        device.setDevEui(notif.getDevEui());
+        device.setDevEui(normalizedDevEui);
         device.setProject(project);
         device.setTod(tod);
         device.setStatus("deactivated");
