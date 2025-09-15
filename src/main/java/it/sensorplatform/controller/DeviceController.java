@@ -289,15 +289,9 @@ public class DeviceController {
                 List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getName(), d.getMacAddress(),
                                 d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))
                                 .collect(Collectors.toList());
-                Collections.sort(deviceDTOs, new Comparator<DeviceDTO>() {
-
-			@Override
-			public int compare(DeviceDTO d1, DeviceDTO d2) {
-
-				return d1.getEmailOwner().compareTo(d2.getEmailOwner());
-			}
-
-		});
+                Comparator<DeviceDTO> cmp = Comparator.comparing(DeviceDTO::getEmailOwner,
+                                Comparator.nullsFirst(String::compareTo));
+                Collections.sort(deviceDTOs, cmp);
 		model.addAttribute("devices", deviceDTOs);
 	}
 }
