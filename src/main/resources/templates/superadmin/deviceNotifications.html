@@ -51,7 +51,12 @@
     const notifications = new Map();
 
     function formatMac(mac) {
-        return mac ? mac.replace(/(..)(?=..)/g, '$1:') : '';
+        if (!mac) {
+            return '';
+        }
+        const cleaned = mac.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+        const pairs = cleaned.match(/.{1,2}/g);
+        return pairs ? pairs.join(':') : '';
     }
 
     function renderNotification(n) {
