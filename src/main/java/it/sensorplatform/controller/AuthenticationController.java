@@ -21,10 +21,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import it.sensorplatform.model.Credentials;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.Project;
+import it.sensorplatform.model.Superadmin;
 import it.sensorplatform.model.User;
 import it.sensorplatform.service.CredentialsService;
 import it.sensorplatform.service.DeviceService;
 import it.sensorplatform.service.ProjectService;
+import it.sensorplatform.service.SuperadminService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
@@ -43,11 +45,14 @@ public class AuthenticationController {
 	@Autowired
 	private CredentialsService credentialsService;
 
-	@Autowired
-	private ProjectService projectService;
+        @Autowired
+        private ProjectService projectService;
 
-	@Autowired
-	private DeviceService deviceService;
+        @Autowired
+        private DeviceService deviceService;
+
+        @Autowired
+        private SuperadminService superadminService;
 
 	@GetMapping(value = "/register") 
 	public String showRegisterForm (@RequestParam(value = "projectId", required = false) Long projectId, Model model) {
@@ -180,11 +185,16 @@ public class AuthenticationController {
 			if (project.getName().equals("VOLCANO")) {
 				credentials.setRole(Credentials.VOLCANO_ADMIN_ROLE);
 			}
-			credentialsService.saveCredentials(credentials);
-			model.addAttribute("user", user);
-			model.addAttribute("projectId", projectId);
+                        Credentials savedCredentials = credentialsService.saveCredentials(credentials);
+                        Superadmin superadmin = superadminService.getDefaultSuperadmin();
+                        if (superadmin != null) {
+                                superadmin.addAdminEmail(savedCredentials.getEmail());
+                                superadminService.save(superadmin);
+                        }
+                        model.addAttribute("user", user);
+                        model.addAttribute("projectId", projectId);
 
-			return "registrationSuccessful";
+                        return "registrationSuccessful";
 		}
 		model.addAttribute("projectId", projectId);
 		List<Project> projects = (List<Project>) projectService.getAllProjects();

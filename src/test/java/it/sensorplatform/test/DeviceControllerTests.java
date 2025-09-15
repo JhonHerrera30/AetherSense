@@ -26,6 +26,7 @@ class DeviceControllerTests {
         deviceWithNullEmail.setEmailOwner(null);
         deviceWithNullEmail.setDevEui("devEui1");
         deviceWithNullEmail.setTod(tod);
+        deviceWithNullEmail.setId(1L);
 
         Device deviceB = new Device();
         deviceB.setName("dev2");
@@ -33,6 +34,7 @@ class DeviceControllerTests {
         deviceB.setEmailOwner("b@example.com");
         deviceB.setDevEui("devEui2");
         deviceB.setTod(tod);
+        deviceB.setId(2L);
 
         Device deviceA = new Device();
         deviceA.setName("dev3");
@@ -40,6 +42,7 @@ class DeviceControllerTests {
         deviceA.setEmailOwner("a@example.com");
         deviceA.setDevEui("devEui3");
         deviceA.setTod(tod);
+        deviceA.setId(3L);
 
         List<Device> devices = Arrays.asList(deviceB, deviceWithNullEmail, deviceA);
 
@@ -55,5 +58,11 @@ class DeviceControllerTests {
         assertNull(result.get(0).getEmailOwner());
         assertEquals("a@example.com", result.get(1).getEmailOwner());
         assertEquals("b@example.com", result.get(2).getEmailOwner());
+
+        @SuppressWarnings("unchecked")
+        List<DeviceDTO> withoutOwner = (List<DeviceDTO>) model.getAttribute("devicesWithoutOwner");
+        assertNotNull(withoutOwner);
+        assertEquals(1, withoutOwner.size());
+        assertTrue(withoutOwner.get(0).isEmailOwnerMissing());
     }
 }

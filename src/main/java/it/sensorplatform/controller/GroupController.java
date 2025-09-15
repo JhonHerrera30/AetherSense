@@ -273,8 +273,8 @@ private AdminService adminService;
 				return d1.getName().compareTo(d2.getName());
 			}
 		});
-                List<DeviceDTO> deviceDTOs = orderedDevices.stream().map(d -> new DeviceDTO(d.getName(), d.getMacAddress(),
-                                d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))
+                List<DeviceDTO> deviceDTOs = orderedDevices.stream().map(d -> new DeviceDTO(d.getId(), d.getName(),
+                                d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))
                                 .collect(Collectors.toList());
                 model.addAttribute("devices", deviceDTOs);
         }

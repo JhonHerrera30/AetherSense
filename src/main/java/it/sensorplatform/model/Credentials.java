@@ -58,6 +58,9 @@ public class Credentials {
         @OneToOne(mappedBy = "credentials")
         private Admin admin;
 
+        @OneToOne(mappedBy = "credentials")
+        private Superadmin superadmin;
+
         @ManyToOne
         private Admin employer;
 	
@@ -76,6 +79,14 @@ public class Credentials {
 
         public void setAdmin(Admin admin) {
                 this.admin = admin;
+        }
+
+        public Superadmin getSuperadmin() {
+                return superadmin;
+        }
+
+        public void setSuperadmin(Superadmin superadmin) {
+                this.superadmin = superadmin;
         }
 
         public Admin getEmployer() {
