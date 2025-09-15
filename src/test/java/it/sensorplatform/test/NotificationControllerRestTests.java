@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -48,6 +49,7 @@ class NotificationControllerRestTests {
                 projectId,
                 "type",
                 Map.of(),
+                List.of(),
                 Instant.now()
         );
 
@@ -77,6 +79,48 @@ class NotificationControllerRestTests {
         assertEquals("DEV123", savedDevice.getDevEui());
 
         assertTrue(output.getOut().contains("using DevEUI DEV123 as MAC address"));
+    }
+
+    @Test
+    void addDeviceIgnoresNullDevEui() {
+        UnknownDeviceService unknownDeviceService = mock(UnknownDeviceService.class);
+        DeviceRepository deviceRepository = mock(DeviceRepository.class);
+        TypeOfDeviceRepository typeOfDeviceRepository = mock(TypeOfDeviceRepository.class);
+        SpecService specService = mock(SpecService.class);
+        ProjectRepository projectRepository = mock(ProjectRepository.class);
+
+        Long projectId = 1L;
+        String key = "key";
+        String normalizedKey = "KEY";
+        UnknownDeviceNotification notif = new UnknownDeviceNotification(
+                normalizedKey,
+                "AA:BB:CC:DD:EE:FF",
+                null,
+                projectId,
+                "type",
+                Map.of(),
+                List.of(),
+                Instant.now()
+        );
+
+        when(unknownDeviceService.consume(projectId, normalizedKey)).thenReturn(notif);
+        when(typeOfDeviceRepository.findByName("type")).thenReturn(Optional.of(new TypeOfDevice()));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(new Project()));
+        when(deviceRepository.existsByMacAddress(MacAddressUtils.normalize("AA:BB:CC:DD:EE:FF"))).thenReturn(false);
+        when(deviceRepository.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        NotificationControllerRest controller = new NotificationControllerRest(
+                unknownDeviceService,
+                deviceRepository,
+                typeOfDeviceRepository,
+                specService,
+                projectRepository
+        );
+
+        ResponseEntity<Void> response = controller.addDevice(projectId, key);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(deviceRepository, never()).existsByDevEui(any());
     }
 }
 

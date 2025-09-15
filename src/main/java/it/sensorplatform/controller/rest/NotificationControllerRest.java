@@ -21,7 +21,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -65,16 +64,18 @@ public class NotificationControllerRest {
             tod = new TypeOfDevice();
             tod.setName(notif.getTypeOfDevice());
             List<Spec> specs = new ArrayList<>();
-            for (Map.Entry<String, Object> entry : notif.getPayload().entrySet()) {
-                String[] parts = entry.getKey().split("[_:]");
-                Spec spec = new Spec();
-                spec.setMeasurement(parts[0]);
-                spec.setComponent(parts.length > 1 ? parts[1] : "");
-                spec.setUnitOfMeasurement("");
-                if (!specService.existsByFields(spec)) {
-                    specService.save(spec);
+            if (notif.getSpec() != null) {
+                for (String specEntry : notif.getSpec()) {
+                    String[] parts = specEntry.split("-");
+                    Spec spec = new Spec();
+                    spec.setComponent(parts.length > 0 ? parts[0] : "");
+                    spec.setMeasurement(parts.length > 1 ? parts[1] : "");
+                    spec.setUnitOfMeasurement(parts.length > 2 ? parts[2] : "");
+                    if (!specService.existsByFields(spec)) {
+                        specService.save(spec);
+                    }
+                    specs.add(spec);
                 }
-                specs.add(spec);
             }
             tod.setSpecs(specs);
             typeOfDeviceRepository.save(tod);
@@ -87,7 +88,8 @@ public class NotificationControllerRest {
         }
 
         String normalizedDevEui = MacAddressUtils.normalize(notif.getDevEui());
-        if (deviceRepository.existsByMacAddress(macAddress) || deviceRepository.existsByDevEui(normalizedDevEui)) {
+        if (deviceRepository.existsByMacAddress(macAddress)
+                || (normalizedDevEui != null && deviceRepository.existsByDevEui(normalizedDevEui))) {
             logger.warn("Device with MAC {} or DevEUI {} already exists", macAddress, notif.getDevEui());
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
