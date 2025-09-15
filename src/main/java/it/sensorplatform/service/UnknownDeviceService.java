@@ -20,6 +20,7 @@ public class UnknownDeviceService {
         String mac = MacAddressUtils.normalize(packet.getMacAddress());
         String devEui = MacAddressUtils.normalize(packet.getDevEui());
         String key = mac != null && !mac.isBlank() ? mac : devEui;
+        key = MacAddressUtils.normalize(key);
         System.out.println("UnknownDeviceService.notify - unknown device key: " + key + ", project: " + packet.getProjectId());
         UnknownDeviceNotification notification = new UnknownDeviceNotification(
                 key,
