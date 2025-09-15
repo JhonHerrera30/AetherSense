@@ -12,7 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
-
+import it.sensorplatform.util.MacAddressUtils;
 @Entity
 public class Device {
 	@Id
@@ -120,9 +120,9 @@ public class Device {
 	}
 
 
-	public void setMacAddress(String macAddress) {
-		this.macAddress = macAddress;
-	}
+        public void setMacAddress(String macAddress) {
+                this.macAddress = MacAddressUtils.normalize(macAddress);
+        }
 	
 	
 	public List<MeasurementRecord> getRecords() {

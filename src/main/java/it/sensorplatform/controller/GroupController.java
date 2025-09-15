@@ -22,6 +22,7 @@ import it.sensorplatform.service.DeviceService;
 import it.sensorplatform.service.GroupService;
 import it.sensorplatform.service.ProjectService;
 import it.sensorplatform.service.AdminService;
+import it.sensorplatform.util.MacAddressUtils;
 
 
 import static it.sensorplatform.model.Credentials.SUPERADMIN_ROLE;
@@ -177,30 +178,32 @@ private AdminService adminService;
 		return "redirect:/manageGroups/" + projectId;
 	}
 
-	@PostMapping("/group/{projectId}/{groupId}/removeDevice/{macAddress}")
-	public String removeDeviceFromGroup(@PathVariable Long projectId, @PathVariable Long groupId,
-			@PathVariable String macAddress, RedirectAttributes redirectAttributes) {
-		Group group = groupService.findGroupById(groupId);
-		Device device = deviceService.findByMacAddress(macAddress);
-		List<Device> devices = group.getDevices();
-		devices.remove(device);
-		group.setDevices(devices);
-		device.setGroup(null);
-		groupService.save(group);
-		deviceService.save(device);
-		redirectAttributes.addFlashAttribute("success", "Device removed successfully.");
-		return "redirect:/manageGroups/" + projectId;
-	}
+        @PostMapping("/group/{projectId}/{groupId}/removeDevice/{macAddress}")
+        public String removeDeviceFromGroup(@PathVariable Long projectId, @PathVariable Long groupId,
+                        @PathVariable String macAddress, RedirectAttributes redirectAttributes) {
+                macAddress = MacAddressUtils.normalize(macAddress);
+                Group group = groupService.findGroupById(groupId);
+                Device device = deviceService.findByMacAddress(macAddress);
+                List<Device> devices = group.getDevices();
+                devices.remove(device);
+                group.setDevices(devices);
+                device.setGroup(null);
+                groupService.save(group);
+                deviceService.save(device);
+                redirectAttributes.addFlashAttribute("success", "Device removed successfully.");
+                return "redirect:/manageGroups/" + projectId;
+        }
 
-	@PostMapping("/group/{groupId}/add-device/{macAddress}")
-	public String addDeviceToGroup(@PathVariable Long groupId, @PathVariable("macAddress") String macAddress,
-			Principal principal, RedirectAttributes redirectAttributes) {
-		Group group = groupService.findGroupById(groupId);
-		if (group == null) {
-			redirectAttributes.addFlashAttribute("error", "Group not found");
-			return "error";
-		}
-		Device device = deviceService.findByMacAddress(macAddress);
+        @PostMapping("/group/{groupId}/add-device/{macAddress}")
+        public String addDeviceToGroup(@PathVariable Long groupId, @PathVariable("macAddress") String macAddress,
+                        Principal principal, RedirectAttributes redirectAttributes) {
+                macAddress = MacAddressUtils.normalize(macAddress);
+                Group group = groupService.findGroupById(groupId);
+                if (group == null) {
+                        redirectAttributes.addFlashAttribute("error", "Group not found");
+                        return "error";
+                }
+                Device device = deviceService.findByMacAddress(macAddress);
 		if (device == null) {
 			redirectAttributes.addFlashAttribute("error", "Device not found");
 		} else {

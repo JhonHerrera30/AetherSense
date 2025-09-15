@@ -7,6 +7,7 @@ import it.sensorplatform.repository.DeviceRepository;
 import it.sensorplatform.repository.ProjectRepository;
 import it.sensorplatform.service.IngestService;
 import it.sensorplatform.service.PacketService;
+import it.sensorplatform.util.MacAddressUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,7 +45,7 @@ class PacketServiceTests {
         PacketService.Result res = packetService.handlePacket(dto);
 
         assertEquals(PacketService.Result.NEW_DEVICE, res);
-        Device saved = deviceRepository.findByMacAddress("AA:BB:CC").orElseThrow();
+        Device saved = deviceRepository.findByMacAddress(MacAddressUtils.normalize("AA:BB:CC")).orElseThrow();
         assertEquals("deactivated", saved.getStatus());
         assertEquals(project.getId(), saved.getProject().getId());
     }
@@ -71,7 +72,7 @@ class PacketServiceTests {
 
         PacketService.Result res = packetService.handlePacket(dto);
         assertEquals(PacketService.Result.DATA, res);
-        assertEquals(1, ingestService.last("AA:DD:EE", 1).size());
+        assertEquals(1, ingestService.last(MacAddressUtils.normalize("AA:DD:EE"), 1).size());
     }
 
     @Test
@@ -99,7 +100,7 @@ class PacketServiceTests {
         PacketService.Result res = packetService.handlePacket(dto);
         assertEquals(PacketService.Result.ACTIVATION, res);
 
-        Device updated = deviceRepository.findByMacAddress("AA:FF:00").orElseThrow();
+        Device updated = deviceRepository.findByMacAddress(MacAddressUtils.normalize("AA:FF:00")).orElseThrow();
         assertEquals("activated", updated.getStatus());
         assertEquals(45.0, updated.getLatitude());
         assertEquals(7.0, updated.getLongitude());

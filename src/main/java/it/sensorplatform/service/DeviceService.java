@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import it.sensorplatform.model.Credentials;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.repository.DeviceRepository;
+import it.sensorplatform.util.MacAddressUtils;
 
 @Service
 public class DeviceService {
@@ -29,32 +30,38 @@ public class DeviceService {
 		this.deviceRepository.deleteById(deviceId);
 	}
 
-	public void saveDevice(Device existing) {
-		this.deviceRepository.save(existing);
-	}
+        public void saveDevice(Device existing) {
+                if (existing != null) {
+                        existing.setMacAddress(MacAddressUtils.normalize(existing.getMacAddress()));
+                        this.deviceRepository.save(existing);
+                }
+        }
 
 	public Device findById(Long deviceId) {
 		return this.deviceRepository.findById(deviceId).get();
 	}
 
-	public Device findByMacAddress(String macAddress) {
-		return this.deviceRepository.findByMacAddress(macAddress).get();
-	}
+        public Device findByMacAddress(String macAddress) {
+                return this.deviceRepository.findByMacAddress(MacAddressUtils.normalize(macAddress)).get();
+        }
 
-	public void save(Device device) {
-		this.deviceRepository.save(device);
-	}
+        public void save(Device device) {
+                if (device != null) {
+                        device.setMacAddress(MacAddressUtils.normalize(device.getMacAddress()));
+                        this.deviceRepository.save(device);
+                }
+        }
 
-	public boolean existsByMacAddress(String macAddress) {
-		return this.deviceRepository.existsByMacAddress(macAddress);
-	}
+        public boolean existsByMacAddress(String macAddress) {
+                return this.deviceRepository.existsByMacAddress(MacAddressUtils.normalize(macAddress));
+        }
 
 	public Set<Device> findByNameStartingWithIgnoreCase(String deviceInfo) {
         return this.deviceRepository.findByNameStartingWithIgnoreCase(deviceInfo);
     }
 
     public Set<Device> findByMacAddressStartingWithIgnoreCase(String deviceInfo) {
-        return this.deviceRepository.findByMacAddressStartingWithIgnoreCase(deviceInfo);
+        return this.deviceRepository.findByMacAddressStartingWithIgnoreCase(MacAddressUtils.normalize(deviceInfo));
     }
 
     public Set<Device> findByEmailOwnerStartingWithIgnoreCase(String deviceQuery) {
