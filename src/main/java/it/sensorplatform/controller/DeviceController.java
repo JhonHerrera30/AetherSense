@@ -90,12 +90,9 @@ public class DeviceController {
                         return "redirect:/superadmin/manageProjectDevices/" + projectId;
                 }
 
-                String emailToAssign = null;
-                if (StringUtils.hasText(newEmail)) {
-                        emailToAssign = newEmail.trim();
-                } else if (StringUtils.hasText(existingEmail)) {
-                        emailToAssign = existingEmail.trim();
-                }
+                final String emailToAssign =
+                                StringUtils.hasText(newEmail) ? newEmail.trim()
+                                                : StringUtils.hasText(existingEmail) ? existingEmail.trim() : null;
 
                 if (!StringUtils.hasText(emailToAssign)) {
                         redirectAttributes.addFlashAttribute("errorMessage",
