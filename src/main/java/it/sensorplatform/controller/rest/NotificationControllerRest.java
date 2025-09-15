@@ -74,9 +74,21 @@ public class NotificationControllerRest {
             tod.setSpecs(specs);
             typeOfDeviceRepository.save(tod);
         }
-        logger.info("Creating device with MAC {} and DevEUI {}", notif.getMacAddress(), notif.getDevEui());
+
+        String macAddress = notif.getMacAddress();
+        if (macAddress == null || macAddress.isBlank()) {
+            macAddress = notif.getDevEui();
+            logger.info("MAC address missing; using DevEUI {} as MAC address", macAddress);
+        }
+
+        if (deviceRepository.existsByMacAddress(macAddress) || deviceRepository.existsByDevEui(notif.getDevEui())) {
+            logger.warn("Device with MAC {} or DevEUI {} already exists", macAddress, notif.getDevEui());
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        logger.info("Creating device with MAC {} and DevEUI {}", macAddress, notif.getDevEui());
         Device device = new Device();
-        device.setMacAddress(notif.getMacAddress());
+        device.setMacAddress(macAddress);
         device.setDevEui(notif.getDevEui());
         device.setProject(project);
         device.setTod(tod);
@@ -86,7 +98,7 @@ public class NotificationControllerRest {
             logger.info("Persisted device with id {} and status {}", savedDevice.getId(), savedDevice.getStatus());
             return ResponseEntity.ok().build();
         } catch (Exception e) {
-            logger.error("Error saving device with MAC {} and DevEUI {}", notif.getMacAddress(), notif.getDevEui(), e);
+            logger.error("Error saving device with MAC {} and DevEUI {}", macAddress, notif.getDevEui(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
