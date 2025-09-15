@@ -106,7 +106,7 @@
 		    <tbody>
 				<tr th:each="device : ${group.devices}">
 				    <td th:text="${device.name}">Device Name</td>
-				    <td th:text="${device.macAddress}">MAC</td>
+                                    <td th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">MAC</td>
 				    <td th:text="${device.tod != null ? device.tod.name : 'N/A'}">Type</td> <!-- Spostata sopra -->
 				    <td>
 				        <form th:action="@{'/group/' + ${project.id} + '/' + ${group.id} + '/removeDevice/' + ${device.macAddress}}" 
@@ -130,6 +130,9 @@
     </div>
 </div>
 <script>
+function formatMac(mac) {
+    return mac ? mac.replace(/.{2}(?!$)/g, '$&:') : '';
+}
 document.querySelectorAll('.toggle-add-list').forEach(button => {
     button.addEventListener('click', async () => {
         const groupId = button.getAttribute('data-group-id');
@@ -158,8 +161,8 @@ document.querySelectorAll('.toggle-add-list').forEach(button => {
 			    devices.forEach(device => {
 			        html += `
 			            <tr>
-			                <td>${device.name}</td>
-			                <td>${device.macAddress}</td>
+                                        <td>${device.name}</td>
+                                        <td>${formatMac(device.macAddress)}</td>
 			                <td>${device.tod || 'N/A'}</td>
 			                <td>
 			                    <form method="post" action="/group/${groupId}/add-device/${device.macAddress}">

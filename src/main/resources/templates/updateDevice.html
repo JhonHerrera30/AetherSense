@@ -58,7 +58,7 @@
             <table>
                 <tr>
                     <th>MAC Address</th>
-                    <td th:text="${device.macAddress}"></td>
+                    <td th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}"></td>
                 </tr>
                 <tr>
                     <th>Owner Email</th>
