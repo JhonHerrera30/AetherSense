@@ -72,12 +72,13 @@ public class AuthConfiguration {
 
 
 		http
-//		.csrf(csrf -> csrf
-//			    .ignoringRequestMatchers("/api/ingest/**")
-//			)
+		.csrf(csrf -> csrf
+				.ignoringRequestMatchers("/api/packets")
+			)
 		.authorizeHttpRequests(auth -> auth
 				.requestMatchers(HttpMethod.GET, "/", "/home", "/login", "/register", "/access", "/css/**", "/img/**", "/favicon.ico", "/videos/**", "/project/**").permitAll()
 				.requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
+				.requestMatchers(HttpMethod.POST, "/api/packets").permitAll()
 				
 				.requestMatchers(HttpMethod.GET, "/superadmin/**").hasAuthority(SUPERADMIN_ROLE)
 				.requestMatchers(HttpMethod.POST, "/superadmin/**").hasAuthority(SUPERADMIN_ROLE)
