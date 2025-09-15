@@ -19,11 +19,12 @@ public class PacketControllerRest {
         this.packetService = packetService;
     }
 
-@PostMapping
-public ResponseEntity<PacketService.Result> handle(@RequestBody PacketDTO packet) {
-    System.out.println("Received packet: " + packet);
-    PacketService.Result result = packetService.handlePacket(packet);
-    return ResponseEntity.ok(result);
+    @PostMapping
+    public ResponseEntity<PacketService.Result> handle(@RequestBody PacketDTO packet) {
+        System.out.println("PacketControllerRest.handle - received packet: " + packet);
+        PacketService.Result result = packetService.handlePacket(packet);
+        System.out.println("PacketControllerRest.handle - processing result: " + result);
+        return ResponseEntity.ok(result);
     }
 
 }

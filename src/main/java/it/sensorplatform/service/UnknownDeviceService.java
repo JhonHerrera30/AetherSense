@@ -18,6 +18,7 @@ public class UnknownDeviceService {
     public void notify(PacketDTO packet) {
         String key = packet.getMacAddress() != null && !packet.getMacAddress().isBlank() ?
                 packet.getMacAddress() : packet.getDevEui();
+        System.out.println("UnknownDeviceService.notify - unknown device key: " + key + ", project: " + packet.getProjectId());
         UnknownDeviceNotification notification = new UnknownDeviceNotification(
                 key,
                 packet.getMacAddress(),
@@ -30,10 +31,13 @@ public class UnknownDeviceService {
         notifications.computeIfAbsent(packet.getProjectId(), k -> new ConcurrentHashMap<>())
                 .put(key, notification);
         List<SseEmitter> list = emitters.getOrDefault(packet.getProjectId(), List.of());
+        System.out.println("UnknownDeviceService.notify - sending notification to " + list.size() + " emitter(s)");
         for (SseEmitter emitter : list) {
             try {
+                System.out.println("UnknownDeviceService.notify - sending SSE event");
                 emitter.send(SseEmitter.event().name("unknown-device").data(notification));
             } catch (Exception e) {
+                System.out.println("UnknownDeviceService.notify - emitter failed, completing");
                 emitter.complete();
             }
         }
