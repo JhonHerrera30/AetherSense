@@ -1,5 +1,6 @@
 package it.sensorplatform.dto;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -16,6 +17,7 @@ public class PacketDTO {
     private Double latitude;
     private Double longitude;
     private Map<String, Object> payload;
+    private List<String> spec;
 
     public String getMacAddress() {
         return macAddress;
@@ -79,6 +81,14 @@ public class PacketDTO {
 
     public void setPayload(Map<String, Object> payload) {
         this.payload = payload;
+    }
+
+    public List<String> getSpec() {
+        return spec;
+    }
+
+    public void setSpec(List<String> spec) {
+        this.spec = spec;
     }
 }
 

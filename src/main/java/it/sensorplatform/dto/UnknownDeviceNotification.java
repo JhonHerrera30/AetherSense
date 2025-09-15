@@ -1,6 +1,7 @@
 package it.sensorplatform.dto;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 public class UnknownDeviceNotification {
@@ -10,15 +11,24 @@ public class UnknownDeviceNotification {
     private Long projectId;
     private String typeOfDevice;
     private Map<String, Object> payload;
+    private List<String> spec;
     private Instant timestamp;
 
-    public UnknownDeviceNotification(String key, String macAddress, String devEui, Long projectId, String typeOfDevice, Map<String, Object> payload, Instant timestamp) {
+    public UnknownDeviceNotification(String key,
+                                     String macAddress,
+                                     String devEui,
+                                     Long projectId,
+                                     String typeOfDevice,
+                                     Map<String, Object> payload,
+                                     List<String> spec,
+                                     Instant timestamp) {
         this.key = key;
         this.macAddress = macAddress;
         this.devEui = devEui;
         this.projectId = projectId;
         this.typeOfDevice = typeOfDevice;
         this.payload = payload;
+        this.spec = spec;
         this.timestamp = timestamp;
     }
 
@@ -28,5 +38,6 @@ public class UnknownDeviceNotification {
     public Long getProjectId() { return projectId; }
     public String getTypeOfDevice() { return typeOfDevice; }
     public Map<String, Object> getPayload() { return payload; }
+    public List<String> getSpec() { return spec; }
     public Instant getTimestamp() { return timestamp; }
 }
