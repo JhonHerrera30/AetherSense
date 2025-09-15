@@ -73,8 +73,12 @@ public class AuthConfiguration {
 
 		http
 		.csrf(csrf -> csrf
-				.ignoringRequestMatchers("/api/packets")
-			)
+    	.ignoringRequestMatchers(
+			"/api/packets",
+        	"/api/notifications/**" 
+    )
+)
+
 		.authorizeHttpRequests(auth -> auth
 				.requestMatchers(HttpMethod.GET, "/", "/home", "/login", "/register", "/access", "/css/**", "/img/**", "/favicon.ico", "/videos/**", "/project/**").permitAll()
 				.requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
@@ -124,4 +128,5 @@ public class AuthConfiguration {
 
 		return http.build();
 	}
+
 }
