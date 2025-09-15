@@ -10,6 +10,7 @@ import it.sensorplatform.repository.ProjectRepository;
 import it.sensorplatform.repository.TypeOfDeviceRepository;
 import it.sensorplatform.service.SpecService;
 import it.sensorplatform.service.UnknownDeviceService;
+import it.sensorplatform.util.MacAddressUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -53,7 +54,7 @@ class NotificationControllerRestTests {
         when(unknownDeviceService.consume(projectId, normalizedKey)).thenReturn(notif);
         when(typeOfDeviceRepository.findByName("type")).thenReturn(Optional.of(new TypeOfDevice()));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(new Project()));
-        when(deviceRepository.existsByMacAddress("DEV123")).thenReturn(false);
+        when(deviceRepository.existsByMacAddress(MacAddressUtils.normalize("DEV123"))).thenReturn(false);
         when(deviceRepository.existsByDevEui("DEV123")).thenReturn(false);
         when(deviceRepository.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
