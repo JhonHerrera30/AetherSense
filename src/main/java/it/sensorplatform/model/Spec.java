@@ -14,13 +14,13 @@ public class Spec {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 	
-	@NotBlank
+	//@NotBlank
 	private String measurement;
 	
-	@NotBlank
+	//@NotBlank
 	private String unitOfMeasurement;
 	
-	@NotBlank
+	//@NotBlank
 	private String component;
 	
 	public Long getId() {
@@ -75,3 +75,4 @@ public class Spec {
 	
 	
 }
+
