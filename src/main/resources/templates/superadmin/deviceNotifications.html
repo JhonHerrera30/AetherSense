@@ -51,7 +51,7 @@
     const notifications = new Map();
 
     function formatMac(mac) {
-        return mac ? mac.replace(/.{2}(?!$)/g, '$&:') : '';
+        return mac ? mac.replace(/(..)(?=..)/g, '$1:') : '';
     }
 
     function renderNotification(n) {
@@ -60,9 +60,11 @@
             box = document.createElement('div');
             box.id = 'notif-' + n.key;
             box.className = 'notification-box';
-            box.innerHTML = `<p><strong>${n.macAddress ? formatMac(n.macAddress) : ''}${n.devEui ? '/' + n.devEui : ''}</strong></p>
+            const address = n.macAddress ? formatMac(n.macAddress) : formatMac(n.devEui);
+            const details = n.devEui && n.macAddress ? `/${n.devEui}` : '';
+            box.innerHTML = `<p><strong>${address}${details}</strong></p>
                              <p class="time"></p>
-                              <button class="btn-add" onclick="addDevice('${n.key}')">Add</button>`;
+                             <button class="btn-add" onclick="addDevice('${n.key}')">Add</button>`;
             container.appendChild(box);
         }
         box.dataset.timestamp = Date.parse(n.timestamp);
