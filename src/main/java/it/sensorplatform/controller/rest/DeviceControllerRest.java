@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.MeasurementRecord;
 import it.sensorplatform.service.DeviceService;
+import it.sensorplatform.util.MacAddressUtils;
 
 @RestController
 @RequestMapping("/api/device")
@@ -27,10 +28,10 @@ public class DeviceControllerRest {
 
 
 	@PostMapping("/data")
-	public ResponseEntity<String> receivePayload(@RequestBody Map<String, Object> data) {
-	    String macAddress = (String) data.get("macAddress"); // Assicurati che sia presente nel pacchetto
+        public ResponseEntity<String> receivePayload(@RequestBody Map<String, Object> data) {
+            String macAddress = MacAddressUtils.normalize((String) data.get("macAddress"));
 
-		Device device = deviceService.findByMacAddress(macAddress);
+                Device device = deviceService.findByMacAddress(macAddress);
 
 	    try {
 	        ObjectMapper mapper = new ObjectMapper();
