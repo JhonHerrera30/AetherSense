@@ -7,7 +7,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * IngestService: punto unico che riceve i dati in stile TTN (deviceId/devEui, timestamp, metrics)
+ * IngestService: punto unico che riceve dati normalizzati (deviceId/devEui, timestamp, metrics)
  * e li memorizza in un buffer in-memory per i test locali.
  *
  * Fase 2 (quando vorrai): qui dentro collegheremo i repository per persistere su DB.
