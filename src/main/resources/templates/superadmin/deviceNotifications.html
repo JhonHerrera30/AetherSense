@@ -75,7 +75,7 @@
     setInterval(updateTimes, 1000);
 
     function addDevice(key) {
-        fetch(`/api/notifications/${projectId}/${key}/add`, {method:'POST'})
+        fetch(`/api/notifications/${projectId}/${encodeURIComponent(key)}/add`, {method:'POST'})
             .then(response => {
                 if (response.ok) {
                     window.location.href = `/superadmin/manageProjectDevices/${projectId}`;
