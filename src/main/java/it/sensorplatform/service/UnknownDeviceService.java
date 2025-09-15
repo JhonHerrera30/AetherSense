@@ -2,6 +2,7 @@ package it.sensorplatform.service;
 
 import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.dto.UnknownDeviceNotification;
+import it.sensorplatform.util.MacAddressUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -16,12 +17,12 @@ public class UnknownDeviceService {
     private final Map<Long, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
     public void notify(PacketDTO packet) {
-        String key = packet.getMacAddress() != null && !packet.getMacAddress().isBlank() ?
-                packet.getMacAddress() : packet.getDevEui();
+        String mac = MacAddressUtils.normalize(packet.getMacAddress());
+        String key = mac != null && !mac.isBlank() ? mac : packet.getDevEui();
         System.out.println("UnknownDeviceService.notify - unknown device key: " + key + ", project: " + packet.getProjectId());
         UnknownDeviceNotification notification = new UnknownDeviceNotification(
                 key,
-                packet.getMacAddress(),
+                mac,
                 packet.getDevEui(),
                 packet.getProjectId(),
                 packet.getTypeOfDevice(),

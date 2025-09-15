@@ -3,6 +3,7 @@ package it.sensorplatform.service;
 import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.repository.DeviceRepository;
+import it.sensorplatform.util.MacAddressUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -38,14 +39,15 @@ public class PacketService {
      */
     public Result handlePacket(PacketDTO packet) {
         System.out.println("PacketService.handlePacket - processing packet: " + packet);
-        if ((packet.getMacAddress() == null || packet.getMacAddress().isBlank()) &&
+        String mac = MacAddressUtils.normalize(packet.getMacAddress());
+        if ((mac == null || mac.isBlank()) &&
                 (packet.getDevEui() == null || packet.getDevEui().isBlank())) {
             throw new IllegalArgumentException("macAddress or devEui is required");
         }
 
         Optional<Device> existing = Optional.empty();
-        if (packet.getMacAddress() != null && !packet.getMacAddress().isBlank()) {
-            existing = deviceRepository.findByMacAddress(packet.getMacAddress());
+        if (mac != null && !mac.isBlank()) {
+            existing = deviceRepository.findByMacAddress(mac);
         }
         if (existing.isEmpty() && packet.getDevEui() != null && !packet.getDevEui().isBlank()) {
             existing = deviceRepository.findByDevEui(packet.getDevEui());
