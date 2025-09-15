@@ -76,7 +76,18 @@
 
     function addDevice(key) {
         fetch(`/api/notifications/${projectId}/${key}/add`, {method:'POST'})
-            .then(() => { window.location.href = `/superadmin/manageProjectDevices/${projectId}`; });
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = `/superadmin/manageProjectDevices/${projectId}`;
+                } else if (response.status === 404) {
+                    alert('Notification not found');
+                } else if (response.status === 409) {
+                    alert('Device already exists');
+                } else {
+                    alert('Error adding device');
+                }
+            })
+            .catch(() => alert('Error connecting to server'));
     }
 
     const evtSource = new EventSource(`/api/notifications/stream/${projectId}`);
