@@ -11,7 +11,8 @@ public final class MacAddressUtils {
     }
 
     public static String format(String mac) {
-        return mac == null ? "" : mac.replaceAll("..(?!$)", "$0:");
+        String cleaned = normalize(mac);
+        return cleaned == null ? "" : cleaned.replaceAll("..(?!$)", "$0:");
     }
 }
 

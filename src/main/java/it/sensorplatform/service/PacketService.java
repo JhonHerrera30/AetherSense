@@ -40,8 +40,9 @@ public class PacketService {
     public Result handlePacket(PacketDTO packet) {
         System.out.println("PacketService.handlePacket - processing packet: " + packet);
         String mac = MacAddressUtils.normalize(packet.getMacAddress());
+        String devEui = MacAddressUtils.normalize(packet.getDevEui());
         if ((mac == null || mac.isBlank()) &&
-                (packet.getDevEui() == null || packet.getDevEui().isBlank())) {
+                (devEui == null || devEui.isBlank())) {
             throw new IllegalArgumentException("macAddress or devEui is required");
         }
 
@@ -49,8 +50,8 @@ public class PacketService {
         if (mac != null && !mac.isBlank()) {
             existing = deviceRepository.findByMacAddress(mac);
         }
-        if (existing.isEmpty() && packet.getDevEui() != null && !packet.getDevEui().isBlank()) {
-            existing = deviceRepository.findByDevEui(packet.getDevEui());
+        if (existing.isEmpty() && devEui != null && !devEui.isBlank()) {
+            existing = deviceRepository.findByDevEui(devEui);
         }
         if (existing.isEmpty()) {
             System.out.println("PacketService.handlePacket - device not found, notifying UnknownDeviceService");

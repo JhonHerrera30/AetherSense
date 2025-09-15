@@ -39,8 +39,9 @@ class NotificationControllerRestTests {
 
         Long projectId = 1L;
         String key = "key";
+        String normalizedKey = "KEY";
         UnknownDeviceNotification notif = new UnknownDeviceNotification(
-                key,
+                normalizedKey,
                 null,
                 "DEV123",
                 projectId,
@@ -49,7 +50,7 @@ class NotificationControllerRestTests {
                 Instant.now()
         );
 
-        when(unknownDeviceService.consume(projectId, key)).thenReturn(notif);
+        when(unknownDeviceService.consume(projectId, normalizedKey)).thenReturn(notif);
         when(typeOfDeviceRepository.findByName("type")).thenReturn(Optional.of(new TypeOfDevice()));
         when(projectRepository.findById(projectId)).thenReturn(Optional.of(new Project()));
         when(deviceRepository.existsByMacAddress("DEV123")).thenReturn(false);

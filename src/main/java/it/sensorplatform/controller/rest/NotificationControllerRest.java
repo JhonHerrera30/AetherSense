@@ -52,12 +52,13 @@ public class NotificationControllerRest {
 
     @PostMapping("/{projectId}/{key}/add")
     public ResponseEntity<Void> addDevice(@PathVariable Long projectId, @PathVariable String key) {
-        UnknownDeviceNotification notif = unknownDeviceService.consume(projectId, key);
+        String normalizedKey = MacAddressUtils.normalize(key);
+        UnknownDeviceNotification notif = unknownDeviceService.consume(projectId, normalizedKey);
         if (notif == null) {
-            logger.warn("No notification found for project {} and key {}", projectId, key);
+            logger.warn("No notification found for project {} and key {}", projectId, normalizedKey);
             return ResponseEntity.notFound().build();
         }
-        logger.info("Consumed notification for project {} key {}: mac {} devEui {}", projectId, key, notif.getMacAddress(), notif.getDevEui());
+        logger.info("Consumed notification for project {} key {}: mac {} devEui {}", projectId, normalizedKey, notif.getMacAddress(), notif.getDevEui());
         Project project = projectRepository.findById(projectId).orElse(null);
         TypeOfDevice tod = typeOfDeviceRepository.findByName(notif.getTypeOfDevice()).orElse(null);
         if (tod == null) {
