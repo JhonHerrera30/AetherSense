@@ -12,6 +12,7 @@ import it.sensorplatform.service.SpecService;
 import it.sensorplatform.service.UnknownDeviceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,8 +53,10 @@ public class NotificationControllerRest {
     public ResponseEntity<Void> addDevice(@PathVariable Long projectId, @PathVariable String key) {
         UnknownDeviceNotification notif = unknownDeviceService.consume(projectId, key);
         if (notif == null) {
+            logger.warn("No notification found for project {} and key {}", projectId, key);
             return ResponseEntity.notFound().build();
         }
+        logger.info("Consumed notification for project {} key {}: mac {} devEui {}", projectId, key, notif.getMacAddress(), notif.getDevEui());
         Project project = projectRepository.findById(projectId).orElse(null);
         TypeOfDevice tod = typeOfDeviceRepository.findByName(notif.getTypeOfDevice()).orElse(null);
         if (tod == null) {
@@ -97,6 +100,9 @@ public class NotificationControllerRest {
             Device savedDevice = deviceRepository.save(device);
             logger.info("Persisted device with id {} and status {}", savedDevice.getId(), savedDevice.getStatus());
             return ResponseEntity.ok().build();
+        } catch (DataIntegrityViolationException e) {
+            logger.warn("Conflict saving device with MAC {} and DevEUI {}", macAddress, notif.getDevEui(), e);
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (Exception e) {
             logger.error("Error saving device with MAC {} and DevEUI {}", macAddress, notif.getDevEui(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
