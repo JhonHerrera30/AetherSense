@@ -147,7 +147,8 @@ function doGet(e) {
         payload: JSON.stringify({
           projectId: 101,
           typeOfDevice: 'Device4G',
-          macAddress: payload.macAddress, // o devEui
+          macAddress: payload.macAddress || null,
+          devEui: payload.devEui || null,
           payload: payload,
           spec: spec
         })

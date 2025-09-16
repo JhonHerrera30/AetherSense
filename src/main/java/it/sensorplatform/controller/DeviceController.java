@@ -147,40 +147,51 @@ public class DeviceController {
                 return "superadmin/deviceNotifications.html";
         }
 
-	@GetMapping("/superadmin/formUpdateDevice/{projectId}/{macAddress}")
+        @GetMapping("/superadmin/formUpdateDevice/{projectId}/{macAddress}")
         public String formUpdateDevice(@PathVariable("projectId") Long projectId,
-                        @PathVariable("macAddress") String macAddress, Model model) {
-                macAddress = MacAddressUtils.normalize(macAddress);
+                        @PathVariable("macAddress") String deviceKey, Model model) {
+                String normalizedKey = MacAddressUtils.normalize(deviceKey);
+                if (normalizedKey == null || normalizedKey.isBlank()) {
+                        return "error";
+                }
                 Project project = projectService.getProjectById(projectId);
-                Device device = deviceService.findByMacAddress(macAddress);
-		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
-		model.addAttribute("user", credentials);
-		model.addAttribute("project", project);
-		model.addAttribute("device", device);
-		return "superadmin/formUpdateDevice.html";
-	}
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
+                if (deviceOpt.isEmpty()) {
+                        return "error";
+                }
+                Device device = deviceOpt.get();
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                model.addAttribute("user", credentials);
+                model.addAttribute("project", project);
+                model.addAttribute("device", device);
+                return "superadmin/formUpdateDevice.html";
+        }
 
         @PostMapping("/superadmin/updateDevice/{projectId}/{macAddress}")
         public String adminUpdateDevice(@PathVariable("projectId") Long projectId,
-                        @PathVariable("macAddress") String macAddress, @RequestParam String name,
+                        @PathVariable("macAddress") String deviceKey, @RequestParam String name,
                         @RequestParam(required = false) Double latitude, @RequestParam(required = false) Double longitude,
                         RedirectAttributes redirectAttributes) {
 
-		if (name == null || name.trim().isEmpty()) {
-			redirectAttributes.addFlashAttribute("error", "Device name is required.");
-			return "redirect:/superadmin/manageProjectDevices/" + projectId;
-		}
+                if (name == null || name.trim().isEmpty()) {
+                        redirectAttributes.addFlashAttribute("error", "Device name is required.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
 
-		// Recupera il dispositivo tramite MAC address
-                macAddress = MacAddressUtils.normalize(macAddress);
-                Device device = deviceService.findByMacAddress(macAddress);
+                String normalizedKey = MacAddressUtils.normalize(deviceKey);
+                if (normalizedKey == null || normalizedKey.isBlank()) {
+                        redirectAttributes.addFlashAttribute("error", "Device not found.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
 
-		if (device == null) {
-			redirectAttributes.addFlashAttribute("error", "Device not found.");
-			return "redirect:/superadmin/manageProjectDevices/" + projectId;
-		}
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
+                if (deviceOpt.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("error", "Device not found.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
 
+                Device device = deviceOpt.get();
                 // Aggiorna solo i campi modificabili
                 device.setName(name);
                 if (latitude != null && longitude != null) {
@@ -200,27 +211,42 @@ public class DeviceController {
                 return "redirect:/superadmin/manageProjectDevices/" + projectId;
         }
 
-	@PostMapping("/superadmin/deleteDevice/{projectId}/{macAddress}")
-        public String deleteDevice(@PathVariable("projectId") Long projectId, @PathVariable("macAddress") String macAddress,
+        @PostMapping("/superadmin/deleteDevice/{projectId}/{macAddress}")
+        public String deleteDevice(@PathVariable("projectId") Long projectId, @PathVariable("macAddress") String deviceKey,
                         RedirectAttributes redirectAttributes) {
-                macAddress = MacAddressUtils.normalize(macAddress);
-                Device device = deviceService.findByMacAddress(macAddress);
-		deviceService.delete(device);
-		redirectAttributes.addFlashAttribute("successMessage", "Dispositivo eliminato.");
-		return "redirect:/superadmin/manageProjectDevices/" + projectId;
-	}
+                String normalizedKey = MacAddressUtils.normalize(deviceKey);
+                if (normalizedKey == null || normalizedKey.isBlank()) {
+                        redirectAttributes.addFlashAttribute("errorMessage", "Device not found.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
+                if (deviceOpt.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("errorMessage", "Device not found.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
+                deviceService.delete(deviceOpt.get());
+                redirectAttributes.addFlashAttribute("successMessage", "Dispositivo eliminato.");
+                return "redirect:/superadmin/manageProjectDevices/" + projectId;
+        }
 
-	@GetMapping("/device/{projectId}/{macAddress}")
-        public String aboutDevice(@PathVariable("projectId") Long projectId, @PathVariable("macAddress") String macAddress,
+        @GetMapping("/device/{projectId}/{macAddress}")
+        public String aboutDevice(@PathVariable("projectId") Long projectId, @PathVariable("macAddress") String deviceKey,
                         Model model) {
-                macAddress = MacAddressUtils.normalize(macAddress);
+                String normalizedKey = MacAddressUtils.normalize(deviceKey);
                 Project project = projectService.getProjectById(projectId);
-                Device device = deviceService.findByMacAddress(macAddress);
-		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
-		model.addAttribute("user", credentials);
-		model.addAttribute("project", project);
-		model.addAttribute("device", device);
+                if (normalizedKey == null || normalizedKey.isBlank()) {
+                        return "error";
+                }
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
+                if (deviceOpt.isEmpty()) {
+                        return "error";
+                }
+                Device device = deviceOpt.get();
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                model.addAttribute("user", credentials);
+                model.addAttribute("project", project);
+                model.addAttribute("device", device);
 		return "updateDevice";
 	}
 
@@ -229,21 +255,25 @@ public class DeviceController {
                         @RequestParam(required = false) Double latitude, @RequestParam(required = false) Double longitude,
                         RedirectAttributes redirectAttributes) {
 
-                macAddress = MacAddressUtils.normalize(macAddress);
+                String normalizedKey = MacAddressUtils.normalize(macAddress);
 
                 if (name == null || name.trim().isEmpty()) {
                         redirectAttributes.addFlashAttribute("error", "Device name is required.");
-                        return "redirect:/device/" + projectId + "/" + macAddress;
+                        return "redirect:/device/" + projectId + "/" + normalizedKey;
                 }
 
-                // Recupera il dispositivo tramite MAC address
-                Device device = deviceService.findByMacAddress(macAddress);
+                if (normalizedKey == null || normalizedKey.isBlank()) {
+                        redirectAttributes.addFlashAttribute("error", "Device not found.");
+                        return "redirect:/device/" + projectId + "/" + normalizedKey;
+                }
 
-		if (device == null) {
-			redirectAttributes.addFlashAttribute("error", "Device not found.");
-                        return "redirect:/device/" + projectId + "/" + macAddress;
-		}
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
+                if (deviceOpt.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("error", "Device not found.");
+                        return "redirect:/device/" + projectId + "/" + normalizedKey;
+                }
 
+                Device device = deviceOpt.get();
                 // Aggiorna solo i campi modificabili
                 device.setName(name);
                 if (latitude != null && longitude != null) {
@@ -260,7 +290,7 @@ public class DeviceController {
                 deviceService.save(device);
 
                 redirectAttributes.addFlashAttribute("success", "Device updated successfully.");
-                return "redirect:/device/" + projectId + "/" + macAddress;
+                return "redirect:/device/" + projectId + "/" + normalizedKey;
         }
 
 	@GetMapping("/admin/formRegisterOperator/{projectId}")
@@ -336,24 +366,42 @@ public class DeviceController {
 
 	}
 
-	@PostMapping("/admin/selectOperator/{macAddress}/{opId}/{projectId}")
+        @PostMapping("/admin/selectOperator/{macAddress}/{opId}/{projectId}")
         public String assignOperatorToDevice(@PathVariable ("projectId") Long projectId, @PathVariable ("macAddress") String macAddress,
                                                                                 @PathVariable("opId") Long opId, RedirectAttributes ra) {
-                macAddress = MacAddressUtils.normalize(macAddress);
-                Device d = deviceService.findByMacAddress(macAddress);
-		Credentials operator = credentialsService.findById(opId);
-		
-		d.setOperator(operator);
-		deviceService.save(d);
-		
-		return "redirect:/admin/group/"+projectId;
-	}
-	
+                String normalizedKey = MacAddressUtils.normalize(macAddress);
+                if (normalizedKey == null || normalizedKey.isBlank()) {
+                        ra.addFlashAttribute("errorMessage", "Device not found.");
+                        return "redirect:/admin/group/"+projectId;
+                }
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
+                if (deviceOpt.isEmpty()) {
+                        ra.addFlashAttribute("errorMessage", "Device not found.");
+                        return "redirect:/admin/group/"+projectId;
+                }
+                Device d = deviceOpt.get();
+                Credentials operator = credentialsService.findById(opId);
+
+                d.setOperator(operator);
+                deviceService.save(d);
+
+                return "redirect:/admin/group/"+projectId;
+        }
+
         @PostMapping("/admin/removeOperator/{macAddress}/{projectId}")
         public String removeOperatorfromDevice(@PathVariable ("projectId") Long projectId, @PathVariable ("macAddress") String macAddress,
                                                                                  RedirectAttributes ra) {
-                macAddress = MacAddressUtils.normalize(macAddress);
-                Device d = deviceService.findByMacAddress(macAddress);
+                String normalizedKey = MacAddressUtils.normalize(macAddress);
+                if (normalizedKey == null || normalizedKey.isBlank()) {
+                        ra.addFlashAttribute("errorMessage", "Device not found.");
+                        return "redirect:/admin/group/"+projectId;
+                }
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
+                if (deviceOpt.isEmpty()) {
+                        ra.addFlashAttribute("errorMessage", "Device not found.");
+                        return "redirect:/admin/group/"+projectId;
+                }
+                Device d = deviceOpt.get();
 
                 d.setOperator(null);
                 d.setLatitude(null);
@@ -386,7 +434,7 @@ public class DeviceController {
                 }
 
                 String normalizedMac = MacAddressUtils.normalize(macAddress);
-                Optional<Device> deviceOpt = deviceService.findOptionalByMacAddress(normalizedMac);
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedMac);
                 if (deviceOpt.isEmpty()) {
                         return "error";
                 }

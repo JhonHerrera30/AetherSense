@@ -50,6 +50,27 @@ public class DeviceService {
                 return this.deviceRepository.findByMacAddress(MacAddressUtils.normalize(macAddress));
         }
 
+        public Optional<Device> findOptionalByDevEui(String devEui) {
+                return this.deviceRepository.findByDevEui(MacAddressUtils.normalize(devEui));
+        }
+
+        public Optional<Device> findOptionalByDeviceKey(String deviceKey) {
+                String normalizedKey = MacAddressUtils.normalize(deviceKey);
+                if (normalizedKey == null || normalizedKey.isBlank()) {
+                        return Optional.empty();
+                }
+                Optional<Device> byMac = this.deviceRepository.findByMacAddress(normalizedKey);
+                if (byMac.isPresent()) {
+                        return byMac;
+                }
+                return this.deviceRepository.findByDevEui(normalizedKey);
+        }
+
+        public Device findByDeviceKey(String deviceKey) {
+                return findOptionalByDeviceKey(deviceKey)
+                                .orElseThrow(() -> new IllegalArgumentException("Device not found for key: " + deviceKey));
+        }
+
         public void save(Device device) {
                 if (device != null) {
                         device.setMacAddress(MacAddressUtils.normalize(device.getMacAddress()));
