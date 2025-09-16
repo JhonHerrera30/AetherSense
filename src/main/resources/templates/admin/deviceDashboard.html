@@ -88,10 +88,19 @@
                         </div>
                 </section>
 
+                <section class="panel info-panel">
+                        <div class="panel-header">
+                                <h3>Device information</h3>
+                                <span class="panel-subtitle">Metadata sent with the latest packet</span>
+                        </div>
+                        <dl id="info-grid" class="info-grid"></dl>
+                        <p id="info-empty" class="empty-state">No additional information available.</p>
+                </section>
+
                 <section class="panel status-panel">
                         <div class="panel-header">
                                 <h3>Status indicators</h3>
-                                <span class="panel-subtitle">Control bits and diagnostics</span>
+                                <span class="panel-subtitle">SEN55 diagnostic bits (0 = OK, 1 = Fault)</span>
                         </div>
                         <div id="status-flags" class="status-flags"></div>
                         <p id="status-empty" class="empty-state">No diagnostics were provided in the latest packet.</p>
@@ -111,7 +120,6 @@
                 const state = {
                         specDescriptors: [],
                         specCardsRendered: false,
-                        metricKeyBySpecId: new Map(),
                         chart: null,
                         historyLimit: 60,
                         lastSamples: [],
@@ -167,7 +175,7 @@
                                 throw new Error('Unable to load device specs.');
                         }
                         const specs = await response.json();
-                        state.specDescriptors = Array.isArray(specs) ? specs.map((spec, index) => buildDescriptorFromSpec(spec, index)) : [];
+                        state.specDescriptors = Array.isArray(specs) ? specs.map(buildDescriptorFromSpec) : [];
                 }
 
                 async function loadHistory() {
@@ -191,13 +199,14 @@
                                 metricsEmpty.hidden = false;
                                 chartEmpty.hidden = false;
                                 resetChart();
-                                updateStatusFlags({}, new Set());
+                                updateStatusFlags([]);
+                                updateInfoPanel(null);
                                 document.getElementById('last-update').textContent = '--';
                                 return;
                         }
 
                         if (!state.specDescriptors.length) {
-                                const fallback = buildDescriptorsFromMetrics(state.lastSamples[state.lastSamples.length - 1]);
+                                const fallback = buildDescriptorsFromSample(state.lastSamples[state.lastSamples.length - 1]);
                                 state.specDescriptors = fallback;
                         }
 
@@ -209,7 +218,6 @@
                                 metricsEmpty.hidden = true;
                         }
 
-                        resolveMetricKeys(state.lastSamples);
                         const latestSample = state.lastSamples[state.lastSamples.length - 1];
                         updateFromSample(latestSample);
                         buildOrUpdateChart(state.lastSamples);
@@ -230,7 +238,7 @@
                                 return;
                         }
                         const sample = await response.json();
-                        if (!sample || !sample.metrics) {
+                        if (!sample || !Array.isArray(sample.measurements)) {
                                 return;
                         }
                         if (state.latestTimestamp && state.latestTimestamp === sample.timestamp) {
@@ -240,7 +248,6 @@
                         if (state.lastSamples.length > state.historyLimit) {
                                 state.lastSamples.splice(0, state.lastSamples.length - state.historyLimit);
                         }
-                        resolveMetricKeys([sample]);
                         updateFromSample(sample);
                         buildOrUpdateChart(state.lastSamples);
                 }
@@ -251,14 +258,13 @@
                         state.specDescriptors.forEach(descriptor => {
                                 const card = document.createElement('div');
                                 card.className = 'metric-card';
-                                card.dataset.specId = descriptor.id;
+                                card.dataset.specKey = descriptor.key;
                                 card.innerHTML = `
                                         <div class="metric-header">
-                                                <span class="metric-name">${descriptor.measurement}</span>
-                                                ${descriptor.component ? `<span class="metric-component">${descriptor.component}</span>` : ''}
+                                                <span class="metric-name">${descriptor.displayName}</span>
                                         </div>
                                         <div class="metric-value" data-value>--</div>
-                                        <div class="metric-unit">${descriptor.unit ?? ''}</div>
+                                        <div class="metric-range" data-range>${formatRange(descriptor.min, descriptor.max, descriptor.unit)}</div>
                                 `;
                                 container.appendChild(card);
                         });
@@ -266,68 +272,55 @@
                 }
 
                 function updateFromSample(sample) {
-                        if (!sample || !sample.metrics) {
+                        if (!sample || !Array.isArray(sample.measurements)) {
                                 return;
                         }
-                        const matchedKeys = updateMetricCards(sample.metrics);
-                        updateStatusFlags(sample.metrics, matchedKeys);
+                        const measurementMap = mapMeasurements(sample.measurements);
+                        updateMetricCards(measurementMap);
+                        updateStatusFlags(sample.indicators);
+                        updateInfoPanel(sample.info);
                         updateTimestamp(sample.timestamp);
                 }
 
-                function updateMetricCards(metrics) {
-                        const matchedKeys = new Set();
+                function updateMetricCards(measurements) {
                         state.specDescriptors.forEach(descriptor => {
-                                const card = document.querySelector(`.metric-card[data-spec-id="${descriptor.id}"]`);
+                                const card = document.querySelector(`.metric-card[data-spec-key="${descriptor.key}"]`);
                                 if (!card) {
                                         return;
                                 }
-                                let metricKey = state.metricKeyBySpecId.get(descriptor.id);
-                                if (!metricKey) {
-                                        metricKey = findMetricKey(descriptor, metrics);
-                                        if (metricKey) {
-                                                state.metricKeyBySpecId.set(descriptor.id, metricKey);
-                                        }
-                                }
                                 const valueEl = card.querySelector('[data-value]');
-                                if (!metricKey || !(metricKey in metrics)) {
+                                const rangeEl = card.querySelector('[data-range]');
+                                const measurement = measurements.get(descriptor.key);
+                                if (!measurement) {
                                         valueEl.textContent = '--';
+                                        rangeEl.textContent = formatRange(descriptor.min, descriptor.max, descriptor.unit);
                                         return;
                                 }
-                                matchedKeys.add(metricKey);
-                                const rawValue = metrics[metricKey];
-                                valueEl.textContent = formatValue(rawValue);
+                                valueEl.textContent = formatValue(measurement.value);
+                                rangeEl.textContent = formatRange(measurement.min, measurement.max, measurement.unit || descriptor.unit);
                         });
-                        return matchedKeys;
                 }
 
-                function updateStatusFlags(metrics, matchedKeys) {
+                function updateStatusFlags(indicators) {
                         const container = document.getElementById('status-flags');
                         const emptyState = document.getElementById('status-empty');
                         container.innerHTML = '';
 
-                        if (!metrics) {
-                                emptyState.hidden = false;
-                                return;
-                        }
-
-                        const entries = Object.entries(metrics).filter(([key]) => !matchedKeys.has(key));
-
-                        if (!entries.length) {
+                        if (!Array.isArray(indicators) || !indicators.length) {
                                 emptyState.hidden = false;
                                 return;
                         }
 
                         emptyState.hidden = true;
-                        entries.forEach(([key, value]) => {
+                        indicators.forEach(indicator => {
                                 const flag = document.createElement('div');
                                 flag.className = 'status-flag';
-                                const numeric = toNumber(value);
-                                const isBinary = typeof value === 'boolean' || numeric === 0 || numeric === 1;
-                                const isOn = typeof value === 'boolean' ? value : numeric === 1;
-                                const valueClass = isBinary ? (isOn ? 'flag-on' : 'flag-off') : 'flag-generic';
-                                const normalizedValue = formatStatus(value);
+                                const numeric = toNumber(indicator.value);
+                                const isOn = numeric === 1;
+                                const valueClass = numeric === null ? 'flag-generic' : (isOn ? 'flag-on' : 'flag-off');
+                                const normalizedValue = numeric === null ? '--' : (isOn ? 'Issue' : 'OK');
                                 flag.innerHTML = `
-                                        <span class="flag-key">${prettifyKey(key)}</span>
+                                        <span class="flag-key">${indicator.label ?? prettifyKey(indicator.key)}</span>
                                         <span class="flag-value ${valueClass}">${normalizedValue}</span>
                                 `;
                                 container.appendChild(flag);
@@ -387,18 +380,21 @@
                 function buildDatasets(samples) {
                         const theme = (PROJECT_KEY && palettes[PROJECT_KEY]) ? PROJECT_KEY : 'default';
                         const palette = palettes[theme];
-                        const descriptors = state.specDescriptors.filter(descriptor => state.metricKeyBySpecId.get(descriptor.id));
+                        const descriptors = state.specDescriptors;
+                        const measurementMaps = samples.map(sample => mapMeasurements(sample.measurements));
                         let colorIndex = 0;
                         return descriptors.map(descriptor => {
-                                const metricKey = state.metricKeyBySpecId.get(descriptor.id);
-                                const values = samples.map(sample => toNumber(sample.metrics?.[metricKey]));
+                                const values = measurementMaps.map(measurements => {
+                                        const measurement = measurements.get(descriptor.key);
+                                        return measurement ? toNumber(measurement.value) : null;
+                                });
                                 if (values.every(value => value === null)) {
                                         return null;
                                 }
                                 const color = palette[colorIndex % palette.length];
                                 colorIndex += 1;
                                 return {
-                                        label: descriptor.unit ? `${descriptor.measurement} (${descriptor.unit})` : descriptor.measurement,
+                                        label: descriptor.unit ? `${descriptor.displayName} (${descriptor.unit})` : descriptor.displayName,
                                         data: values,
                                         borderColor: color,
                                         backgroundColor: color + '33',
@@ -408,110 +404,63 @@
                         }).filter(Boolean);
                 }
 
-                function resolveMetricKeys(samples) {
-                        samples.forEach(sample => {
-                                if (!sample || !sample.metrics) {
-                                        return;
-                                }
-                                state.specDescriptors.forEach(descriptor => {
-                                        if (state.metricKeyBySpecId.get(descriptor.id)) {
-                                                return;
-                                        }
-                                        const key = findMetricKey(descriptor, sample.metrics);
-                                        if (key) {
-                                                state.metricKeyBySpecId.set(descriptor.id, key);
-                                        }
-                                });
-                        });
-                }
-
-                function findMetricKey(descriptor, metrics) {
-                        if (!metrics) {
-                                return null;
-                        }
-                        const entries = Object.entries(metrics);
-                        for (const [key, value] of entries) {
-                                const normalizedKey = normalizeKey(key);
-                                if (!normalizedKey) {
-                                        continue;
-                                }
-                                const numericValue = toNumber(value);
-                                if (numericValue === null) {
-                                        continue;
-                                }
-                                if (descriptor.normalizedKeys.some(candidate =>
-                                        candidate && (normalizedKey === candidate || normalizedKey.includes(candidate) || candidate.includes(normalizedKey)))) {
-                                        return key;
-                                }
-                        }
-                        return null;
-                }
-
-                function buildDescriptorFromSpec(spec, index) {
-                        const measurement = spec?.measurement ?? `Metric ${index + 1}`;
-                        const unit = spec?.unitOfMeasurement ?? '';
-                        const component = spec?.component ?? '';
+                function buildDescriptorFromSpec(spec) {
+                        const displayName = spec.displayName || prettifyKey(spec.label || spec.key);
                         return {
-                                id: `spec-${index}-${normalizeKey(measurement + component)}`,
-                                measurement,
-                                unit,
-                                component,
-                                normalizedKeys: buildCandidateKeys(measurement)
+                                key: spec.key,
+                                label: spec.label,
+                                displayName,
+                                unit: spec.unit,
+                                min: spec.min,
+                                max: spec.max
                         };
                 }
 
-                function buildDescriptorsFromMetrics(sample) {
-                        if (!sample || !sample.metrics) {
+                function buildDescriptorsFromSample(sample) {
+                        if (!sample || !Array.isArray(sample.measurements)) {
                                 return [];
                         }
-                        return Object.entries(sample.metrics)
-                                .filter(([key, value]) => toNumber(value) !== null)
-                                .map(([key]) => ({
-                                        id: `auto-${normalizeKey(key)}`,
-                                        measurement: prettifyKey(key),
-                                        unit: '',
-                                        component: '',
-                                        normalizedKeys: [normalizeKey(key)]
-                                }));
+                        return sample.measurements.map(measurement => ({
+                                key: measurement.key,
+                                label: measurement.label,
+                                displayName: measurement.displayName || prettifyKey(measurement.label || measurement.key),
+                                unit: measurement.unit,
+                                min: measurement.min,
+                                max: measurement.max
+                        }));
                 }
 
-                function buildCandidateKeys(measurement) {
-                        const candidates = new Set();
-                        const base = measurement ? measurement.toString() : '';
-                        const normalized = normalizeKey(base);
-                        if (normalized) {
-                                candidates.add(normalized);
+                function mapMeasurements(measurements) {
+                        const map = new Map();
+                        if (!Array.isArray(measurements)) {
+                                return map;
                         }
-                        const noSpaces = normalizeKey(base.replace(/\s+/g, ''));
-                        if (noSpaces) {
-                                candidates.add(noSpaces);
-                        }
-                        const decimalAlt = normalizeKey(base.replace(/\./g, ''));
-                        if (decimalAlt) {
-                                candidates.add(decimalAlt);
-                        }
-                        const decimalP = normalizeKey(base.replace(/\./g, 'p'));
-                        if (decimalP) {
-                                candidates.add(decimalP);
-                        }
-                        const percentLess = normalizeKey(base.replace(/%/g, ''));
-                        if (percentLess) {
-                                candidates.add(percentLess);
-                        }
-                        base.split(/\s+/).forEach(part => {
-                                const normalizedPart = normalizeKey(part);
-                                if (normalizedPart) {
-                                        candidates.add(normalizedPart);
+                        measurements.forEach(measurement => {
+                                if (measurement && measurement.key) {
+                                        map.set(measurement.key, measurement);
                                 }
                         });
-                        return Array.from(candidates);
+                        return map;
                 }
 
-                function normalizeKey(value) {
-                        if (!value && value !== 0) {
-                                return '';
+                function updateInfoPanel(info) {
+                        const container = document.getElementById('info-grid');
+                        const emptyState = document.getElementById('info-empty');
+                        container.innerHTML = '';
+                        if (!info || Object.keys(info).length === 0) {
+                                emptyState.hidden = false;
+                                return;
                         }
-                        return value.toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+                        emptyState.hidden = true;
+                        Object.entries(info).forEach(([key, value]) => {
+                                const row = document.createElement('div');
+                                row.className = 'info-row';
+                                row.innerHTML = `
+                                        <dt>${prettifyKey(key)}</dt>
+                                        <dd>${formatValue(value)}</dd>
+                                `;
+                                container.appendChild(row);
+                        });
                 }
 
                 function prettifyKey(key) {
@@ -542,24 +491,14 @@
                         return Math.abs(numeric) >= 100 ? numeric.toFixed(0) : numeric.toFixed(2).replace(/\.00$/, '');
                 }
 
-                function formatStatus(value) {
-                        if (typeof value === 'boolean') {
-                                return value ? 'ON' : 'OFF';
+                function formatRange(min, max, unit) {
+                        if (min === null && max === null) {
+                                return unit ? `Range: -- ${unit}` : 'Range: --';
                         }
-                        if (value === null || value === undefined) {
-                                return '--';
-                        }
-                        const numeric = toNumber(value);
-                        if (numeric === 1) {
-                                return 'ON';
-                        }
-                        if (numeric === 0) {
-                                return 'OFF';
-                        }
-                        if (numeric !== null) {
-                                return formatValue(numeric);
-                        }
-                        return String(value);
+                        const formattedMin = min === null ? '--' : formatValue(min);
+                        const formattedMax = max === null ? '--' : formatValue(max);
+                        const suffix = unit ? ` ${unit}` : '';
+                        return `Range: ${formattedMin} – ${formattedMax}${suffix}`;
                 }
 
                 function updateTimestamp(timestamp) {
