@@ -1,6 +1,7 @@
 package it.sensorplatform.test;
 
 import it.sensorplatform.controller.rest.NotificationControllerRest;
+import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.dto.UnknownDeviceNotification;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.Project;
@@ -48,8 +49,9 @@ class NotificationControllerRestTests {
                 "DEV123",
                 projectId,
                 "type",
-                Map.of(),
-                List.of(),
+                Map.<String, Object>of(),
+                List.<PacketDTO.SpecEntry>of(),
+                List.<String>of(),
                 Instant.now()
         );
 
@@ -98,8 +100,9 @@ class NotificationControllerRestTests {
                 null,
                 projectId,
                 "type",
-                Map.of(),
-                List.of(),
+                Map.<String, Object>of(),
+                List.<PacketDTO.SpecEntry>of(),
+                List.<String>of(),
                 Instant.now()
         );
 
