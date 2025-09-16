@@ -1,5 +1,9 @@
 package it.sensorplatform.controller;
 
+import static it.sensorplatform.model.Credentials.FIRE_ADMIN_ROLE;
+import static it.sensorplatform.model.Credentials.LTRAD_ADMIN_ROLE;
+import static it.sensorplatform.model.Credentials.VOLCANO_ADMIN_ROLE;
+
 import it.sensorplatform.dto.DeviceDTO;
 import it.sensorplatform.model.Admin;
 import it.sensorplatform.model.Credentials;
@@ -30,6 +34,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -342,7 +349,7 @@ public class DeviceController {
 		return "redirect:/admin/group/"+projectId;
 	}
 	
-	@PostMapping("/admin/removeOperator/{macAddress}/{projectId}")
+        @PostMapping("/admin/removeOperator/{macAddress}/{projectId}")
         public String removeOperatorfromDevice(@PathVariable ("projectId") Long projectId, @PathVariable ("macAddress") String macAddress,
                                                                                  RedirectAttributes ra) {
                 macAddress = MacAddressUtils.normalize(macAddress);
@@ -356,8 +363,63 @@ public class DeviceController {
                 ra.addFlashAttribute("successMessage", "Operator removed.");
                 return "redirect:/admin/group/"+projectId;
         }
-	
-	public void loadDeviceDTO(List<Device> devices, Model model) {
+
+        @GetMapping("/admin/device-dashboard/{projectId}/{macAddress}")
+        public String viewDeviceDashboard(@PathVariable("projectId") Long projectId,
+                                          @PathVariable("macAddress") String macAddress,
+                                          Model model) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                model.addAttribute("user", credentials);
+
+                if (credentials.getAdmin() == null) {
+                        return "error";
+                }
+
+                Project project = projectService.getProjectById(projectId);
+                if (project == null || !Objects.equals(project.getId(), credentials.getProjectId())) {
+                        return "error";
+                }
+
+                if (!isAdminRoleForProject(credentials.getRole(), project.getName())) {
+                        return "error";
+                }
+
+                String normalizedMac = MacAddressUtils.normalize(macAddress);
+                Optional<Device> deviceOpt = deviceService.findOptionalByMacAddress(normalizedMac);
+                if (deviceOpt.isEmpty()) {
+                        return "error";
+                }
+
+                Device device = deviceOpt.get();
+                if (device.getProject() == null || !Objects.equals(device.getProject().getId(), projectId)) {
+                        return "error";
+                }
+
+                model.addAttribute("project", project);
+                model.addAttribute("device", device);
+                String projectKey = project.getName() != null ? project.getName().toLowerCase(Locale.ROOT) : "default";
+                model.addAttribute("projectKey", projectKey);
+                model.addAttribute("specs", device.getTod() != null && device.getTod().getSpecs() != null
+                                ? device.getTod().getSpecs() : List.of());
+
+                return "admin/deviceDashboard";
+        }
+
+        private boolean isAdminRoleForProject(String role, String projectName) {
+                if (role == null || projectName == null) {
+                        return false;
+                }
+                String normalizedProject = projectName.toUpperCase(Locale.ROOT);
+                return switch (normalizedProject) {
+                        case "LTRAD" -> LTRAD_ADMIN_ROLE.equals(role);
+                        case "FIRE" -> FIRE_ADMIN_ROLE.equals(role);
+                        case "VOLCANO" -> VOLCANO_ADMIN_ROLE.equals(role);
+                        default -> false;
+                };
+        }
+
+        public void loadDeviceDTO(List<Device> devices, Model model) {
                 List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getId(), d.getName(),
                                 d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(),
                                 d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))

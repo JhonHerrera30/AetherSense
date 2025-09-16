@@ -249,11 +249,16 @@ private AdminService adminService;
 	    devices.removeIf(d -> d.getLatitude() == null || d.getLongitude() == null);
 
 	    // search locale
-	    if (deviceInfo != null && !deviceInfo.isEmpty()) {
-	        String q = deviceInfo.toLowerCase();
-	        devices.removeIf(d -> !(d.getName().toLowerCase().startsWith(q)
-	                || d.getMacAddress().toLowerCase().startsWith(q)));
-	    }
+            if (deviceInfo != null && !deviceInfo.isEmpty()) {
+                String q = deviceInfo.toLowerCase();
+                devices.removeIf(d -> {
+                    String deviceName = d.getName();
+                    boolean nameMatches = deviceName != null && deviceName.toLowerCase().startsWith(q);
+                    String macAddress = d.getMacAddress();
+                    boolean macMatches = macAddress != null && macAddress.toLowerCase().startsWith(q);
+                    return !(nameMatches || macMatches);
+                });
+            }
 
 	    // DTO e model
 	    this.loadDeviceDTO(devices, model);
@@ -265,18 +270,35 @@ private AdminService adminService;
 	}
 	
 
-	public void loadDeviceDTO(Set<Device> devices, Model model) {
-		List<Device> orderedDevices = new ArrayList<>(devices);
-		Collections.sort(orderedDevices, new Comparator<Device>() {
-			@Override
-			public int compare(Device d1, Device d2) {
-				return d1.getName().compareTo(d2.getName());
-			}
-		});
+        public void loadDeviceDTO(Set<Device> devices, Model model) {
+                List<Device> orderedDevices = new ArrayList<>(devices);
+                Collections.sort(orderedDevices, new Comparator<Device>() {
+                        @Override
+                        public int compare(Device d1, Device d2) {
+                                String label1 = getDeviceSortLabel(d1);
+                                String label2 = getDeviceSortLabel(d2);
+                                return label1.compareToIgnoreCase(label2);
+                        }
+                });
                 List<DeviceDTO> deviceDTOs = orderedDevices.stream().map(d -> new DeviceDTO(d.getId(), d.getName(),
                                 d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))
                                 .collect(Collectors.toList());
                 model.addAttribute("devices", deviceDTOs);
+        }
+
+        private String getDeviceSortLabel(Device device) {
+                if (device == null) {
+                        return "";
+                }
+                String name = device.getName();
+                if (name != null && !name.isBlank()) {
+                        return name;
+                }
+                String macAddress = device.getMacAddress();
+                if (macAddress != null) {
+                        return macAddress;
+                }
+                return "";
         }
 
 }
