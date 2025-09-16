@@ -1,6 +1,7 @@
 package it.sensorplatform.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,8 +42,12 @@ public class DeviceService {
 		return this.deviceRepository.findById(deviceId).get();
 	}
 
-        public Device findByMacAddress(String macAddress) {
+    public Device findByMacAddress(String macAddress) {
                 return this.deviceRepository.findByMacAddress(MacAddressUtils.normalize(macAddress)).get();
+        }
+
+        public Optional<Device> findOptionalByMacAddress(String macAddress) {
+                return this.deviceRepository.findByMacAddress(MacAddressUtils.normalize(macAddress));
         }
 
         public void save(Device device) {
