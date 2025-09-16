@@ -200,6 +200,7 @@
 
 	<script th:inline="javascript">
 		/*<![CDATA[*/
+                const PROJECT_ID = /*[[${project.id}]]*/ 0;
                 let initialDevices = [[${devices}]];
                 initialDevices = initialDevices.filter(d => d.latitude != null && d.longitude != null);
                 /*]]>*/
@@ -235,6 +236,10 @@
                         marker.bindPopup(popupContent);
                         marker.on("mouseover", function () {this.openPopup();});
                         marker.on("mouseout", function () {this.closePopup();});
+                        marker.on("click", function () {
+                                const destination = `/admin/device-dashboard/${PROJECT_ID}/${encodeURIComponent(d.macAddress)}`;
+                                window.location.href = destination;
+                        });
 
                         markerByMac.set(d.macAddress, marker);
                 });
@@ -305,8 +310,7 @@
 
 	<script th:inline="javascript">
 		/*<![CDATA[*/
-		document.addEventListener('DOMContentLoaded', function () {
-			const PROJECT_ID = /*[[${project.id}]]*/ 0;
+                document.addEventListener('DOMContentLoaded', function () {
 
                         const LIST_OP_URL = `/api/projects/${PROJECT_ID}/operators`;
                         const ASSIGN_OP_URL = ({mac, opId}) =>
