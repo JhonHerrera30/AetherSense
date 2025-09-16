@@ -1,5 +1,6 @@
 package it.sensorplatform.controller.rest;
 
+import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.dto.UnknownDeviceNotification;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.Project;
@@ -65,8 +66,11 @@ public class NotificationControllerRest {
             tod.setName(notif.getTypeOfDevice());
             List<Spec> specs = new ArrayList<>();
             if (notif.getSpec() != null) {
-                for (String specEntry : notif.getSpec()) {
-                    String[] parts = specEntry.split("-");
+                for (PacketDTO.SpecEntry specEntry : notif.getSpec()) {
+                    if (specEntry == null || specEntry.getLabel() == null) {
+                        continue;
+                    }
+                    String[] parts = specEntry.getLabel().split("-");
                     Spec spec = new Spec();
                     spec.setComponent(parts.length > 0 ? parts[0] : "");
                     spec.setMeasurement(parts.length > 1 ? parts[1] : "");

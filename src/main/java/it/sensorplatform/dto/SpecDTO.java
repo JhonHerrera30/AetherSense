@@ -1,14 +1,25 @@
 package it.sensorplatform.dto;
 
-import it.sensorplatform.model.Spec;
+import it.sensorplatform.service.IngestService;
 
-public record SpecDTO(String measurement, String unitOfMeasurement, String component) {
+public record SpecDTO(String key,
+                      String label,
+                      String displayName,
+                      String unit,
+                      Double min,
+                      Double max) {
 
-    public static SpecDTO fromSpec(Spec spec) {
-        if (spec == null) {
-            return new SpecDTO(null, null, null);
+    public static SpecDTO fromMeasurement(IngestService.MeasurementSample measurement) {
+        if (measurement == null) {
+            return new SpecDTO(null, null, null, null, null, null);
         }
-        return new SpecDTO(spec.getMeasurement(), spec.getUnitOfMeasurement(), spec.getComponent());
+        return new SpecDTO(
+                measurement.key(),
+                measurement.label(),
+                measurement.displayName(),
+                measurement.unit(),
+                measurement.min(),
+                measurement.max()
+        );
     }
 }
-

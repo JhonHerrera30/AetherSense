@@ -252,8 +252,8 @@
         color: var(--accent-contrast);
 }
 
-.metric-unit {
-        font-size: 0.95rem;
+.metric-range {
+        font-size: 0.85rem;
         color: var(--muted-color);
 }
 
@@ -281,6 +281,36 @@
         border-radius: 0.6rem;
         color: var(--accent-contrast);
         padding: 0.35rem 0.75rem;
+}
+
+.info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+}
+
+.info-row {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        display: grid;
+        row-gap: 0.35rem;
+}
+
+.info-row dt {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--muted-color);
+        margin: 0;
+}
+
+.info-row dd {
+        margin: 0;
+        font-size: 1.05rem;
+        color: var(--accent-contrast);
+        font-weight: 500;
 }
 
 .status-panel {

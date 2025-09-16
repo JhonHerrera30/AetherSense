@@ -30,6 +30,7 @@ public class UnknownDeviceService {
                 packet.getTypeOfDevice(),
                 packet.getPayload(),
                 packet.getSpec(),
+                packet.getIndicator(),
                 Instant.now()
         );
         notifications.computeIfAbsent(packet.getProjectId(), k -> new ConcurrentHashMap<>())
