@@ -56,14 +56,17 @@ public class DeviceTelemetryController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        Device device = deviceOpt.get();
-        if (device.getTod() == null || device.getTod().getSpecs() == null) {
+        String normalizedMac = MacAddressUtils.normalize(macAddress);
+        if (normalizedMac == null) {
             return ResponseEntity.ok(Collections.emptyList());
         }
-
-        List<SpecDTO> specs = device.getTod().getSpecs().stream()
-                .filter(Objects::nonNull)
-                .map(SpecDTO::fromSpec)
+        List<IngestService.Sample> samples = ingestService.last(normalizedMac, 1);
+        if (samples.isEmpty()) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+        IngestService.Sample sample = samples.get(samples.size() - 1);
+        List<SpecDTO> specs = sample.measurements().stream()
+                .map(SpecDTO::fromMeasurement)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(specs);
     }

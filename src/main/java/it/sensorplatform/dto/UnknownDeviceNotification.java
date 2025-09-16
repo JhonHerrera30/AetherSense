@@ -11,7 +11,8 @@ public class UnknownDeviceNotification {
     private Long projectId;
     private String typeOfDevice;
     private Map<String, Object> payload;
-    private List<String> spec;
+    private List<PacketDTO.SpecEntry> spec;
+    private List<String> indicator;
     private Instant timestamp;
 
     public UnknownDeviceNotification(String key,
@@ -20,7 +21,8 @@ public class UnknownDeviceNotification {
                                      Long projectId,
                                      String typeOfDevice,
                                      Map<String, Object> payload,
-                                     List<String> spec,
+                                     List<PacketDTO.SpecEntry> spec,
+                                     List<String> indicator,
                                      Instant timestamp) {
         this.key = key;
         this.macAddress = macAddress;
@@ -29,6 +31,7 @@ public class UnknownDeviceNotification {
         this.typeOfDevice = typeOfDevice;
         this.payload = payload;
         this.spec = spec;
+        this.indicator = indicator;
         this.timestamp = timestamp;
     }
 
@@ -38,6 +41,7 @@ public class UnknownDeviceNotification {
     public Long getProjectId() { return projectId; }
     public String getTypeOfDevice() { return typeOfDevice; }
     public Map<String, Object> getPayload() { return payload; }
-    public List<String> getSpec() { return spec; }
+    public List<PacketDTO.SpecEntry> getSpec() { return spec; }
+    public List<String> getIndicator() { return indicator; }
     public Instant getTimestamp() { return timestamp; }
 }

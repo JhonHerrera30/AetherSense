@@ -74,7 +74,14 @@ public class PacketService {
         System.out.println("PacketService.handlePacket - forwarding data to IngestService for device: " + device.getMacAddress());
         // Case 2: normal data packet -> forward metrics to ingest service
         Map<String, Object> payload = packet.getPayload();
-        ingestService.process(device.getMacAddress(), device.getDevEui(), Instant.now(), payload);
+        ingestService.process(
+                device.getMacAddress(),
+                device.getDevEui(),
+                Instant.now(),
+                payload,
+                packet.getSpec(),
+                packet.getIndicator()
+        );
         return Result.DATA;
     }
 }

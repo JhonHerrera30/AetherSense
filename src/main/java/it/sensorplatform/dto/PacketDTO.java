@@ -17,7 +17,8 @@ public class PacketDTO {
     private Double latitude;
     private Double longitude;
     private Map<String, Object> payload;
-    private List<String> spec;
+    private List<SpecEntry> spec;
+    private List<String> indicator;
 
     public String getMacAddress() {
         return macAddress;
@@ -83,12 +84,50 @@ public class PacketDTO {
         this.payload = payload;
     }
 
-    public List<String> getSpec() {
+    public List<SpecEntry> getSpec() {
         return spec;
     }
 
-    public void setSpec(List<String> spec) {
+    public void setSpec(List<SpecEntry> spec) {
         this.spec = spec;
+    }
+
+    public List<String> getIndicator() {
+        return indicator;
+    }
+
+    public void setIndicator(List<String> indicator) {
+        this.indicator = indicator;
+    }
+
+    public static class SpecEntry {
+        private String label;
+        private Double min;
+        private Double max;
+
+        public String getLabel() {
+            return label;
+        }
+
+        public void setLabel(String label) {
+            this.label = label;
+        }
+
+        public Double getMin() {
+            return min;
+        }
+
+        public void setMin(Double min) {
+            this.min = min;
+        }
+
+        public Double getMax() {
+            return max;
+        }
+
+        public void setMax(Double max) {
+            this.max = max;
+        }
     }
 }
 
