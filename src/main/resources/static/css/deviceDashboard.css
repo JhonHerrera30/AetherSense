@@ -6,44 +6,48 @@
         margin: 0;
         min-height: 100vh;
         font-family: 'Roboto', sans-serif;
-        background: var(--page-background, #0b1729);
-        color: var(--text-color, #f8fbff);
+        background: var(--page-background, #1B263B);
+        color: var(--text-color, #ffffff);
 }
 
 .dashboard-body.theme-ltrad {
         --accent-color: #007bff;
         --accent-contrast: #ffffff;
         --accent-soft: rgba(0, 123, 255, 0.2);
-        --page-background: linear-gradient(180deg, #0b1729 0%, #14233f 100%);
-        --panel-background: rgba(16, 28, 48, 0.9);
-        --muted-color: #c7d3f5;
+        --accent-border: rgb(142, 196, 255);
+        --page-background: #1B263B;
+        --panel-background: rgba(13, 30, 54, 0.92);
+        --muted-color: #d6e6ff;
 }
 
 .dashboard-body.theme-fire {
-        --accent-color: #e85d04;
+        --accent-color: #cc0000;
         --accent-contrast: #ffffff;
-        --accent-soft: rgba(232, 93, 4, 0.25);
-        --page-background: linear-gradient(180deg, #1f1a24 0%, #311b1b 100%);
-        --panel-background: rgba(37, 24, 24, 0.92);
-        --muted-color: #f5d0b5;
+        --accent-soft: rgba(204, 0, 0, 0.25);
+        --accent-border: rgb(255, 142, 142);
+        --page-background: #1B263B;
+        --panel-background: rgba(27, 38, 59, 0.92);
+        --muted-color: #ffd2d2;
 }
 
 .dashboard-body.theme-volcano {
-        --accent-color: #6a040f;
+        --accent-color: #e67e00;
         --accent-contrast: #ffffff;
-        --accent-soft: rgba(106, 4, 15, 0.3);
-        --page-background: linear-gradient(180deg, #120e16 0%, #24121a 100%);
-        --panel-background: rgba(28, 16, 21, 0.94);
-        --muted-color: #f0cbd4;
+        --accent-soft: rgba(230, 126, 0, 0.25);
+        --accent-border: rgb(255, 191, 128);
+        --page-background: #1B263B;
+        --panel-background: rgba(27, 38, 59, 0.92);
+        --muted-color: #ffe0c2;
 }
 
 .dashboard-body.theme-default {
-        --accent-color: #2d6cdf;
+        --accent-color: #007bff;
         --accent-contrast: #ffffff;
-        --accent-soft: rgba(45, 108, 223, 0.25);
-        --page-background: linear-gradient(180deg, #0f172a 0%, #16233c 100%);
-        --panel-background: rgba(17, 25, 41, 0.92);
-        --muted-color: #d1ddf9;
+        --accent-soft: rgba(0, 123, 255, 0.2);
+        --accent-border: rgb(142, 196, 255);
+        --page-background: #1B263B;
+        --panel-background: rgba(13, 30, 54, 0.92);
+        --muted-color: #d6e6ff;
 }
 
 .navbar {
@@ -56,17 +60,24 @@
         position: sticky;
         top: 0;
         z-index: 10;
-        border-bottom: 2px solid var(--muted-color);
+        border-bottom: 2px solid var(--accent-border, var(--muted-color));
+        height: 3em;
+}
+
+.nav-left {
+        margin-left: 3rem;
 }
 
 .nav-left h1 {
         margin: 0;
-        font-size: 1.5rem;
+        font-size: 2rem;
 }
 
 .nav-title-link {
         color: var(--accent-contrast);
         text-decoration: none;
+        font-weight: bold;
+        font-size: 2rem;
 }
 
 .nav-right {
@@ -79,6 +90,8 @@
         color: var(--accent-contrast);
         display: flex;
         align-items: center;
+        text-decoration: none;
+        margin-right: 2rem;
 }
 
 .icon-home {
@@ -107,9 +120,9 @@
         display: none;
         position: absolute;
         right: 0;
-        top: 2.4rem;
-        background: var(--panel-background);
-        border: 1px solid var(--accent-soft);
+        top: 2.2rem;
+        background: #1B263B;
+        border: 1px solid var(--accent-color);
         border-radius: 0.5rem;
         padding: 0.75rem;
         min-width: 140px;
@@ -129,10 +142,11 @@
         text-align: left;
         cursor: pointer;
         padding: 0.4rem 0;
+        transition: background-color 0.2s;
 }
 
 .dropdown-logout:hover {
-        color: var(--muted-color);
+        background-color: rgba(255, 255, 255, 0.1);
 }
 
 .dashboard-main {
@@ -335,6 +349,19 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 0.75rem;
+        }
+
+        .nav-left {
+                margin-left: 0;
+        }
+
+        .nav-left h1,
+        .nav-title-link {
+                font-size: 1.6rem;
+        }
+
+        .home-button {
+                margin-right: 0;
         }
 
         .device-header {
