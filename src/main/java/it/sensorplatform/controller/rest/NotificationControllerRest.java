@@ -86,19 +86,21 @@ public class NotificationControllerRest {
         }
 
         String macAddress = MacAddressUtils.normalize(notif.getMacAddress());
-        if (macAddress == null || macAddress.isBlank()) {
-            macAddress = MacAddressUtils.normalize(notif.getDevEui());
-            logger.info("MAC address missing; using DevEUI {} as MAC address", macAddress);
-        }
-
         String normalizedDevEui = MacAddressUtils.normalize(notif.getDevEui());
-        if (deviceRepository.existsByMacAddress(macAddress)
-                || (normalizedDevEui != null && deviceRepository.existsByDevEui(normalizedDevEui))) {
-            logger.warn("Device with MAC {} or DevEUI {} already exists", macAddress, notif.getDevEui());
+
+        boolean macConflict = macAddress != null && !macAddress.isBlank() && deviceRepository.existsByMacAddress(macAddress);
+        boolean devEuiConflict = normalizedDevEui != null && !normalizedDevEui.isBlank()
+                && deviceRepository.existsByDevEui(normalizedDevEui);
+        if (macConflict || devEuiConflict) {
+            logger.warn("Device with MAC {} or DevEUI {} already exists", macAddress, normalizedDevEui);
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        logger.info("Creating device with MAC {} and DevEUI {}", macAddress, notif.getDevEui());
+        if (macAddress == null || macAddress.isBlank()) {
+            logger.info("MAC address missing; persisting device with DevEUI {} only", normalizedDevEui);
+        }
+
+        logger.info("Creating device with MAC {} and DevEUI {}", macAddress, normalizedDevEui);
         Device device = new Device();
         device.setMacAddress(macAddress);
         device.setDevEui(normalizedDevEui);

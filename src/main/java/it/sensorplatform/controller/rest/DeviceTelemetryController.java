@@ -6,6 +6,7 @@ import static it.sensorplatform.model.Credentials.VOLCANO_ADMIN_ROLE;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -50,17 +51,17 @@ public class DeviceTelemetryController {
     }
 
     @GetMapping("/{macAddress}/specs")
-    public ResponseEntity<List<SpecDTO>> getDeviceSpecs(@PathVariable("macAddress") String macAddress) {
-        Optional<Device> deviceOpt = resolveAuthorizedDevice(macAddress);
+    public ResponseEntity<List<SpecDTO>> getDeviceSpecs(@PathVariable("macAddress") String deviceKey) {
+        Optional<Device> deviceOpt = resolveAuthorizedDevice(deviceKey);
         if (deviceOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        String normalizedMac = MacAddressUtils.normalize(macAddress);
-        if (normalizedMac == null) {
+        String telemetryKey = telemetryIdentifier(deviceOpt.get());
+        if (telemetryKey == null) {
             return ResponseEntity.ok(Collections.emptyList());
         }
-        List<IngestService.Sample> samples = ingestService.last(normalizedMac, 1);
+        List<IngestService.Sample> samples = ingestService.last(telemetryKey, 1);
         if (samples.isEmpty()) {
             return ResponseEntity.ok(Collections.emptyList());
         }
@@ -72,14 +73,17 @@ public class DeviceTelemetryController {
     }
 
     @GetMapping("/{macAddress}/telemetry/latest")
-    public ResponseEntity<TelemetrySampleDTO> getLatestSample(@PathVariable("macAddress") String macAddress) {
-        Optional<Device> deviceOpt = resolveAuthorizedDevice(macAddress);
+    public ResponseEntity<TelemetrySampleDTO> getLatestSample(@PathVariable("macAddress") String deviceKey) {
+        Optional<Device> deviceOpt = resolveAuthorizedDevice(deviceKey);
         if (deviceOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        String normalizedMac = MacAddressUtils.normalize(macAddress);
-        List<IngestService.Sample> samples = ingestService.last(normalizedMac, 1);
+        String telemetryKey = telemetryIdentifier(deviceOpt.get());
+        if (telemetryKey == null) {
+            return ResponseEntity.noContent().build();
+        }
+        List<IngestService.Sample> samples = ingestService.last(telemetryKey, 1);
         if (samples.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
@@ -88,33 +92,31 @@ public class DeviceTelemetryController {
     }
 
     @GetMapping("/{macAddress}/telemetry/history")
-    public ResponseEntity<List<TelemetrySampleDTO>> getHistory(@PathVariable("macAddress") String macAddress,
+    public ResponseEntity<List<TelemetrySampleDTO>> getHistory(@PathVariable("macAddress") String deviceKey,
                                                                @RequestParam(value = "limit", defaultValue = "50") int limit) {
-        Optional<Device> deviceOpt = resolveAuthorizedDevice(macAddress);
+        Optional<Device> deviceOpt = resolveAuthorizedDevice(deviceKey);
         if (deviceOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        String normalizedMac = MacAddressUtils.normalize(macAddress);
+        String telemetryKey = telemetryIdentifier(deviceOpt.get());
+        if (telemetryKey == null) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
         int safeLimit = Math.max(1, Math.min(limit, MAX_HISTORY));
-        List<TelemetrySampleDTO> history = ingestService.last(normalizedMac, safeLimit).stream()
+        List<TelemetrySampleDTO> history = ingestService.last(telemetryKey, safeLimit).stream()
                 .map(TelemetrySampleDTO::fromSample)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(history);
     }
 
-    private Optional<Device> resolveAuthorizedDevice(String macAddress) {
+    private Optional<Device> resolveAuthorizedDevice(String deviceKey) {
         Credentials credentials = currentCredentials();
         if (credentials == null || credentials.getAdmin() == null) {
             return Optional.empty();
         }
 
-        String normalizedMac = MacAddressUtils.normalize(macAddress);
-        if (normalizedMac == null || normalizedMac.isBlank()) {
-            return Optional.empty();
-        }
-
-        Optional<Device> deviceOpt = deviceService.findOptionalByMacAddress(normalizedMac);
+        Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(deviceKey);
         if (deviceOpt.isEmpty()) {
             return Optional.empty();
         }
@@ -124,6 +126,18 @@ public class DeviceTelemetryController {
             return Optional.empty();
         }
         return Optional.of(device);
+    }
+
+    private String telemetryIdentifier(Device device) {
+        String mac = MacAddressUtils.normalize(device.getMacAddress());
+        if (mac != null && !mac.isBlank()) {
+            return mac;
+        }
+        String devEui = device.getDevEui();
+        if (devEui == null || devEui.isBlank()) {
+            return null;
+        }
+        return devEui.toLowerCase(Locale.ROOT);
     }
 
     private Credentials currentCredentials() {

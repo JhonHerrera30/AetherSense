@@ -48,7 +48,8 @@
                         <div>
                                 <h2 th:text="${device.name}">Device name</h2>
                                 <p class="device-meta">
-                                        <span>MAC: <strong th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">--</strong></span>
+                                        <span th:if="${device.macAddress != null}">MAC: <strong th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">--</strong></span>
+                                        <span th:if="${device.macAddress == null}">DevEUI: <strong th:text="${device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui) : '--'}">--</strong></span>
                                         <span th:if="${device.tod != null}">Type: <strong th:text="${device.tod.name}">Type</strong></span>
                                         <span>Status: <strong th:text="${device.status}">--</strong></span>
                                 </p>
@@ -107,7 +108,7 @@
 
         <script th:inline="javascript">
                 /*<![CDATA[*/
-                const DEVICE_MAC = /*[[${device.macAddress}]]*/ '';
+                const DEVICE_KEY = /*[[${device.macAddress != null ? device.macAddress : (device.devEui != null ? device.devEui : '')}]]*/ '';
                 const PROJECT_ID = /*[[${project.id}]]*/ 0;
                 const DEVICE_NAME = /*[[${device.name}]]*/ '';
                 const PROJECT_KEY = /*[[${projectKey}]]*/ 'default';
@@ -165,7 +166,7 @@
                 }
 
                 async function loadSpecs() {
-                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_MAC)}/specs`);
+                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_KEY)}/specs`);
                         if (response.status === 403) {
                                 throw new Error('Non sei autorizzato a visualizzare questo dispositivo.');
                         }
@@ -178,7 +179,7 @@
 
                 async function loadHistory() {
                         clearError();
-                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_MAC)}/telemetry/history?limit=${state.historyLimit}`);
+                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_KEY)}/telemetry/history?limit=${state.historyLimit}`);
                         if (response.status === 403) {
                                 throw new Error('Non sei autorizzato a visualizzare questo dispositivo.');
                         }
@@ -223,7 +224,7 @@
                 }
 
                 async function refreshLatestSample() {
-                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_MAC)}/telemetry/latest`);
+                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_KEY)}/telemetry/latest`);
                         if (response.status === 403) {
                                 showError('Non sei autorizzato a visualizzare questo dispositivo.');
                                 return;
