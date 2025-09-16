@@ -101,9 +101,18 @@ public class PacketDTO {
     }
 
     public static class SpecEntry {
+        private String key;
         private String label;
         private Double min;
         private Double max;
+
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
 
         public String getLabel() {
             return label;
