@@ -174,7 +174,30 @@
                                 throw new Error('Unable to load device specs.');
                         }
                         const specs = await response.json();
-                        state.specDescriptors = Array.isArray(specs) ? specs.map(buildDescriptorFromSpec) : [];
+                        const descriptors = Array.isArray(specs) ? specs.map(buildDescriptorFromSpec) : [];
+                        const changed = descriptorsDiffer(state.specDescriptors, descriptors);
+                        state.specDescriptors = descriptors;
+                        if (changed) {
+                                state.specCardsRendered = false;
+                                if (state.specDescriptors.length) {
+                                        renderMetricCards();
+                                        const latestSample = state.lastSamples[state.lastSamples.length - 1];
+                                        if (latestSample) {
+                                                updateFromSample(latestSample);
+                                                buildOrUpdateChart(state.lastSamples);
+                                        } else {
+                                                updateMetricCards(new Map());
+                                                resetChart();
+                                        }
+                                } else {
+                                        document.getElementById('metrics-grid').innerHTML = '';
+                                        resetChart();
+                                }
+                                const metricsEmpty = document.getElementById('metrics-empty');
+                                if (metricsEmpty) {
+                                        metricsEmpty.hidden = state.specDescriptors.length > 0;
+                                }
+                        }
                 }
 
                 async function loadHistory() {
@@ -193,20 +216,12 @@
                         const metricsEmpty = document.getElementById('metrics-empty');
                         const chartEmpty = document.getElementById('chart-empty');
 
-                        if (!state.lastSamples.length) {
-                                metricsGrid.innerHTML = '';
-                                metricsEmpty.hidden = false;
-                                chartEmpty.hidden = false;
-                                resetChart();
-                                updateStatusFlags([]);
-                                updateInfoPanel(null);
-                                document.getElementById('last-update').textContent = '--';
-                                return;
-                        }
-
-                        if (!state.specDescriptors.length) {
+                        if (!state.specDescriptors.length && state.lastSamples.length) {
                                 const fallback = buildDescriptorsFromSample(state.lastSamples[state.lastSamples.length - 1]);
-                                state.specDescriptors = fallback;
+                                if (fallback.length) {
+                                        state.specDescriptors = fallback;
+                                        state.specCardsRendered = false;
+                                }
                         }
 
                         if (!state.specDescriptors.length) {
@@ -215,6 +230,23 @@
                         } else if (!state.specCardsRendered) {
                                 renderMetricCards();
                                 metricsEmpty.hidden = true;
+                        } else {
+                                metricsEmpty.hidden = true;
+                        }
+
+                        if (!state.lastSamples.length) {
+                                if (state.specDescriptors.length) {
+                                        updateMetricCards(new Map());
+                                } else {
+                                        metricsGrid.innerHTML = '';
+                                }
+                                chartEmpty.hidden = false;
+                                resetChart();
+                                updateStatusFlags([]);
+                                updateInfoPanel(null);
+                                state.latestTimestamp = null;
+                                document.getElementById('last-update').textContent = '--';
+                                return;
                         }
 
                         const latestSample = state.lastSamples[state.lastSamples.length - 1];
@@ -427,6 +459,24 @@
                                 min: measurement.min,
                                 max: measurement.max
                         }));
+                }
+
+                function descriptorsDiffer(previous, next) {
+                        if (!Array.isArray(previous) || !Array.isArray(next)) {
+                                return true;
+                        }
+                        if (previous.length !== next.length) {
+                                return true;
+                        }
+                        for (let i = 0; i < previous.length; i += 1) {
+                                const a = previous[i] || {};
+                                const b = next[i] || {};
+                                if (a.key !== b.key || a.label !== b.label || a.displayName !== b.displayName
+                                        || a.unit !== b.unit || a.min !== b.min || a.max !== b.max) {
+                                        return true;
+                                }
+                        }
+                        return false;
                 }
 
                 function mapMeasurements(measurements) {

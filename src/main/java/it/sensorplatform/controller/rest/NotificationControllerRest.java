@@ -67,14 +67,30 @@ public class NotificationControllerRest {
             List<Spec> specs = new ArrayList<>();
             if (notif.getSpec() != null) {
                 for (PacketDTO.SpecEntry specEntry : notif.getSpec()) {
-                    if (specEntry == null || specEntry.getLabel() == null) {
+                    if (specEntry == null) {
                         continue;
                     }
-                    String[] parts = specEntry.getLabel().split("-");
+                    String label = specEntry.getLabel();
+                    String key = sanitize(specEntry.getKey());
+                    if (label == null && key == null) {
+                        continue;
+                    }
                     Spec spec = new Spec();
-                    spec.setComponent(parts.length > 0 ? parts[0] : "");
-                    spec.setMeasurement(parts.length > 1 ? parts[1] : "");
-                    spec.setUnitOfMeasurement(parts.length > 2 ? parts[2] : "");
+                    if (label != null) {
+                        String[] parts = label.split("-");
+                        spec.setComponent(parts.length > 0 ? parts[0] : "");
+                        String measurementPart = parts.length > 1 ? parts[1] : "";
+                        spec.setMeasurement(key != null ? key : measurementPart);
+                        spec.setUnitOfMeasurement(parts.length > 2 ? parts[2] : "");
+                    } else {
+                        spec.setMeasurement(key != null ? key : "");
+                    }
+                    if (spec.getComponent() == null) {
+                        spec.setComponent("");
+                    }
+                    if (spec.getUnitOfMeasurement() == null) {
+                        spec.setUnitOfMeasurement("");
+                    }
                     if (!specService.existsByFields(spec)) {
                         specService.save(spec);
                     }
@@ -118,5 +134,13 @@ public class NotificationControllerRest {
             logger.error("Error saving device with MAC {} and DevEUI {}", macAddress, notif.getDevEui(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    private String sanitize(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

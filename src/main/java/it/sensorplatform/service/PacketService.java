@@ -75,8 +75,7 @@ public class PacketService {
         // Case 2: normal data packet -> forward metrics to ingest service
         Map<String, Object> payload = packet.getPayload();
         ingestService.process(
-                device.getMacAddress(),
-                device.getDevEui(),
+                device,
                 Instant.now(),
                 payload,
                 packet.getSpec(),
