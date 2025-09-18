@@ -358,34 +358,87 @@
                                 return '';
                         }
                         const component = componentOverride || getDescriptorComponent(descriptor);
-                        let title = displayName;
-
-                        if (component) {
-                                const trimmedComponent = component.trim();
-                                if (trimmedComponent) {
-                                        const componentPattern = new RegExp(`^${escapeRegExp(trimmedComponent)}(?:\s*[\-–—:]\s*|\s+)`, 'i');
-                                        const stripped = title.replace(componentPattern, '').trim();
-                                        if (stripped) {
-                                                title = stripped;
-                                        }
-                                }
-                        }
-
-                        const unit = typeof descriptor.unit === 'string' ? descriptor.unit.trim() : '';
-                        if (unit) {
-                                const unitPattern = new RegExp(`\s*\(?${escapeRegExp(unit)}\)?$`, 'i');
-                                const strippedUnit = title.replace(unitPattern, '').trim();
-                                if (strippedUnit) {
-                                        title = strippedUnit;
-                                }
-                        }
-
-                        title = title.replace(/[\-–—:]+$/u, '').trim();
+                        let title = stripComponentPrefix(displayName, component);
+                        title = stripUnitSuffix(title, descriptor.unit);
+                        title = stripTrailingDelimiters(title);
                         return title || displayName;
                 }
 
-                function escapeRegExp(value) {
-                        return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\$&');
+                function stripComponentPrefix(title, component) {
+                        const normalizedTitle = typeof title === 'string' ? title.trim() : '';
+                        const normalizedComponent = typeof component === 'string' ? component.trim() : '';
+                        if (!normalizedTitle || !normalizedComponent) {
+                                return normalizedTitle;
+                        }
+                        const lowerTitle = normalizedTitle.toLowerCase();
+                        const lowerComponent = normalizedComponent.toLowerCase();
+                        const variants = [
+                                `${normalizedComponent} - `,
+                                `${normalizedComponent}-`,
+                                `${normalizedComponent} – `,
+                                `${normalizedComponent} — `,
+                                `${normalizedComponent}: `,
+                                `${normalizedComponent}:`,
+                                `${normalizedComponent} `
+                        ];
+                        for (const variant of variants) {
+                                const variantLower = variant.toLowerCase();
+                                if (variantLower.length && lowerTitle.startsWith(variantLower)) {
+                                        const stripped = normalizedTitle.slice(variant.length).trim();
+                                        if (stripped) {
+                                                return stripped;
+                                        }
+                                }
+                        }
+                        if (lowerTitle.startsWith(lowerComponent)) {
+                                const stripped = normalizedTitle.slice(normalizedComponent.length).trim();
+                                if (stripped) {
+                                        return stripped;
+                                }
+                        }
+                        return normalizedTitle;
+                }
+
+                function stripUnitSuffix(title, unit) {
+                        const normalizedTitle = typeof title === 'string' ? title.trim() : '';
+                        const normalizedUnit = typeof unit === 'string' ? unit.trim() : '';
+                        if (!normalizedTitle || !normalizedUnit) {
+                                return normalizedTitle;
+                        }
+                        const lowerTitle = normalizedTitle.toLowerCase();
+                        const unitVariants = new Set([
+                                normalizedUnit,
+                                normalizedUnit.toLowerCase(),
+                                normalizedUnit.toUpperCase()
+                        ]);
+                        const suffixes = [];
+                        unitVariants.forEach(value => {
+                                if (!value) {
+                                        return;
+                                }
+                                suffixes.push(` (${value})`);
+                                suffixes.push(` [${value}]`);
+                                suffixes.push(` ${value}`);
+                                suffixes.push(value);
+                        });
+                        suffixes.sort((a, b) => b.length - a.length);
+                        for (const suffix of suffixes) {
+                                const suffixLower = suffix.toLowerCase();
+                                if (suffixLower.length && lowerTitle.endsWith(suffixLower)) {
+                                        const stripped = normalizedTitle.slice(0, normalizedTitle.length - suffix.length).trim();
+                                        if (stripped) {
+                                                return stripped;
+                                        }
+                                }
+                        }
+                        return normalizedTitle;
+                }
+
+                function stripTrailingDelimiters(value) {
+                        if (!value) {
+                                return '';
+                        }
+                        return value.replace(/[\-–—:]+$/u, '').trim();
                 }
 
                 function renderMetricCards() {
