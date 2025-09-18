@@ -71,8 +71,8 @@ public class NotificationControllerRest {
                         continue;
                     }
                     String label = specEntry.getLabel();
-                    String key = sanitize(specEntry.getKey());
-                    if (label == null && key == null) {
+                    String specKey = sanitize(specEntry.getKey());
+                    if (label == null && specKey == null) {
                         continue;
                     }
                     Spec spec = new Spec();
@@ -80,10 +80,10 @@ public class NotificationControllerRest {
                         String[] parts = label.split("-");
                         spec.setComponent(parts.length > 0 ? parts[0] : "");
                         String measurementPart = parts.length > 1 ? parts[1] : "";
-                        spec.setMeasurement(key != null ? key : measurementPart);
+                        spec.setMeasurement(specKey != null ? specKey : measurementPart);
                         spec.setUnitOfMeasurement(parts.length > 2 ? parts[2] : "");
                     } else {
-                        spec.setMeasurement(key != null ? key : "");
+                        spec.setMeasurement(specKey != null ? specKey : "");
                     }
                     if (spec.getComponent() == null) {
                         spec.setComponent("");
