@@ -116,6 +116,8 @@
         </script>
 
         <script>
+                const CHART_SAMPLE_LIMIT = 120; // Keep render cost predictable; pairs with decimation settings below.
+
                 const state = {
                         specDescriptors: [],
                         specCardsRendered: false,
@@ -410,10 +412,21 @@
                                 return;
                         }
 
+                        let workingSamples = samples;
+                        if (samples.length > CHART_SAMPLE_LIMIT) {
+                                const excess = samples.length - CHART_SAMPLE_LIMIT;
+                                if (samples === state.lastSamples) {
+                                        // Trim the state array in-place so future updates operate on the reduced window.
+                                        workingSamples.splice(0, excess);
+                                } else {
+                                        workingSamples = samples.slice(samples.length - CHART_SAMPLE_LIMIT);
+                                }
+                        }
+
                         ensureTrendCanvases();
 
-                        const labels = samples.map(sample => formatTimestamp(sample.timestamp, true));
-                        const datasetsByKey = buildDatasetsByKey(samples);
+                        const labels = workingSamples.map(sample => formatTimestamp(sample.timestamp, true));
+                        const datasetsByKey = buildDatasetsByKey(workingSamples);
                         const descriptorKeys = new Set(state.specDescriptors.map(descriptor => descriptor.key));
                         let hasAnyChart = false;
 
@@ -448,9 +461,13 @@
                                                 options: {
                                                         responsive: true,
                                                         maintainAspectRatio: false,
+                                                        animation: false,
                                                         interaction: { mode: 'index', intersect: false },
                                                         plugins: {
                                                                 legend: { labels: { color: '#ffffff' } },
+                                                                // Enable LTTB decimation so charts stay smooth.
+                                                                // Paired with CHART_SAMPLE_LIMIT to cap rendered points.
+                                                                decimation: { enabled: true, algorithm: 'lttb', samples: 100 },
                                                                 tooltip: {
                                                                         callbacks: {
                                                                                 label: (context) => `${context.dataset.label}: ${formatValue(context.parsed.y)}`
