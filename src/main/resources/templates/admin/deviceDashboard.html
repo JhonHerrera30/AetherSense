@@ -121,6 +121,7 @@
                         specCardsRendered: false,
                         chartCanvasesRendered: false,
                         charts: new Map(),
+                        gaugeCharts: new Map(),
                         historyLimit: 60,
                         lastSamples: [],
                         latestTimestamp: null
@@ -182,6 +183,7 @@
                                 state.specCardsRendered = false;
                                 state.chartCanvasesRendered = false;
                                 resetCharts();
+                                resetGaugeCharts();
                                 clearTrendCanvases();
                                 if (state.specDescriptors.length) {
                                         renderMetricCards();
@@ -228,6 +230,7 @@
                                         state.specCardsRendered = false;
                                         state.chartCanvasesRendered = false;
                                         resetCharts();
+                                        resetGaugeCharts();
                                         clearTrendCanvases();
                                 }
                         }
@@ -236,6 +239,7 @@
                                 metricsGrid.innerHTML = '';
                                 metricsEmpty.hidden = false;
                                 resetCharts();
+                                resetGaugeCharts();
                                 clearTrendCanvases();
                         } else if (!state.specCardsRendered) {
                                 renderMetricCards();
@@ -294,6 +298,7 @@
                 }
 
                 function renderMetricCards() {
+                        resetGaugeCharts();
                         const container = document.getElementById('metrics-grid');
                         container.innerHTML = '';
                         state.specDescriptors.forEach(descriptor => {
@@ -304,10 +309,20 @@
                                         <div class="metric-header">
                                                 <span class="metric-name">${descriptor.displayName}</span>
                                         </div>
+                                        <div class="metric-gauge-wrapper">
+                                                <canvas class="metric-gauge" data-gauge></canvas>
+                                        </div>
                                         <div class="metric-value" data-value>--</div>
                                         <div class="metric-range" data-range>${formatRange(descriptor.min, descriptor.max, descriptor.unit)}</div>
                                 `;
                                 container.appendChild(card);
+                                const gaugeCanvas = card.querySelector('[data-gauge]');
+                                if (gaugeCanvas) {
+                                        const gaugeChart = createGaugeChart(descriptor, gaugeCanvas);
+                                        if (gaugeChart) {
+                                                state.gaugeCharts.set(descriptor.key, gaugeChart);
+                                        }
+                                }
                         });
                         state.specCardsRendered = true;
                 }
@@ -335,11 +350,105 @@
                                 if (!measurement) {
                                         valueEl.textContent = '--';
                                         rangeEl.textContent = formatRange(descriptor.min, descriptor.max, descriptor.unit);
+                                        const gaugeChart = state.gaugeCharts.get(descriptor.key);
+                                        if (gaugeChart) {
+                                                gaugeChart.data.datasets[0].data = [0, 1];
+                                                gaugeChart.update('none');
+                                        }
                                         return;
                                 }
                                 valueEl.textContent = formatValue(measurement.value);
                                 rangeEl.textContent = formatRange(measurement.min, measurement.max, measurement.unit || descriptor.unit);
+                                const gaugeChart = state.gaugeCharts.get(descriptor.key);
+                                if (gaugeChart) {
+                                        const normalized = calculateNormalizedValue(descriptor, measurement);
+                                        const clamped = Math.max(0, Math.min(1, normalized));
+                                        gaugeChart.data.datasets[0].data = [clamped, 1 - clamped];
+                                        gaugeChart.update('none');
+                                }
                         });
+                }
+
+                function createGaugeChart(descriptor, canvas) {
+                        if (!canvas) {
+                                return null;
+                        }
+                        const ctx = canvas.getContext('2d');
+                        if (!ctx) {
+                                return null;
+                        }
+                        const color = getDescriptorColor(descriptor);
+                        return new Chart(ctx, {
+                                type: 'doughnut',
+                                data: {
+                                        labels: ['Current', 'Remaining'],
+                                        datasets: [{
+                                                data: [0, 1],
+                                                backgroundColor: [color, 'rgba(255, 255, 255, 0.12)'],
+                                                borderWidth: 0
+                                        }]
+                                },
+                                options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        circumference: 180,
+                                        rotation: 270,
+                                        cutout: '70%',
+                                        animation: false,
+                                        plugins: {
+                                                legend: { display: false },
+                                                tooltip: { enabled: false }
+                                        }
+                                }
+                        });
+                }
+
+                function resetGaugeCharts() {
+                        state.gaugeCharts.forEach(chart => chart.destroy());
+                        state.gaugeCharts.clear();
+                }
+
+                function calculateNormalizedValue(descriptor, measurement) {
+                        if (!measurement) {
+                                return 0;
+                        }
+                        const value = toNumber(measurement.value);
+                        if (value === null) {
+                                return 0;
+                        }
+                        const min = firstFinite(descriptor.min, measurement.min);
+                        const max = firstFinite(descriptor.max, measurement.max);
+                        if (min !== null && max !== null) {
+                                if (max <= min) {
+                                        return value >= max ? 1 : 0;
+                                }
+                                return (value - min) / (max - min);
+                        }
+                        if (max !== null && max !== 0) {
+                                return value / max;
+                        }
+                        if (min !== null) {
+                                return value >= min ? 1 : 0;
+                        }
+                        return 0;
+                }
+
+                function getDescriptorColor(descriptor) {
+                        const themeKey = (PROJECT_KEY && palettes[PROJECT_KEY]) ? PROJECT_KEY : 'default';
+                        const palette = palettes[themeKey] || palettes.default;
+                        const index = state.specDescriptors.findIndex(item => item.key === descriptor.key);
+                        const safeIndex = index >= 0 ? index : 0;
+                        return palette[safeIndex % palette.length];
+                }
+
+                function firstFinite(...values) {
+                        for (let i = 0; i < values.length; i += 1) {
+                                const numeric = toNumber(values[i]);
+                                if (numeric !== null) {
+                                        return numeric;
+                                }
+                        }
+                        return null;
                 }
 
                 function updateStatusFlags(indicators) {

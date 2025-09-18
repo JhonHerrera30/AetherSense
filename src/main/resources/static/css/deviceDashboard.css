@@ -233,8 +233,8 @@
         border: 1px solid var(--accent-soft);
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
-        min-height: 130px;
+        gap: 0.75rem;
+        min-height: 200px;
 }
 
 .metric-header {
@@ -250,11 +250,27 @@
         font-size: clamp(1.6rem, 4vw, 2.4rem);
         font-weight: 600;
         color: var(--accent-contrast);
+        text-align: center;
 }
 
 .metric-range {
         font-size: 0.85rem;
         color: var(--muted-color);
+        text-align: center;
+}
+
+.metric-gauge-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        min-height: 80px;
+}
+
+.metric-gauge {
+        width: 120px !important;
+        height: 120px !important;
+        max-width: 100%;
+        display: block;
 }
 
 .chart-panel {
