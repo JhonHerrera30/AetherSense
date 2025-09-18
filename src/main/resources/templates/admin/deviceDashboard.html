@@ -54,9 +54,14 @@
                                         <span>Status: <strong th:text="${device.status}">--</strong></span>
                                 </p>
                         </div>
-                        <div class="device-location" th:if="${device.latitude != null && device.longitude != null}">
-                                <span>Lat: <strong th:text="${#numbers.formatDecimal(device.latitude, 1, 6)}">0</strong></span>
-                                <span>Lng: <strong th:text="${#numbers.formatDecimal(device.longitude, 1, 6)}">0</strong></span>
+                        <div class="device-actions">
+                                <a class="back-to-map" th:href="@{'/success'(projectId=${project.id})}" title="Back to map">
+                                        Back to map
+                                </a>
+                                <div class="device-location" th:if="${device.latitude != null && device.longitude != null}">
+                                        <span>Lat: <strong th:text="${#numbers.formatDecimal(device.latitude, 1, 6)}">0</strong></span>
+                                        <span>Lng: <strong th:text="${#numbers.formatDecimal(device.longitude, 1, 6)}">0</strong></span>
+                                </div>
                         </div>
                 </section>
 
@@ -132,6 +137,35 @@
                         'volcano': ['#6a040f', '#9d0208', '#f48c06'],
                         'default': ['#2d6cdf', '#4c9f70', '#dd6b20']
                 };
+
+                const INFO_PREFERRED_ORDER = ['date', 'time', 'mac', 'latitude', 'longitude', 'bat_pct', 'bat_v'];
+                const INFO_KEY_ALIASES = new Map([
+                        ['data', 'date'],
+                        ['date', 'date'],
+                        ['ora', 'time'],
+                        ['time', 'time'],
+                        ['mac', 'mac'],
+                        ['macaddress', 'mac'],
+                        ['mac_address', 'mac'],
+                        ['lat', 'latitude'],
+                        ['latitude', 'latitude'],
+                        ['latitudine', 'latitude'],
+                        ['lon', 'longitude'],
+                        ['lng', 'longitude'],
+                        ['longitude', 'longitude'],
+                        ['longitudine', 'longitude'],
+                        ['batpct', 'bat_pct'],
+                        ['bat_pct', 'bat_pct'],
+                        ['batpercent', 'bat_pct'],
+                        ['battery_pct', 'bat_pct'],
+                        ['batterypercent', 'bat_pct'],
+                        ['battery_percentage', 'bat_pct'],
+                        ['batv', 'bat_v'],
+                        ['bat_v', 'bat_v'],
+                        ['battery_v', 'bat_v'],
+                        ['batteryvolt', 'bat_v'],
+                        ['battery_voltage', 'bat_v']
+                ]);
 
                 document.addEventListener('DOMContentLoaded', () => {
                         setupDropdown();
@@ -315,6 +349,98 @@
                         return '';
                 }
 
+                function getDescriptorTitle(descriptor, componentOverride) {
+                        if (!descriptor) {
+                                return '';
+                        }
+                        const displayName = typeof descriptor.displayName === 'string' ? descriptor.displayName.trim() : '';
+                        if (!displayName) {
+                                return '';
+                        }
+                        const component = componentOverride || getDescriptorComponent(descriptor);
+                        let title = stripComponentPrefix(displayName, component);
+                        title = stripUnitSuffix(title, descriptor.unit);
+                        title = stripTrailingDelimiters(title);
+                        return title || displayName;
+                }
+
+                function stripComponentPrefix(title, component) {
+                        const normalizedTitle = typeof title === 'string' ? title.trim() : '';
+                        const normalizedComponent = typeof component === 'string' ? component.trim() : '';
+                        if (!normalizedTitle || !normalizedComponent) {
+                                return normalizedTitle;
+                        }
+                        const lowerTitle = normalizedTitle.toLowerCase();
+                        const lowerComponent = normalizedComponent.toLowerCase();
+                        const variants = [
+                                `${normalizedComponent} - `,
+                                `${normalizedComponent}-`,
+                                `${normalizedComponent} – `,
+                                `${normalizedComponent} — `,
+                                `${normalizedComponent}: `,
+                                `${normalizedComponent}:`,
+                                `${normalizedComponent} `
+                        ];
+                        for (const variant of variants) {
+                                const variantLower = variant.toLowerCase();
+                                if (variantLower.length && lowerTitle.startsWith(variantLower)) {
+                                        const stripped = normalizedTitle.slice(variant.length).trim();
+                                        if (stripped) {
+                                                return stripped;
+                                        }
+                                }
+                        }
+                        if (lowerTitle.startsWith(lowerComponent)) {
+                                const stripped = normalizedTitle.slice(normalizedComponent.length).trim();
+                                if (stripped) {
+                                        return stripped;
+                                }
+                        }
+                        return normalizedTitle;
+                }
+
+                function stripUnitSuffix(title, unit) {
+                        const normalizedTitle = typeof title === 'string' ? title.trim() : '';
+                        const normalizedUnit = typeof unit === 'string' ? unit.trim() : '';
+                        if (!normalizedTitle || !normalizedUnit) {
+                                return normalizedTitle;
+                        }
+                        const lowerTitle = normalizedTitle.toLowerCase();
+                        const unitVariants = new Set([
+                                normalizedUnit,
+                                normalizedUnit.toLowerCase(),
+                                normalizedUnit.toUpperCase()
+                        ]);
+                        const suffixes = [];
+                        unitVariants.forEach(value => {
+                                if (!value) {
+                                        return;
+                                }
+                                suffixes.push(` (${value})`);
+                                suffixes.push(` [${value}]`);
+                                suffixes.push(` ${value}`);
+                                suffixes.push(value);
+                        });
+                        suffixes.sort((a, b) => b.length - a.length);
+                        for (const suffix of suffixes) {
+                                const suffixLower = suffix.toLowerCase();
+                                if (suffixLower.length && lowerTitle.endsWith(suffixLower)) {
+                                        const stripped = normalizedTitle.slice(0, normalizedTitle.length - suffix.length).trim();
+                                        if (stripped) {
+                                                return stripped;
+                                        }
+                                }
+                        }
+                        return normalizedTitle;
+                }
+
+                function stripTrailingDelimiters(value) {
+                        if (!value) {
+                                return '';
+                        }
+                        return value.replace(/[\-–—:]+$/u, '').trim();
+                }
+
                 function renderMetricCards() {
                         const container = document.getElementById('metrics-grid');
                         container.innerHTML = '';
@@ -323,10 +449,11 @@
                                 card.className = 'metric-card';
                                 card.dataset.specKey = descriptor.key;
                                 const component = getDescriptorComponent(descriptor);
+                                const title = getDescriptorTitle(descriptor, component);
                                 const unit = descriptor.unit ? descriptor.unit : '';
                                 card.innerHTML = `
                                         <div class="metric-heading">
-                                                <span class="metric-title">${descriptor.displayName}</span>
+                                                <span class="metric-title">${title}</span>
                                                 <span class="metric-subtitle" data-component></span>
                                         </div>
                                         <div class="metric-reading">
@@ -398,7 +525,7 @@
                                 flag.className = 'status-flag';
                                 const numeric = toNumber(indicator.value);
                                 const isOn = numeric === 1;
-                                const valueClass = numeric === null ? 'flag-generic' : (isOn ? 'flag-on' : 'flag-off');
+                                const valueClass = numeric === null ? 'flag-generic' : (isOn ? 'flag-issue' : 'flag-ok');
                                 const normalizedValue = numeric === null ? '--' : (isOn ? 'Issue' : 'OK');
                                 flag.innerHTML = `
                                         <span class="flag-key">${indicator.label ?? prettifyKey(indicator.key)}</span>
@@ -626,7 +753,16 @@
                                 return;
                         }
                         emptyState.hidden = true;
-                        Object.entries(info).forEach(([key, value]) => {
+                        const sortedEntries = Object.entries(info)
+                                .map(([key, value], index) => ({ key, value, index, priority: getInfoPriority(key) }))
+                                .sort((a, b) => {
+                                        if (a.priority === b.priority) {
+                                                return a.index - b.index;
+                                        }
+                                        return a.priority - b.priority;
+                                });
+
+                        sortedEntries.forEach(({ key, value }) => {
                                 const row = document.createElement('div');
                                 row.className = 'info-row';
                                 row.innerHTML = `
@@ -635,6 +771,18 @@
                                 `;
                                 container.appendChild(row);
                         });
+                }
+
+                function getInfoPriority(key) {
+                        const normalizedKey = normalizeInfoKey(key);
+                        const simplifiedKey = normalizedKey.replace(/[^a-z0-9]/g, '');
+                        const mappedKey = INFO_KEY_ALIASES.get(normalizedKey) || INFO_KEY_ALIASES.get(simplifiedKey) || simplifiedKey;
+                        const index = INFO_PREFERRED_ORDER.indexOf(mappedKey);
+                        return index === -1 ? Number.POSITIVE_INFINITY : index;
+                }
+
+                function normalizeInfoKey(key) {
+                        return key === undefined || key === null ? '' : String(key).trim().toLowerCase();
                 }
 
                 function prettifyKey(key) {
