@@ -2,6 +2,7 @@ package it.sensorplatform.service;
 
 import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.model.Device;
+import it.sensorplatform.model.Indicator;
 import it.sensorplatform.model.Spec;
 import org.springframework.stereotype.Service;
 
@@ -51,19 +52,11 @@ public class IngestService {
     private final Map<String, Deque<Sample>> store = new ConcurrentHashMap<>();
     private static final int MAX_SAMPLES_PER_DEVICE = 200;
 
-    private static final Map<String, String> INDICATOR_LABELS = Map.of(
-            "sen55_fan_err", "SEN55 Fan Error",
-            "sen55_speed_warn", "SEN55 Speed Warning",
-            "sen55_laser_err", "SEN55 Laser Error",
-            "sen55_rht_err", "SEN55 RHT Error",
-            "sen55_gas_err", "SEN55 Gas Error",
-            "sen55_cleaning", "SEN55 Cleaning"
-    );
-
     private static final Set<String> INFO_KEYS = Set.of(
             "currentDate",
             "currentTime",
             "macAddress",
+            "devEui",
             "bat_V",
             "bat_pct",
             "latitude",
@@ -89,7 +82,10 @@ public class IngestService {
         List<Spec> savedSpecs = device != null && device.getTod() != null && device.getTod().getSpecs() != null
                 ? device.getTod().getSpecs()
                 : List.of();
-        process(deviceId, devEui, ts, metrics, specEntries, indicatorLabels, savedSpecs);
+        List<Indicator> savedIndicators = device != null && device.getTod() != null && device.getTod().getIndicators() != null
+                ? device.getTod().getIndicators()
+                : List.of();
+        process(deviceId, devEui, ts, metrics, specEntries, indicatorLabels, savedSpecs, savedIndicators);
     }
 
     public void process(String deviceId,
@@ -98,7 +94,7 @@ public class IngestService {
                         Map<String, Object> metrics,
                         List<PacketDTO.SpecEntry> specEntries,
                         List<String> indicatorLabels) {
-        process(deviceId, devEui, ts, metrics, specEntries, indicatorLabels, List.of());
+        process(deviceId, devEui, ts, metrics, specEntries, indicatorLabels, List.of(), List.of());
     }
 
     private void process(String deviceId,
@@ -107,7 +103,8 @@ public class IngestService {
                          Map<String, Object> metrics,
                          List<PacketDTO.SpecEntry> specEntries,
                          List<String> indicatorLabels,
-                         List<Spec> savedSpecs) {
+                         List<Spec> savedSpecs,
+                         List<Indicator> savedIndicators) {
         if (deviceId == null && devEui != null) {
             deviceId = devEui.toLowerCase(Locale.ROOT);
         }
@@ -119,6 +116,7 @@ public class IngestService {
         Map<String, Object> safeMetrics = metrics != null ? new LinkedHashMap<>(metrics) : new LinkedHashMap<>();
         List<PacketDTO.SpecEntry> safeSpecEntries = specEntries != null ? specEntries : List.of();
         List<Spec> safeSavedSpecs = savedSpecs != null ? savedSpecs : List.of();
+        List<Indicator> safeSavedIndicators = savedIndicators != null ? savedIndicators : List.of();
 
         List<IndicatorDescriptor> indicatorDescriptors = parseIndicatorDescriptors(indicatorLabels);
         Set<String> indicatorKeyHints = new LinkedHashSet<>();
@@ -127,13 +125,22 @@ public class IngestService {
                 indicatorKeyHints.add(descriptor.key());
             }
         }
+        for (Indicator indicator : safeSavedIndicators) {
+            if (indicator == null) {
+                continue;
+            }
+            String key = sanitize(indicator.getKey());
+            if (key != null) {
+                indicatorKeyHints.add(key);
+            }
+        }
 
         List<MeasurementSample> measurements = buildMeasurements(safeMetrics, safeSpecEntries, safeSavedSpecs, indicatorKeyHints);
         Set<String> measurementKeys = new LinkedHashSet<>();
         for (MeasurementSample measurement : measurements) {
             measurementKeys.add(measurement.key());
         }
-        List<IndicatorSample> indicators = buildIndicators(safeMetrics, indicatorDescriptors, measurementKeys);
+        List<IndicatorSample> indicators = buildIndicators(safeMetrics, indicatorDescriptors, measurementKeys, safeSavedIndicators);
         Map<String, Object> info = extractInfo(safeMetrics);
 
         Deque<Sample> queue = store.computeIfAbsent(deviceId, k -> new ArrayDeque<>());
@@ -190,15 +197,17 @@ public class IngestService {
 
     private List<IndicatorSample> buildIndicators(Map<String, Object> metrics,
                                                   List<IndicatorDescriptor> indicatorDescriptors,
-                                                  Set<String> measurementKeys) {
+                                                  Set<String> measurementKeys,
+                                                  List<Indicator> savedIndicators) {
         List<IndicatorSample> result = new ArrayList<>();
         List<IndicatorDescriptor> safeDescriptors = indicatorDescriptors != null ? indicatorDescriptors : List.of();
-        List<String> indicatorKeys = resolveIndicatorKeys(metrics, safeDescriptors, measurementKeys);
+        Map<String, Indicator> savedIndicatorsByKey = indexSavedIndicators(savedIndicators);
+        List<String> indicatorKeys = resolveIndicatorKeys(metrics, safeDescriptors, measurementKeys, savedIndicatorsByKey);
         for (int i = 0; i < indicatorKeys.size(); i++) {
             String key = indicatorKeys.get(i);
             Object rawValue = metrics.get(key);
             Integer value = toInteger(rawValue);
-            String label = resolveIndicatorLabel(key, safeDescriptors, i);
+            String label = resolveIndicatorLabel(key, safeDescriptors, i, savedIndicatorsByKey);
             result.add(new IndicatorSample(key, label, value));
         }
         return result;
@@ -233,6 +242,23 @@ public class IngestService {
             String key = sanitize(spec.getMeasurement());
             if (key != null && !map.containsKey(key)) {
                 map.put(key, spec);
+            }
+        }
+        return map;
+    }
+
+    private Map<String, Indicator> indexSavedIndicators(List<Indicator> indicators) {
+        Map<String, Indicator> map = new LinkedHashMap<>();
+        if (indicators == null) {
+            return map;
+        }
+        for (Indicator indicator : indicators) {
+            if (indicator == null) {
+                continue;
+            }
+            String key = sanitize(indicator.getKey());
+            if (key != null && !map.containsKey(key)) {
+                map.put(key, indicator);
             }
         }
         return map;
@@ -427,8 +453,12 @@ public class IngestService {
 
     private List<String> resolveIndicatorKeys(Map<String, Object> metrics,
                                               List<IndicatorDescriptor> indicatorDescriptors,
-                                              Set<String> measurementKeys) {
+                                              Set<String> measurementKeys,
+                                              Map<String, Indicator> savedIndicatorsByKey) {
         LinkedHashSet<String> keys = new LinkedHashSet<>();
+        if (savedIndicatorsByKey != null) {
+            keys.addAll(savedIndicatorsByKey.keySet());
+        }
         if (indicatorDescriptors != null) {
             for (IndicatorDescriptor descriptor : indicatorDescriptors) {
                 if (descriptor == null) {
@@ -478,7 +508,8 @@ public class IngestService {
 
     private String resolveIndicatorLabel(String key,
                                          List<IndicatorDescriptor> descriptors,
-                                         int index) {
+                                         int index,
+                                         Map<String, Indicator> savedIndicatorsByKey) {
         if (descriptors != null && !descriptors.isEmpty()) {
             if (index < descriptors.size()) {
                 IndicatorDescriptor descriptor = descriptors.get(index);
@@ -503,8 +534,14 @@ public class IngestService {
                 }
             }
         }
-        if (INDICATOR_LABELS.containsKey(key)) {
-            return INDICATOR_LABELS.get(key);
+        if (savedIndicatorsByKey != null) {
+            Indicator indicator = savedIndicatorsByKey.get(key);
+            if (indicator != null) {
+                String name = sanitize(indicator.getName());
+                if (name != null) {
+                    return name;
+                }
+            }
         }
         String pretty = prettify(key);
         return pretty != null ? pretty : key;

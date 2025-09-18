@@ -9,6 +9,7 @@ import it.sensorplatform.model.TypeOfDevice;
 import it.sensorplatform.repository.DeviceRepository;
 import it.sensorplatform.repository.ProjectRepository;
 import it.sensorplatform.repository.TypeOfDeviceRepository;
+import it.sensorplatform.service.IndicatorService;
 import it.sensorplatform.service.SpecService;
 import it.sensorplatform.service.UnknownDeviceService;
 import it.sensorplatform.util.MacAddressUtils;
@@ -38,6 +39,7 @@ class NotificationControllerRestTests {
         DeviceRepository deviceRepository = mock(DeviceRepository.class);
         TypeOfDeviceRepository typeOfDeviceRepository = mock(TypeOfDeviceRepository.class);
         SpecService specService = mock(SpecService.class);
+        IndicatorService indicatorService = mock(IndicatorService.class);
         ProjectRepository projectRepository = mock(ProjectRepository.class);
 
         Long projectId = 1L;
@@ -67,6 +69,7 @@ class NotificationControllerRestTests {
                 deviceRepository,
                 typeOfDeviceRepository,
                 specService,
+                indicatorService,
                 projectRepository
         );
 
@@ -77,10 +80,10 @@ class NotificationControllerRestTests {
         ArgumentCaptor<Device> deviceCaptor = ArgumentCaptor.forClass(Device.class);
         verify(deviceRepository).save(deviceCaptor.capture());
         Device savedDevice = deviceCaptor.getValue();
-        assertEquals("DEV123", savedDevice.getMacAddress());
+        assertNull(savedDevice.getMacAddress());
         assertEquals("DEV123", savedDevice.getDevEui());
 
-        assertTrue(output.getOut().contains("using DevEUI DEV123 as MAC address"));
+        assertTrue(output.getOut().contains("MAC address missing; persisting device with DevEUI DEV123 only"));
     }
 
     @Test
@@ -89,6 +92,7 @@ class NotificationControllerRestTests {
         DeviceRepository deviceRepository = mock(DeviceRepository.class);
         TypeOfDeviceRepository typeOfDeviceRepository = mock(TypeOfDeviceRepository.class);
         SpecService specService = mock(SpecService.class);
+        IndicatorService indicatorService = mock(IndicatorService.class);
         ProjectRepository projectRepository = mock(ProjectRepository.class);
 
         Long projectId = 1L;
@@ -117,6 +121,7 @@ class NotificationControllerRestTests {
                 deviceRepository,
                 typeOfDeviceRepository,
                 specService,
+                indicatorService,
                 projectRepository
         );
 

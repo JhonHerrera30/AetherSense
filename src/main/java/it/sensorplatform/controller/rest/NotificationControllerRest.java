@@ -3,12 +3,14 @@ package it.sensorplatform.controller.rest;
 import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.dto.UnknownDeviceNotification;
 import it.sensorplatform.model.Device;
+import it.sensorplatform.model.Indicator;
 import it.sensorplatform.model.Project;
 import it.sensorplatform.model.Spec;
 import it.sensorplatform.model.TypeOfDevice;
 import it.sensorplatform.repository.DeviceRepository;
 import it.sensorplatform.repository.ProjectRepository;
 import it.sensorplatform.repository.TypeOfDeviceRepository;
+import it.sensorplatform.service.IndicatorService;
 import it.sensorplatform.service.SpecService;
 import it.sensorplatform.service.UnknownDeviceService;
 import it.sensorplatform.util.MacAddressUtils;
@@ -22,6 +24,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/notifications")
@@ -30,6 +33,7 @@ public class NotificationControllerRest {
     private final DeviceRepository deviceRepository;
     private final TypeOfDeviceRepository typeOfDeviceRepository;
     private final SpecService specService;
+    private final IndicatorService indicatorService;
     private final ProjectRepository projectRepository;
     private static final Logger logger = LoggerFactory.getLogger(NotificationControllerRest.class);
 
@@ -37,11 +41,13 @@ public class NotificationControllerRest {
                                       DeviceRepository deviceRepository,
                                       TypeOfDeviceRepository typeOfDeviceRepository,
                                       SpecService specService,
+                                      IndicatorService indicatorService,
                                       ProjectRepository projectRepository) {
         this.unknownDeviceService = unknownDeviceService;
         this.deviceRepository = deviceRepository;
         this.typeOfDeviceRepository = typeOfDeviceRepository;
         this.specService = specService;
+        this.indicatorService = indicatorService;
         this.projectRepository = projectRepository;
     }
 
@@ -60,43 +66,15 @@ public class NotificationControllerRest {
         }
         logger.info("Consumed notification for project {} key {}: mac {} devEui {}", projectId, normalizedKey, notif.getMacAddress(), notif.getDevEui());
         Project project = projectRepository.findById(projectId).orElse(null);
-        TypeOfDevice tod = typeOfDeviceRepository.findByName(notif.getTypeOfDevice()).orElse(null);
-        if (tod == null) {
-            tod = new TypeOfDevice();
-            tod.setName(notif.getTypeOfDevice());
-            List<Spec> specs = new ArrayList<>();
-            if (notif.getSpec() != null) {
-                for (PacketDTO.SpecEntry specEntry : notif.getSpec()) {
-                    if (specEntry == null) {
-                        continue;
-                    }
-                    String label = specEntry.getLabel();
-                    String specKey = sanitize(specEntry.getKey());
-                    if (label == null && specKey == null) {
-                        continue;
-                    }
-                    Spec spec = new Spec();
-                    if (label != null) {
-                        String[] parts = label.split("-");
-                        spec.setComponent(parts.length > 0 ? parts[0] : "");
-                        String measurementPart = parts.length > 1 ? parts[1] : "";
-                        spec.setMeasurement(specKey != null ? specKey : measurementPart);
-                        spec.setUnitOfMeasurement(parts.length > 2 ? parts[2] : "");
-                    } else {
-                        spec.setMeasurement(specKey != null ? specKey : "");
-                    }
-                    if (spec.getComponent() == null) {
-                        spec.setComponent("");
-                    }
-                    if (spec.getUnitOfMeasurement() == null) {
-                        spec.setUnitOfMeasurement("");
-                    }
-                    Spec managedSpec = specService.findByFields(spec)
-                            .orElseGet(() -> specService.save(spec));
-                    specs.add(managedSpec);
-                }
-            }
-            tod.setSpecs(specs);
+        TypeOfDevice tod = typeOfDeviceRepository.findByName(notif.getTypeOfDevice()).orElseGet(() -> {
+            TypeOfDevice created = new TypeOfDevice();
+            created.setName(notif.getTypeOfDevice());
+            return created;
+        });
+
+        boolean specsUpdated = ensureSpecs(tod, notif.getSpec());
+        boolean indicatorsUpdated = ensureIndicators(tod, notif.getIndicator());
+        if (tod.getId() == null || specsUpdated || indicatorsUpdated) {
             typeOfDeviceRepository.save(tod);
         }
 
@@ -141,5 +119,155 @@ public class NotificationControllerRest {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private boolean ensureSpecs(TypeOfDevice tod, List<PacketDTO.SpecEntry> specEntries) {
+        List<Spec> specs = tod.getSpecs() != null ? new ArrayList<>(tod.getSpecs()) : new ArrayList<>();
+        boolean updated = false;
+        if (specEntries != null) {
+            for (PacketDTO.SpecEntry specEntry : specEntries) {
+                if (specEntry == null) {
+                    continue;
+                }
+                String label = specEntry.getLabel();
+                String specKey = sanitize(specEntry.getKey());
+                if (label == null && specKey == null) {
+                    continue;
+                }
+                Spec spec = new Spec();
+                if (label != null) {
+                    String[] parts = label.split("-");
+                    spec.setComponent(parts.length > 0 ? sanitize(parts[0]) : "");
+                    String measurementPart = parts.length > 1 ? sanitize(parts[1]) : "";
+                    spec.setMeasurement(specKey != null ? specKey : measurementPart);
+                    spec.setUnitOfMeasurement(parts.length > 2 ? sanitize(parts[2]) : "");
+                } else {
+                    spec.setMeasurement(specKey != null ? specKey : "");
+                }
+                if (spec.getComponent() == null) {
+                    spec.setComponent("");
+                }
+                if (spec.getUnitOfMeasurement() == null) {
+                    spec.setUnitOfMeasurement("");
+                }
+                Spec managedSpec = specService.findByFields(spec)
+                        .orElseGet(() -> specService.save(spec));
+                if (!specs.contains(managedSpec)) {
+                    specs.add(managedSpec);
+                    updated = true;
+                }
+            }
+        }
+        if (tod.getSpecs() == null || updated) {
+            tod.setSpecs(specs);
+        }
+        return updated;
+    }
+
+    private boolean ensureIndicators(TypeOfDevice tod, List<String> indicatorEntries) {
+        List<Indicator> indicators = tod.getIndicators() != null ? new ArrayList<>(tod.getIndicators()) : new ArrayList<>();
+        boolean updated = false;
+        if (indicatorEntries != null) {
+            for (String raw : indicatorEntries) {
+                Indicator parsed = parseIndicator(raw);
+                if (parsed == null) {
+                    continue;
+                }
+                Indicator managed = indicatorService.findByKey(parsed.getKey())
+                        .map(existing -> updateIndicatorName(existing, parsed.getName()))
+                        .orElseGet(() -> indicatorService.save(parsed));
+                if (!indicators.contains(managed)) {
+                    indicators.add(managed);
+                    updated = true;
+                }
+            }
+        }
+        if (tod.getIndicators() == null || updated) {
+            tod.setIndicators(indicators);
+        }
+        return updated;
+    }
+
+    private Indicator parseIndicator(String raw) {
+        String sanitized = sanitize(raw);
+        if (sanitized == null) {
+            return null;
+        }
+        int separator = findSeparator(sanitized);
+        String keyPart;
+        String labelPart;
+        if (separator > 0) {
+            keyPart = sanitize(sanitized.substring(0, separator));
+            labelPart = sanitize(sanitized.substring(separator + 1));
+        } else {
+            keyPart = null;
+            labelPart = sanitized;
+        }
+        String key = keyPart != null ? keyPart : deriveKeyFromLabel(labelPart);
+        if (key == null) {
+            return null;
+        }
+        String label = labelPart != null ? labelPart : prettify(key);
+        Indicator indicator = new Indicator();
+        indicator.setKey(key);
+        indicator.setName(label != null ? label : key);
+        return indicator;
+    }
+
+    private Indicator updateIndicatorName(Indicator indicator, String candidate) {
+        String sanitizedCandidate = sanitize(candidate);
+        if (sanitizedCandidate != null && !sanitizedCandidate.equals(indicator.getName())) {
+            indicator.setName(sanitizedCandidate);
+            return indicatorService.save(indicator);
+        }
+        return indicator;
+    }
+
+    private int findSeparator(String value) {
+        int colon = value.indexOf(':');
+        int equal = value.indexOf('=');
+        int pipe = value.indexOf('|');
+        int separator = colon > 0 ? colon : -1;
+        if (separator < 0 || (equal > 0 && equal < separator)) {
+            separator = equal;
+        }
+        if (separator < 0 || (pipe > 0 && pipe < separator)) {
+            separator = pipe;
+        }
+        return separator;
+    }
+
+    private String deriveKeyFromLabel(String label) {
+        String sanitized = sanitize(label);
+        if (sanitized == null) {
+            return null;
+        }
+        return sanitized.replace(' ', '_').toLowerCase(Locale.ROOT);
+    }
+
+    private String prettify(String value) {
+        String sanitized = sanitize(value);
+        if (sanitized == null) {
+            return null;
+        }
+        String replaced = sanitized.replace('_', ' ').replace('-', ' ').trim();
+        if (replaced.isEmpty()) {
+            return sanitized;
+        }
+        String[] parts = replaced.split("\\s+");
+        StringBuilder builder = new StringBuilder();
+        for (String part : parts) {
+            if (part.isEmpty()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append(' ');
+            }
+            builder.append(part.substring(0, 1).toUpperCase());
+            if (part.length() > 1) {
+                builder.append(part.substring(1).toLowerCase());
+            }
+        }
+        return builder.length() > 0 ? builder.toString() : sanitized;
     }
 }

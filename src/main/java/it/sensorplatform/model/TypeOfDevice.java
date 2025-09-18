@@ -3,11 +3,15 @@ package it.sensorplatform.model;
 
 import java.util.List;
 import java.util.Objects;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
@@ -19,8 +23,15 @@ public class TypeOfDevice {
 	@NotBlank
 	private String name;
 	
-	@ManyToMany
-	private List<Spec> specs;
+        @ManyToMany
+        private List<Spec> specs;
+
+        @OneToMany
+        @JoinTable(
+                        name = "type_of_device_indicator",
+                        joinColumns = @JoinColumn(name = "type_of_device_id"),
+                        inverseJoinColumns = @JoinColumn(name = "indicator_id"))
+        private List<Indicator> indicators;
 
 	public Long getId() {
 		return id;
@@ -42,9 +53,17 @@ public class TypeOfDevice {
 		return specs;
 	}
 
-	public void setSpecs(List<Spec> specs) {
-		this.specs = specs;
-	}
+        public void setSpecs(List<Spec> specs) {
+                this.specs = specs;
+        }
+
+        public List<Indicator> getIndicators() {
+                return indicators;
+        }
+
+        public void setIndicators(List<Indicator> indicators) {
+                this.indicators = indicators;
+        }
 
 	@Override
 	public int hashCode() {
