@@ -18,6 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * IngestService: punto unico che riceve dati normalizzati (deviceId/devEui, timestamp, metrics)
@@ -62,6 +63,11 @@ public class IngestService {
             "latitude",
             "longitude"
     );
+
+    private static final Set<String> NORMALIZED_INFO_KEYS = INFO_KEYS.stream()
+            .map(key -> key == null ? null : key.trim().toLowerCase(Locale.ROOT))
+            .filter(key -> key != null && !key.isEmpty())
+            .collect(Collectors.toUnmodifiableSet());
 
     private record IndicatorDescriptor(String key, String label) { }
 
@@ -117,30 +123,34 @@ public class IngestService {
         List<PacketDTO.SpecEntry> safeSpecEntries = specEntries != null ? specEntries : List.of();
         List<Spec> safeSavedSpecs = savedSpecs != null ? savedSpecs : List.of();
         List<Indicator> safeSavedIndicators = savedIndicators != null ? savedIndicators : List.of();
+        Map<String, Object> normalizedMetrics = buildNormalizedMetrics(safeMetrics);
 
         List<IndicatorDescriptor> indicatorDescriptors = parseIndicatorDescriptors(indicatorLabels);
         Set<String> indicatorKeyHints = new LinkedHashSet<>();
         for (IndicatorDescriptor descriptor : indicatorDescriptors) {
             if (descriptor != null && descriptor.key() != null) {
-                indicatorKeyHints.add(descriptor.key());
+                String normalizedKey = normalizeKey(descriptor.key());
+                if (normalizedKey != null) {
+                    indicatorKeyHints.add(normalizedKey);
+                }
             }
         }
         for (Indicator indicator : safeSavedIndicators) {
             if (indicator == null) {
                 continue;
             }
-            String key = sanitize(indicator.getKey());
-            if (key != null) {
-                indicatorKeyHints.add(key);
+            String normalizedKey = normalizeKey(indicator.getKey());
+            if (normalizedKey != null) {
+                indicatorKeyHints.add(normalizedKey);
             }
         }
 
-        List<MeasurementSample> measurements = buildMeasurements(safeMetrics, safeSpecEntries, safeSavedSpecs, indicatorKeyHints);
+        List<MeasurementSample> measurements = buildMeasurements(safeMetrics, normalizedMetrics, safeSpecEntries, safeSavedSpecs, indicatorKeyHints);
         Set<String> measurementKeys = new LinkedHashSet<>();
         for (MeasurementSample measurement : measurements) {
             measurementKeys.add(measurement.key());
         }
-        List<IndicatorSample> indicators = buildIndicators(safeMetrics, indicatorDescriptors, measurementKeys, safeSavedIndicators);
+        List<IndicatorSample> indicators = buildIndicators(safeMetrics, normalizedMetrics, indicatorDescriptors, measurementKeys, safeSavedIndicators);
         Map<String, Object> info = extractInfo(safeMetrics);
 
         Deque<Sample> queue = store.computeIfAbsent(deviceId, k -> new ArrayDeque<>());
@@ -162,6 +172,7 @@ public class IngestService {
     }
 
     private List<MeasurementSample> buildMeasurements(Map<String, Object> metrics,
+                                                      Map<String, Object> normalizedMetrics,
                                                       List<PacketDTO.SpecEntry> specEntries,
                                                       List<Spec> savedSpecs,
                                                       Set<String> indicatorKeyHints) {
@@ -175,14 +186,15 @@ public class IngestService {
 
         for (int i = 0; i < measurementKeys.size(); i++) {
             String key = measurementKeys.get(i);
-            Object rawValue = metrics.get(key);
+            String normalizedKey = normalizeKey(key);
+            Object rawValue = normalizedMetrics.get(normalizedKey);
             Double value = toDouble(rawValue);
 
-            PacketDTO.SpecEntry specEntry = specByKey.get(key);
+            PacketDTO.SpecEntry specEntry = normalizedKey != null ? specByKey.get(normalizedKey) : null;
             if (specEntry == null && i < safeSpecEntries.size()) {
                 specEntry = safeSpecEntries.get(i);
             }
-            Spec savedSpec = savedSpecByKey.get(key);
+            Spec savedSpec = normalizedKey != null ? savedSpecByKey.get(normalizedKey) : null;
 
             Double min = specEntry != null ? specEntry.getMin() : null;
             Double max = specEntry != null ? specEntry.getMax() : null;
@@ -195,17 +207,42 @@ public class IngestService {
         return result;
     }
 
+    private Map<String, Object> buildNormalizedMetrics(Map<String, Object> metrics) {
+        Map<String, Object> normalized = new LinkedHashMap<>();
+        if (metrics == null) {
+            return normalized;
+        }
+        for (Map.Entry<String, Object> entry : metrics.entrySet()) {
+            String normalizedKey = normalizeKey(entry.getKey());
+            if (normalizedKey != null && !normalized.containsKey(normalizedKey)) {
+                normalized.put(normalizedKey, entry.getValue());
+            }
+        }
+        return normalized;
+    }
+
     private List<IndicatorSample> buildIndicators(Map<String, Object> metrics,
+                                                  Map<String, Object> normalizedMetrics,
                                                   List<IndicatorDescriptor> indicatorDescriptors,
                                                   Set<String> measurementKeys,
                                                   List<Indicator> savedIndicators) {
         List<IndicatorSample> result = new ArrayList<>();
         List<IndicatorDescriptor> safeDescriptors = indicatorDescriptors != null ? indicatorDescriptors : List.of();
         Map<String, Indicator> savedIndicatorsByKey = indexSavedIndicators(savedIndicators);
-        List<String> indicatorKeys = resolveIndicatorKeys(metrics, safeDescriptors, measurementKeys, savedIndicatorsByKey);
+        Set<String> measurementKeyHints = new LinkedHashSet<>();
+        if (measurementKeys != null) {
+            for (String measurementKey : measurementKeys) {
+                String normalized = normalizeKey(measurementKey);
+                if (normalized != null) {
+                    measurementKeyHints.add(normalized);
+                }
+            }
+        }
+        List<String> indicatorKeys = resolveIndicatorKeys(metrics, safeDescriptors, measurementKeyHints, savedIndicatorsByKey);
         for (int i = 0; i < indicatorKeys.size(); i++) {
             String key = indicatorKeys.get(i);
-            Object rawValue = metrics.get(key);
+            String normalizedKey = normalizeKey(key);
+            Object rawValue = normalizedMetrics.get(normalizedKey);
             Integer value = toInteger(rawValue);
             String label = resolveIndicatorLabel(key, safeDescriptors, i, savedIndicatorsByKey);
             result.add(new IndicatorSample(key, label, value));
@@ -222,9 +259,9 @@ public class IngestService {
             if (entry == null) {
                 continue;
             }
-            String key = sanitize(entry.getKey());
-            if (key != null && !map.containsKey(key)) {
-                map.put(key, entry);
+            String normalizedKey = normalizeKey(entry.getKey());
+            if (normalizedKey != null && !map.containsKey(normalizedKey)) {
+                map.put(normalizedKey, entry);
             }
         }
         return map;
@@ -239,9 +276,9 @@ public class IngestService {
             if (spec == null) {
                 continue;
             }
-            String key = sanitize(spec.getMeasurement());
-            if (key != null && !map.containsKey(key)) {
-                map.put(key, spec);
+            String normalizedKey = normalizeKey(spec.getMeasurement());
+            if (normalizedKey != null && !map.containsKey(normalizedKey)) {
+                map.put(normalizedKey, spec);
             }
         }
         return map;
@@ -256,9 +293,9 @@ public class IngestService {
             if (indicator == null) {
                 continue;
             }
-            String key = sanitize(indicator.getKey());
-            if (key != null && !map.containsKey(key)) {
-                map.put(key, indicator);
+            String normalizedKey = normalizeKey(indicator.getKey());
+            if (normalizedKey != null && !map.containsKey(normalizedKey)) {
+                map.put(normalizedKey, indicator);
             }
         }
         return map;
@@ -268,15 +305,16 @@ public class IngestService {
                                                 List<PacketDTO.SpecEntry> specEntries,
                                                 List<Spec> savedSpecs,
                                                 Set<String> indicatorKeyHints) {
-        LinkedHashSet<String> keys = new LinkedHashSet<>();
+        LinkedHashMap<String, String> keys = new LinkedHashMap<>();
         if (savedSpecs != null) {
             for (Spec spec : savedSpecs) {
                 if (spec == null) {
                     continue;
                 }
-                String key = sanitize(spec.getMeasurement());
-                if (key != null) {
-                    keys.add(key);
+                String sanitized = sanitize(spec.getMeasurement());
+                String normalized = normalizeKey(spec.getMeasurement());
+                if (sanitized != null && normalized != null) {
+                    keys.putIfAbsent(normalized, sanitized);
                 }
             }
         }
@@ -285,28 +323,32 @@ public class IngestService {
                 if (entry == null) {
                     continue;
                 }
-                String key = sanitize(entry.getKey());
-                if (key != null) {
-                    keys.add(key);
+                String sanitized = sanitize(entry.getKey());
+                String normalized = normalizeKey(entry.getKey());
+                if (sanitized != null && normalized != null) {
+                    keys.putIfAbsent(normalized, sanitized);
                 }
             }
         }
         if (metrics != null) {
             for (String rawKey : metrics.keySet()) {
-                String key = sanitize(rawKey);
-                if (key == null) {
+                String normalized = normalizeKey(rawKey);
+                if (normalized == null) {
                     continue;
                 }
-                if (INFO_KEYS.contains(key)) {
+                if (isInfoKey(rawKey)) {
                     continue;
                 }
-                if (indicatorKeyHints != null && indicatorKeyHints.contains(key)) {
+                if (indicatorKeyHints != null && indicatorKeyHints.contains(normalized)) {
                     continue;
                 }
-                keys.add(key);
+                String sanitized = sanitize(rawKey);
+                if (sanitized != null) {
+                    keys.putIfAbsent(normalized, sanitized);
+                }
             }
         }
-        return new ArrayList<>(keys);
+        return new ArrayList<>(keys.values());
     }
 
     private String resolveMeasurementLabel(String key, PacketDTO.SpecEntry specEntry, Spec savedSpec) {
@@ -453,56 +495,68 @@ public class IngestService {
 
     private List<String> resolveIndicatorKeys(Map<String, Object> metrics,
                                               List<IndicatorDescriptor> indicatorDescriptors,
-                                              Set<String> measurementKeys,
+                                              Set<String> measurementKeyHints,
                                               Map<String, Indicator> savedIndicatorsByKey) {
-        LinkedHashSet<String> keys = new LinkedHashSet<>();
+        LinkedHashMap<String, String> keysByNormalized = new LinkedHashMap<>();
         if (savedIndicatorsByKey != null) {
-            keys.addAll(savedIndicatorsByKey.keySet());
+            for (Map.Entry<String, Indicator> entry : savedIndicatorsByKey.entrySet()) {
+                Indicator indicator = entry.getValue();
+                String sanitized = indicator != null ? sanitize(indicator.getKey()) : null;
+                if (sanitized != null) {
+                    keysByNormalized.putIfAbsent(entry.getKey(), sanitized);
+                }
+            }
         }
         if (indicatorDescriptors != null) {
             for (IndicatorDescriptor descriptor : indicatorDescriptors) {
                 if (descriptor == null) {
                     continue;
                 }
-                String key = sanitize(descriptor.key());
-                if (key != null) {
-                    keys.add(key);
+                String sanitized = sanitize(descriptor.key());
+                String normalized = normalizeKey(descriptor.key());
+                if (sanitized != null && normalized != null) {
+                    keysByNormalized.putIfAbsent(normalized, sanitized);
                 }
             }
         }
         if (metrics != null) {
             for (String rawKey : metrics.keySet()) {
-                String key = sanitize(rawKey);
-                if (key == null) {
+                String normalized = normalizeKey(rawKey);
+                if (normalized == null) {
                     continue;
                 }
-                if (INFO_KEYS.contains(key)) {
+                if (isInfoKey(rawKey)) {
                     continue;
                 }
-                if (measurementKeys != null && measurementKeys.contains(key)) {
+                if (measurementKeyHints != null && measurementKeyHints.contains(normalized)) {
                     continue;
                 }
-                keys.add(key);
+                String sanitized = sanitize(rawKey);
+                if (sanitized != null) {
+                    keysByNormalized.putIfAbsent(normalized, sanitized);
+                }
             }
         }
-        LinkedHashSet<String> remaining = new LinkedHashSet<>(keys);
+        LinkedHashSet<String> remaining = new LinkedHashSet<>(keysByNormalized.keySet());
         List<String> ordered = new ArrayList<>();
         if (indicatorDescriptors != null) {
             for (IndicatorDescriptor descriptor : indicatorDescriptors) {
                 if (descriptor == null) {
                     continue;
                 }
-                String key = sanitize(descriptor.key());
-                if (key != null && remaining.remove(key)) {
-                    ordered.add(key);
-                } else if (key == null && !remaining.isEmpty()) {
+                String normalized = normalizeKey(descriptor.key());
+                if (normalized != null && remaining.remove(normalized)) {
+                    ordered.add(keysByNormalized.get(normalized));
+                } else if (normalized == null && !remaining.isEmpty()) {
                     String next = remaining.iterator().next();
                     remaining.remove(next);
-                    ordered.add(next);
+                    ordered.add(keysByNormalized.get(next));
                 }
             }
         }
-        ordered.addAll(remaining);
+        for (String normalized : remaining) {
+            ordered.add(keysByNormalized.get(normalized));
+        }
         return ordered;
     }
 
@@ -510,13 +564,15 @@ public class IngestService {
                                          List<IndicatorDescriptor> descriptors,
                                          int index,
                                          Map<String, Indicator> savedIndicatorsByKey) {
+        String normalizedKey = normalizeKey(key);
         if (descriptors != null && !descriptors.isEmpty()) {
             if (index < descriptors.size()) {
                 IndicatorDescriptor descriptor = descriptors.get(index);
                 if (descriptor != null) {
-                    String descriptorKey = sanitize(descriptor.key());
                     String descriptorLabel = descriptor.label();
-                    if ((descriptorKey == null || descriptorKey.equals(key)) && descriptorLabel != null && !descriptorLabel.isBlank()) {
+                    String descriptorNormalizedKey = normalizeKey(descriptor.key());
+                    if ((descriptorNormalizedKey == null || descriptorNormalizedKey.equals(normalizedKey))
+                            && descriptorLabel != null && !descriptorLabel.isBlank()) {
                         return descriptorLabel;
                     }
                 }
@@ -525,17 +581,16 @@ public class IngestService {
                 if (descriptor == null) {
                     continue;
                 }
-                String descriptorKey = sanitize(descriptor.key());
-                if (descriptorKey != null && descriptorKey.equals(key)) {
-                    String descriptorLabel = descriptor.label();
-                    if (descriptorLabel != null && !descriptorLabel.isBlank()) {
-                        return descriptorLabel;
-                    }
+                String descriptorLabel = descriptor.label();
+                String descriptorNormalizedKey = normalizeKey(descriptor.key());
+                if (descriptorNormalizedKey != null && descriptorNormalizedKey.equals(normalizedKey)
+                        && descriptorLabel != null && !descriptorLabel.isBlank()) {
+                    return descriptorLabel;
                 }
             }
         }
-        if (savedIndicatorsByKey != null) {
-            Indicator indicator = savedIndicatorsByKey.get(key);
+        if (savedIndicatorsByKey != null && normalizedKey != null) {
+            Indicator indicator = savedIndicatorsByKey.get(normalizedKey);
             if (indicator != null) {
                 String name = sanitize(indicator.getName());
                 if (name != null) {
@@ -588,12 +643,22 @@ public class IngestService {
         return builder.length() > 0 ? builder.toString() : sanitized;
     }
 
+    private String normalizeKey(String value) {
+        String sanitized = sanitize(value);
+        return sanitized != null ? sanitized.toLowerCase(Locale.ROOT) : null;
+    }
+
     private String sanitize(String value) {
         if (value == null) {
             return null;
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private boolean isInfoKey(String key) {
+        String normalized = normalizeKey(key);
+        return normalized != null && NORMALIZED_INFO_KEYS.contains(normalized);
     }
 
     private Map<String, Object> extractInfo(Map<String, Object> metrics) {

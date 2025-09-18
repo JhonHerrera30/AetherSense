@@ -127,5 +127,42 @@ class IngestServiceTests {
         assertEquals("SEN55 Fan Error", indicatorSample.label());
         assertEquals(1, indicatorSample.value());
     }
+
+    @Test
+    void matchesMetricsIgnoringKeyCase() {
+        IngestService ingestService = new IngestService();
+
+        Spec spec = new Spec();
+        spec.setMeasurement("PM10");
+
+        TypeOfDevice typeOfDevice = new TypeOfDevice();
+        typeOfDevice.setName("Case Test");
+        typeOfDevice.setSpecs(List.of(spec));
+
+        Device device = new Device();
+        device.setMacAddress("33:44:55:66:77:88");
+        device.setTod(typeOfDevice);
+
+        PacketDTO.SpecEntry specEntry = new PacketDTO.SpecEntry();
+        specEntry.setKey("pm10");
+        specEntry.setLabel("PM10");
+
+        ingestService.process(
+                device,
+                Instant.parse("2024-04-01T00:00:00Z"),
+                Map.of("pM10", 12.34),
+                List.of(specEntry),
+                List.of()
+        );
+
+        List<IngestService.Sample> samples = ingestService.last(device.getMacAddress(), 1);
+        assertEquals(1, samples.size());
+        List<IngestService.MeasurementSample> measurements = samples.get(0).measurements();
+        assertEquals(1, measurements.size());
+        IngestService.MeasurementSample measurement = measurements.get(0);
+
+        assertEquals("PM10", measurement.key());
+        assertEquals(12.34, measurement.value());
+    }
 }
 
