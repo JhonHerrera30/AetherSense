@@ -233,23 +233,51 @@
         border: 1px solid var(--accent-soft);
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.75rem;
         min-height: 130px;
 }
 
-.metric-header {
+.metric-heading {
         display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 0.5rem;
-        color: var(--muted-color);
+        flex-direction: column;
+        gap: 0.2rem;
+}
+
+.metric-title {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: var(--accent-contrast);
+}
+
+.metric-subtitle {
         font-size: 0.9rem;
+        color: var(--muted-color);
+}
+
+.metric-subtitle[hidden] {
+        display: none;
+}
+
+.metric-reading {
+        display: flex;
+        align-items: baseline;
+        gap: 0.45rem;
 }
 
 .metric-value {
         font-size: clamp(1.6rem, 4vw, 2.4rem);
         font-weight: 600;
         color: var(--accent-contrast);
+        line-height: 1.1;
+}
+
+.metric-unit {
+        font-size: 1rem;
+        color: var(--muted-color);
+}
+
+.metric-unit:empty {
+        display: none;
 }
 
 .metric-range {
@@ -263,13 +291,19 @@
 
 .trend-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 1rem;
 }
 
 .trend-grid canvas {
         width: 100% !important;
         height: 150px !important;
+}
+
+@media (max-width: 900px) {
+        .trend-grid {
+                grid-template-columns: 1fr;
+        }
 }
 
 .history-controls {

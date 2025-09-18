@@ -39,6 +39,7 @@ public class IngestService {
     public static record MeasurementSample(String key,
                                            String label,
                                            String displayName,
+                                           String component,
                                            String unit,
                                            Double min,
                                            Double max,
@@ -188,9 +189,10 @@ public class IngestService {
             Double max = specEntry != null ? specEntry.getMax() : null;
             String label = resolveMeasurementLabel(key, specEntry, savedSpec);
             String displayName = resolveMeasurementDisplayName(key, label, specEntry, savedSpec);
+            String component = resolveMeasurementComponent(label, specEntry, savedSpec);
             String unit = resolveMeasurementUnit(specEntry, savedSpec);
 
-            result.add(new MeasurementSample(key, label, displayName, unit, min, max, value));
+            result.add(new MeasurementSample(key, label, displayName, component, unit, min, max, value));
         }
         return result;
     }
@@ -385,6 +387,55 @@ public class IngestService {
             return label;
         }
         return prettify(key);
+    }
+
+    private String resolveMeasurementComponent(String label,
+                                               PacketDTO.SpecEntry specEntry,
+                                               Spec savedSpec) {
+        if (savedSpec != null) {
+            String component = sanitize(savedSpec.getComponent());
+            if (component != null) {
+                String prettyComponent = prettify(component);
+                return prettyComponent != null ? prettyComponent : component;
+            }
+        }
+        String fromLabel = extractComponentFromLabel(label);
+        if (fromLabel != null) {
+            return fromLabel;
+        }
+        if (specEntry != null) {
+            String fromSpecEntry = extractComponentFromLabel(specEntry.getLabel());
+            if (fromSpecEntry != null) {
+                return fromSpecEntry;
+            }
+        }
+        return null;
+    }
+
+    private String extractComponentFromLabel(String value) {
+        String sanitized = sanitize(value);
+        if (sanitized == null) {
+            return null;
+        }
+        int separator = sanitized.indexOf('-');
+        if (separator < 0) {
+            separator = sanitized.indexOf('–');
+        }
+        if (separator < 0) {
+            separator = sanitized.indexOf(':');
+        }
+        if (separator < 0) {
+            separator = sanitized.indexOf('|');
+        }
+        if (separator < 0) {
+            return null;
+        }
+        String candidate = sanitized.substring(0, separator).trim();
+        if (candidate.isEmpty()) {
+            return null;
+        }
+        String prettyCandidate = prettify(candidate);
+        return prettyCandidate != null ? prettyCandidate : candidate;
     }
 
     private String resolveMeasurementUnit(PacketDTO.SpecEntry specEntry, Spec savedSpec) {
