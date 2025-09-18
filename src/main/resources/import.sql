@@ -83,7 +83,7 @@ insert into device(latitude, longitude, id, project_id, email_owner, mac_address
 insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(40.639470, 17.694360, 17, 101, 'jhon30.herrera@gmail.com', '7C:06:1C:EC:E7:36', 'Amber5', 3, 7, 'activated'); -- Lecce
 insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(38.193791, 15.554045, 18, 101, 'jhon30.herrera@gmail.com', '8D:06:1C:EC:E7:37', 'Amber6', 3, 7, 'deactivated'); -- Messina
 
-insert into spec(id, measurement, unit_of_measurement, component)values(1, 'Temperature', '°C' ,'Sen5x')
+/*insert into spec(id, measurement, unit_of_measurement, component)values(1, 'Temperature', '°C' ,'Sen5x')
 insert into spec(id, measurement, unit_of_measurement, component)values(2, 'Relative Humidity', '%RH' ,'Sen5x')
 insert into spec(id, measurement, unit_of_measurement, component)values(3, 'VOC', 'Index (0-500)' ,'Sen5x')
 insert into spec(id, measurement, unit_of_measurement, component)values(4, 'PM 1.0', 'µg/m³' ,'Sen5x')
@@ -112,7 +112,7 @@ insert into type_of_device_specs(specs_id, type_of_device_id)values(11, 3)
 insert into type_of_device_specs(specs_id, type_of_device_id)values(12, 3)
 insert into type_of_device_specs(specs_id, type_of_device_id)values(13, 3)
 insert into type_of_device_specs(specs_id, type_of_device_id)values(14, 2)
-
+*/
 
 
 -- 6. Reset sequenze
@@ -124,6 +124,7 @@ SELECT setval('app_group_seq', (SELECT MAX(id) FROM app_group));
 SELECT setval('device_seq', (SELECT MAX(id) FROM device));
 SELECT setval('type_of_device_seq', (SELECT MAX(id) FROM type_of_device));
 SELECT setval('spec_seq', (SELECT MAX(id) FROM spec));
+
 
 
 
