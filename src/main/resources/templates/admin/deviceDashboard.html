@@ -54,9 +54,14 @@
                                         <span>Status: <strong th:text="${device.status}">--</strong></span>
                                 </p>
                         </div>
-                        <div class="device-location" th:if="${device.latitude != null && device.longitude != null}">
-                                <span>Lat: <strong th:text="${#numbers.formatDecimal(device.latitude, 1, 6)}">0</strong></span>
-                                <span>Lng: <strong th:text="${#numbers.formatDecimal(device.longitude, 1, 6)}">0</strong></span>
+                        <div class="device-actions">
+                                <a class="back-to-map" th:href="@{'/success'(projectId=${project.id})}" title="Back to map">
+                                        Back to map
+                                </a>
+                                <div class="device-location" th:if="${device.latitude != null && device.longitude != null}">
+                                        <span>Lat: <strong th:text="${#numbers.formatDecimal(device.latitude, 1, 6)}">0</strong></span>
+                                        <span>Lng: <strong th:text="${#numbers.formatDecimal(device.longitude, 1, 6)}">0</strong></span>
+                                </div>
                         </div>
                 </section>
 
@@ -132,6 +137,35 @@
                         'volcano': ['#6a040f', '#9d0208', '#f48c06'],
                         'default': ['#2d6cdf', '#4c9f70', '#dd6b20']
                 };
+
+                const INFO_PREFERRED_ORDER = ['date', 'time', 'mac', 'latitude', 'longitude', 'bat_pct', 'bat_v'];
+                const INFO_KEY_ALIASES = new Map([
+                        ['data', 'date'],
+                        ['date', 'date'],
+                        ['ora', 'time'],
+                        ['time', 'time'],
+                        ['mac', 'mac'],
+                        ['macaddress', 'mac'],
+                        ['mac_address', 'mac'],
+                        ['lat', 'latitude'],
+                        ['latitude', 'latitude'],
+                        ['latitudine', 'latitude'],
+                        ['lon', 'longitude'],
+                        ['lng', 'longitude'],
+                        ['longitude', 'longitude'],
+                        ['longitudine', 'longitude'],
+                        ['batpct', 'bat_pct'],
+                        ['bat_pct', 'bat_pct'],
+                        ['batpercent', 'bat_pct'],
+                        ['battery_pct', 'bat_pct'],
+                        ['batterypercent', 'bat_pct'],
+                        ['battery_percentage', 'bat_pct'],
+                        ['batv', 'bat_v'],
+                        ['bat_v', 'bat_v'],
+                        ['battery_v', 'bat_v'],
+                        ['batteryvolt', 'bat_v'],
+                        ['battery_voltage', 'bat_v']
+                ]);
 
                 document.addEventListener('DOMContentLoaded', () => {
                         setupDropdown();
@@ -315,6 +349,45 @@
                         return '';
                 }
 
+                function getDescriptorTitle(descriptor, componentOverride) {
+                        if (!descriptor) {
+                                return '';
+                        }
+                        const displayName = typeof descriptor.displayName === 'string' ? descriptor.displayName.trim() : '';
+                        if (!displayName) {
+                                return '';
+                        }
+                        const component = componentOverride || getDescriptorComponent(descriptor);
+                        let title = displayName;
+
+                        if (component) {
+                                const trimmedComponent = component.trim();
+                                if (trimmedComponent) {
+                                        const componentPattern = new RegExp(`^${escapeRegExp(trimmedComponent)}(?:\s*[\-–—:]\s*|\s+)`, 'i');
+                                        const stripped = title.replace(componentPattern, '').trim();
+                                        if (stripped) {
+                                                title = stripped;
+                                        }
+                                }
+                        }
+
+                        const unit = typeof descriptor.unit === 'string' ? descriptor.unit.trim() : '';
+                        if (unit) {
+                                const unitPattern = new RegExp(`\s*\(?${escapeRegExp(unit)}\)?$`, 'i');
+                                const strippedUnit = title.replace(unitPattern, '').trim();
+                                if (strippedUnit) {
+                                        title = strippedUnit;
+                                }
+                        }
+
+                        title = title.replace(/[\-–—:]+$/u, '').trim();
+                        return title || displayName;
+                }
+
+                function escapeRegExp(value) {
+                        return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\$&');
+                }
+
                 function renderMetricCards() {
                         const container = document.getElementById('metrics-grid');
                         container.innerHTML = '';
@@ -323,10 +396,11 @@
                                 card.className = 'metric-card';
                                 card.dataset.specKey = descriptor.key;
                                 const component = getDescriptorComponent(descriptor);
+                                const title = getDescriptorTitle(descriptor, component);
                                 const unit = descriptor.unit ? descriptor.unit : '';
                                 card.innerHTML = `
                                         <div class="metric-heading">
-                                                <span class="metric-title">${descriptor.displayName}</span>
+                                                <span class="metric-title">${title}</span>
                                                 <span class="metric-subtitle" data-component></span>
                                         </div>
                                         <div class="metric-reading">
@@ -398,7 +472,7 @@
                                 flag.className = 'status-flag';
                                 const numeric = toNumber(indicator.value);
                                 const isOn = numeric === 1;
-                                const valueClass = numeric === null ? 'flag-generic' : (isOn ? 'flag-on' : 'flag-off');
+                                const valueClass = numeric === null ? 'flag-generic' : (isOn ? 'flag-issue' : 'flag-ok');
                                 const normalizedValue = numeric === null ? '--' : (isOn ? 'Issue' : 'OK');
                                 flag.innerHTML = `
                                         <span class="flag-key">${indicator.label ?? prettifyKey(indicator.key)}</span>
@@ -626,7 +700,16 @@
                                 return;
                         }
                         emptyState.hidden = true;
-                        Object.entries(info).forEach(([key, value]) => {
+                        const sortedEntries = Object.entries(info)
+                                .map(([key, value], index) => ({ key, value, index, priority: getInfoPriority(key) }))
+                                .sort((a, b) => {
+                                        if (a.priority === b.priority) {
+                                                return a.index - b.index;
+                                        }
+                                        return a.priority - b.priority;
+                                });
+
+                        sortedEntries.forEach(({ key, value }) => {
                                 const row = document.createElement('div');
                                 row.className = 'info-row';
                                 row.innerHTML = `
@@ -635,6 +718,18 @@
                                 `;
                                 container.appendChild(row);
                         });
+                }
+
+                function getInfoPriority(key) {
+                        const normalizedKey = normalizeInfoKey(key);
+                        const simplifiedKey = normalizedKey.replace(/[^a-z0-9]/g, '');
+                        const mappedKey = INFO_KEY_ALIASES.get(normalizedKey) || INFO_KEY_ALIASES.get(simplifiedKey) || simplifiedKey;
+                        const index = INFO_PREFERRED_ORDER.indexOf(mappedKey);
+                        return index === -1 ? Number.POSITIVE_INFINITY : index;
+                }
+
+                function normalizeInfoKey(key) {
+                        return key === undefined || key === null ? '' : String(key).trim().toLowerCase();
                 }
 
                 function prettifyKey(key) {
