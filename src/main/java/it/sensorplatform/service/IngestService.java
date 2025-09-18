@@ -51,27 +51,6 @@ public class IngestService {
     private final Map<String, Deque<Sample>> store = new ConcurrentHashMap<>();
     private static final int MAX_SAMPLES_PER_DEVICE = 200;
 
-    private static final Map<String, MeasurementMetadata> MEASUREMENT_METADATA = Map.ofEntries(
-            Map.entry("co2_ppm", new MeasurementMetadata("CO₂", "ppm")),
-            Map.entry("pm1p0", new MeasurementMetadata("PM1.0", "µg/m³")),
-            Map.entry("pm2p5", new MeasurementMetadata("PM2.5", "µg/m³")),
-            Map.entry("pm4p0", new MeasurementMetadata("PM4.0", "µg/m³")),
-            Map.entry("pm10p0", new MeasurementMetadata("PM10", "µg/m³")),
-            Map.entry("vocIndex", new MeasurementMetadata("VOC Index", "index")),
-            Map.entry("noxIndex", new MeasurementMetadata("NOx Index", "index")),
-            Map.entry("bmeT", new MeasurementMetadata("BME680 Temperature", "°C")),
-            Map.entry("bmeRH", new MeasurementMetadata("BME680 Humidity", "%")),
-            Map.entry("bmeP", new MeasurementMetadata("BME680 Pressure", "Pa")),
-            Map.entry("bmeGas", new MeasurementMetadata("BME680 Gas", "Ω")),
-            Map.entry("icmTemp", new MeasurementMetadata("ICM-20948 Temperature", "°C")),
-            Map.entry("icmAccX", new MeasurementMetadata("ICM-20948 AccX", "g")),
-            Map.entry("icmAccY", new MeasurementMetadata("ICM-20948 AccY", "g")),
-            Map.entry("icmAccZ", new MeasurementMetadata("ICM-20948 AccZ", "g")),
-            Map.entry("icmGyrX", new MeasurementMetadata("ICM-20948 GyrX", "°/s")),
-            Map.entry("icmGyrY", new MeasurementMetadata("ICM-20948 GyrY", "°/s")),
-            Map.entry("icmGyrZ", new MeasurementMetadata("ICM-20948 GyrZ", "°/s"))
-    );
-
     private static final Map<String, String> INDICATOR_LABELS = Map.of(
             "sen55_fan_err", "SEN55 Fan Error",
             "sen55_speed_warn", "SEN55 Speed Warning",
@@ -90,8 +69,6 @@ public class IngestService {
             "latitude",
             "longitude"
     );
-
-    private record MeasurementMetadata(String displayName, String unit) { }
 
     private record IndicatorDescriptor(String key, String label) { }
 
@@ -203,9 +180,8 @@ public class IngestService {
             Double min = specEntry != null ? specEntry.getMin() : null;
             Double max = specEntry != null ? specEntry.getMax() : null;
             String label = resolveMeasurementLabel(key, specEntry, savedSpec);
-            MeasurementMetadata metadata = MEASUREMENT_METADATA.get(key);
-            String displayName = resolveMeasurementDisplayName(key, label, metadata, savedSpec);
-            String unit = resolveMeasurementUnit(metadata, savedSpec);
+            String displayName = resolveMeasurementDisplayName(key, label, specEntry, savedSpec);
+            String unit = resolveMeasurementUnit(specEntry, savedSpec);
 
             result.add(new MeasurementSample(key, label, displayName, unit, min, max, value));
         }
@@ -317,43 +293,66 @@ public class IngestService {
         if (savedSpec != null) {
             String component = sanitize(savedSpec.getComponent());
             String measurement = sanitize(savedSpec.getMeasurement());
+            String prettyComponent = prettify(component);
+            String prettyMeasurement = prettify(measurement);
             if (component != null && measurement != null) {
                 if (component.equalsIgnoreCase(measurement)) {
-                    return component;
+                    return prettyComponent != null ? prettyComponent : component;
+                }
+                if (prettyComponent != null && prettyMeasurement != null) {
+                    return prettyComponent + " - " + prettyMeasurement;
+                }
+                if (prettyComponent != null) {
+                    return prettyComponent + " - " + measurement;
+                }
+                if (prettyMeasurement != null) {
+                    return component + " - " + prettyMeasurement;
                 }
                 return component + " - " + measurement;
             }
+            if (prettyComponent != null) {
+                return prettyComponent;
+            }
             if (component != null) {
                 return component;
+            }
+            if (prettyMeasurement != null) {
+                return prettyMeasurement;
             }
             if (measurement != null) {
                 return measurement;
             }
         }
-        return key;
+        String prettyKey = prettify(key);
+        return prettyKey != null ? prettyKey : key;
     }
 
     private String resolveMeasurementDisplayName(String key,
                                                  String label,
-                                                 MeasurementMetadata metadata,
+                                                 PacketDTO.SpecEntry specEntry,
                                                  Spec savedSpec) {
-        if (metadata != null && metadata.displayName() != null) {
-            return metadata.displayName();
-        }
         if (savedSpec != null) {
             String measurement = sanitize(savedSpec.getMeasurement());
+            String prettyMeasurement = prettify(measurement);
+            if (prettyMeasurement != null) {
+                return prettyMeasurement;
+            }
             if (measurement != null) {
-                String pretty = prettify(measurement);
-                if (pretty != null) {
-                    return pretty;
-                }
+                return measurement;
             }
             String component = sanitize(savedSpec.getComponent());
+            String prettyComponent = prettify(component);
+            if (prettyComponent != null) {
+                return prettyComponent;
+            }
             if (component != null) {
-                String pretty = prettify(component);
-                if (pretty != null) {
-                    return pretty;
-                }
+                return component;
+            }
+        }
+        if (specEntry != null) {
+            String fromEntry = sanitize(specEntry.getLabel());
+            if (fromEntry != null) {
+                return fromEntry;
             }
         }
         if (label != null) {
@@ -362,14 +361,38 @@ public class IngestService {
         return prettify(key);
     }
 
-    private String resolveMeasurementUnit(MeasurementMetadata metadata, Spec savedSpec) {
-        if (metadata != null && metadata.unit() != null) {
-            return metadata.unit();
+    private String resolveMeasurementUnit(PacketDTO.SpecEntry specEntry, Spec savedSpec) {
+        if (specEntry != null) {
+            String unitFromEntry = extractUnitFromSpecEntry(specEntry);
+            if (unitFromEntry != null) {
+                return unitFromEntry;
+            }
         }
         if (savedSpec != null) {
             String unit = sanitize(savedSpec.getUnitOfMeasurement());
             if (unit != null) {
                 return unit;
+            }
+        }
+        return null;
+    }
+
+    private String extractUnitFromSpecEntry(PacketDTO.SpecEntry specEntry) {
+        if (specEntry == null) {
+            return null;
+        }
+        String[] accessors = {"getUnit", "getUnitOfMeasurement"};
+        for (String accessor : accessors) {
+            try {
+                Object value = specEntry.getClass().getMethod(accessor).invoke(specEntry);
+                if (value instanceof String unit) {
+                    String sanitized = sanitize(unit);
+                    if (sanitized != null) {
+                        return sanitized;
+                    }
+                }
+            } catch (ReflectiveOperationException ignored) {
+                // SpecEntry does not expose this accessor, continue with fallbacks
             }
         }
         return null;
