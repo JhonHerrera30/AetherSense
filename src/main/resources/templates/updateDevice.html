@@ -142,6 +142,8 @@
                                 const measurementCells = document.querySelectorAll("td[data-measurement]");
                                 measurementCells.forEach(function (cell) {
                                         const componentCell = cell.previousElementSibling;
+                                        const unitCell = cell.nextElementSibling;
+                                        const unitText = unitCell ? (unitCell.textContent || "").trim() : "";
                                         const originalText = cell.textContent || "";
                                         let measurementText = originalText.trim();
 
@@ -167,8 +169,22 @@
                                                 }
                                         }
 
+                                        if (unitText) {
+                                                const unitPattern = escapeRegExp(unitText).replace(/\\s+/g, "[\\s._-]*");
+                                                const trailingUnitRegex = new RegExp(
+                                                        "[\\s\\(\\[\\{\/:-]*" + unitPattern + "[\\s\\)\\]\\}]*$",
+                                                        "i"
+                                                );
+                                                measurementText = measurementText.replace(trailingUnitRegex, "");
+                                                measurementText = measurementText.replace(/[\\s._-]+$/, "");
+                                        }
+
                                         if (!measurementText) {
-                                                cell.textContent = originalText.trim();
+                                                if (unitText && originalText.trim().toLowerCase() === unitText.toLowerCase()) {
+                                                        cell.textContent = "";
+                                                } else {
+                                                        cell.textContent = originalText.trim();
+                                                }
                                                 return;
                                         }
 
