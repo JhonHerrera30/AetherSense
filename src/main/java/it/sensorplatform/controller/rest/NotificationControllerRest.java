@@ -135,25 +135,62 @@ public class NotificationControllerRest {
                     continue;
                 }
                 Spec spec = new Spec();
+                String component;
+                String unitOfMeasurement;
                 if (label != null) {
                     String[] parts = label.split("-");
-                    spec.setComponent(parts.length > 0 ? sanitize(parts[0]) : "");
-                    spec.setUnitOfMeasurement(parts.length > 2 ? sanitize(parts[2]) : "");
+                    component = parts.length > 0 ? sanitize(parts[0]) : "";
+                    unitOfMeasurement = parts.length > 2 ? sanitize(parts[2]) : "";
                 } else {
-                    spec.setComponent("");
-                    spec.setUnitOfMeasurement("");
+                    component = "";
+                    unitOfMeasurement = "";
                 }
                 String measurement = determineMeasurement(label, specKey);
-                spec.setMeasurement(measurement != null ? measurement : "");
-                if (spec.getComponent() == null) {
-                    spec.setComponent("");
+                String normalizedComponent = component != null ? component : "";
+                String normalizedUnitOfMeasurement = unitOfMeasurement != null ? unitOfMeasurement : "";
+                String normalizedMeasurement = measurement != null ? measurement : "";
+
+                List<String> legacyCandidates = new ArrayList<>();
+                String sanitizedLabel = label != null ? sanitize(label) : null;
+                if (sanitizedLabel != null) {
+                    legacyCandidates.add(sanitizedLabel);
                 }
-                if (spec.getUnitOfMeasurement() == null) {
-                    spec.setUnitOfMeasurement("");
+                if (specKey != null) {
+                    legacyCandidates.add(specKey);
                 }
-                if (spec.getMeasurement() == null) {
-                    spec.setMeasurement("");
+
+                if (!legacyCandidates.isEmpty()) {
+                    final String componentKey = normalizedComponent;
+                    Spec legacySpec = specs.stream()
+                            .filter(existing -> componentKey.equals(existing.getComponent())
+                                    && legacyCandidates.contains(existing.getMeasurement()))
+                            .findFirst()
+                            .orElse(null);
+                    if (legacySpec != null) {
+                        boolean changed = false;
+                        if (!normalizedMeasurement.equals(legacySpec.getMeasurement())) {
+                            legacySpec.setMeasurement(normalizedMeasurement);
+                            changed = true;
+                        }
+                        if (!normalizedUnitOfMeasurement.equals(legacySpec.getUnitOfMeasurement())) {
+                            legacySpec.setUnitOfMeasurement(normalizedUnitOfMeasurement);
+                            changed = true;
+                        }
+                        if (changed) {
+                            Spec savedLegacy = specService.save(legacySpec);
+                            int index = specs.indexOf(legacySpec);
+                            if (index >= 0) {
+                                specs.set(index, savedLegacy);
+                            }
+                            updated = true;
+                        }
+                        continue;
+                    }
                 }
+
+                spec.setComponent(normalizedComponent);
+                spec.setUnitOfMeasurement(normalizedUnitOfMeasurement);
+                spec.setMeasurement(normalizedMeasurement);
                 Spec managedSpec = specService.findByFields(spec)
                         .orElseGet(() -> specService.save(spec));
                 if (!specs.contains(managedSpec)) {
