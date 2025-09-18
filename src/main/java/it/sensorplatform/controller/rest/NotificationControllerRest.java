@@ -146,9 +146,9 @@ public class NotificationControllerRest {
                     unitOfMeasurement = "";
                 }
                 String measurement = determineMeasurement(label, specKey);
-                component = component != null ? component : "";
-                unitOfMeasurement = unitOfMeasurement != null ? unitOfMeasurement : "";
-                String normalizedMeasurement = measurement != null ? measurement : "";
+                final String normalizedComponent = component != null ? component : "";
+                final String normalizedUnitOfMeasurement = unitOfMeasurement != null ? unitOfMeasurement : "";
+                final String normalizedMeasurement = measurement != null ? measurement : "";
 
                 List<String> legacyCandidates = new ArrayList<>();
                 String sanitizedLabel = label != null ? sanitize(label) : null;
@@ -161,7 +161,7 @@ public class NotificationControllerRest {
 
                 if (!legacyCandidates.isEmpty()) {
                     Spec legacySpec = specs.stream()
-                            .filter(existing -> component.equals(existing.getComponent())
+                            .filter(existing -> normalizedComponent.equals(existing.getComponent())
                                     && legacyCandidates.contains(existing.getMeasurement()))
                             .findFirst()
                             .orElse(null);
@@ -171,8 +171,8 @@ public class NotificationControllerRest {
                             legacySpec.setMeasurement(normalizedMeasurement);
                             changed = true;
                         }
-                        if (!unitOfMeasurement.equals(legacySpec.getUnitOfMeasurement())) {
-                            legacySpec.setUnitOfMeasurement(unitOfMeasurement);
+                        if (!normalizedUnitOfMeasurement.equals(legacySpec.getUnitOfMeasurement())) {
+                            legacySpec.setUnitOfMeasurement(normalizedUnitOfMeasurement);
                             changed = true;
                         }
                         if (changed) {
@@ -187,8 +187,8 @@ public class NotificationControllerRest {
                     }
                 }
 
-                spec.setComponent(component);
-                spec.setUnitOfMeasurement(unitOfMeasurement);
+                spec.setComponent(normalizedComponent);
+                spec.setUnitOfMeasurement(normalizedUnitOfMeasurement);
                 spec.setMeasurement(normalizedMeasurement);
                 Spec managedSpec = specService.findByFields(spec)
                         .orElseGet(() -> specService.save(spec));
