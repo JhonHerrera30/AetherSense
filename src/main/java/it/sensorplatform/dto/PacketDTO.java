@@ -1,5 +1,9 @@
 package it.sensorplatform.dto;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -96,8 +100,103 @@ public class PacketDTO {
         return indicator;
     }
 
-    public void setIndicator(List<String> indicator) {
-        this.indicator = indicator;
+    @JsonSetter("indicator")
+    public void setIndicator(List<?> indicator) {
+        if (indicator == null) {
+            this.indicator = null;
+            return;
+        }
+        List<String> normalized = new ArrayList<>(indicator.size());
+        for (Object entry : indicator) {
+            normalized.add(normalizeIndicatorEntry(entry));
+        }
+        this.indicator = normalized;
+    }
+
+    private String normalizeIndicatorEntry(Object entry) {
+        if (entry == null) {
+            return null;
+        }
+        if (entry instanceof String stringEntry) {
+            return stringEntry;
+        }
+        if (entry instanceof Map<?, ?> mapEntry) {
+            String key = extractFromMap(mapEntry, "key");
+            String label = extractFromMap(mapEntry, "label", "name");
+            return buildCanonicalIndicator(key, label, mapEntry);
+        }
+        String key = extractProperty(entry, "getKey", "key");
+        String label = extractProperty(entry, "getLabel", "getName", "label", "name");
+        return buildCanonicalIndicator(key, label, entry);
+    }
+
+    private String extractFromMap(Map<?, ?> map, String... keys) {
+        for (String candidate : keys) {
+            Object value = map.get(candidate);
+            if (value == null) {
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    if (entry.getKey() instanceof String key && candidate.equalsIgnoreCase(key)) {
+                        value = entry.getValue();
+                        break;
+                    }
+                }
+            }
+            String extracted = trimToNull(asString(value));
+            if (extracted != null) {
+                return extracted;
+            }
+        }
+        return null;
+    }
+
+    private String extractProperty(Object target, String... methodNames) {
+        for (String methodName : methodNames) {
+            try {
+                Object value = target.getClass().getMethod(methodName).invoke(target);
+                String extracted = trimToNull(asString(value));
+                if (extracted != null) {
+                    return extracted;
+                }
+            } catch (NoSuchMethodException ignored) {
+                // Accessor not exposed, continue with the next candidate
+            } catch (IllegalAccessException | InvocationTargetException ignored) {
+                // Accessor not accessible, continue with the next candidate
+            }
+        }
+        return null;
+    }
+
+    private String buildCanonicalIndicator(String key, String label, Object fallback) {
+        String normalizedKey = trimToNull(key);
+        String normalizedLabel = trimToNull(label);
+        if (normalizedKey != null && normalizedLabel != null) {
+            return normalizedKey + ":" + normalizedLabel;
+        }
+        if (normalizedKey != null) {
+            return normalizedKey;
+        }
+        if (normalizedLabel != null) {
+            return normalizedLabel;
+        }
+        return fallback != null ? fallback.toString() : null;
+    }
+
+    private String asString(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof String stringValue) {
+            return stringValue;
+        }
+        return value.toString();
+    }
+
+    private String trimToNull(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     public static class SpecEntry {
