@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,6 +61,52 @@ class NotificationControllerRestTest {
         ArgumentCaptor<Spec> specCaptor = ArgumentCaptor.forClass(Spec.class);
         verify(specService).save(specCaptor.capture());
         assertEquals("VOC", specCaptor.getValue().getMeasurement());
+    }
+
+    @Test
+    void ensureSpecsNormalizesLegacyMeasurementEntries() throws Exception {
+        UnknownDeviceService unknownDeviceService = mock(UnknownDeviceService.class);
+        DeviceRepository deviceRepository = mock(DeviceRepository.class);
+        TypeOfDeviceRepository typeOfDeviceRepository = mock(TypeOfDeviceRepository.class);
+        SpecService specService = mock(SpecService.class);
+        IndicatorService indicatorService = mock(IndicatorService.class);
+        ProjectRepository projectRepository = mock(ProjectRepository.class);
+
+        when(specService.save(any(Spec.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        NotificationControllerRest controller = new NotificationControllerRest(
+                unknownDeviceService,
+                deviceRepository,
+                typeOfDeviceRepository,
+                specService,
+                indicatorService,
+                projectRepository
+        );
+
+        PacketDTO.SpecEntry specEntry = new PacketDTO.SpecEntry();
+        specEntry.setKey("SEN55-VOC-index");
+        specEntry.setLabel("SEN55-VOC-index");
+
+        Spec legacySpec = new Spec();
+        legacySpec.setComponent("SEN55");
+        legacySpec.setMeasurement("SEN55-VOC-index");
+        legacySpec.setUnitOfMeasurement("");
+
+        TypeOfDevice typeOfDevice = new TypeOfDevice();
+        typeOfDevice.setSpecs(new ArrayList<>(List.of(legacySpec)));
+
+        Method ensureSpecs = NotificationControllerRest.class
+                .getDeclaredMethod("ensureSpecs", TypeOfDevice.class, List.class);
+        ensureSpecs.setAccessible(true);
+        ensureSpecs.invoke(controller, typeOfDevice, List.of(specEntry));
+
+        List<Spec> resultingSpecs = typeOfDevice.getSpecs();
+        assertEquals(1, resultingSpecs.size());
+        Spec updatedSpec = resultingSpecs.get(0);
+        assertEquals("VOC", updatedSpec.getMeasurement());
+        assertEquals("index", updatedSpec.getUnitOfMeasurement());
+
+        verify(specService).save(legacySpec);
     }
 }
 
