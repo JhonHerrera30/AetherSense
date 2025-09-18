@@ -132,19 +132,36 @@
                                                 }
                                         });
 
-                                        const escapeRegExp = function (str) {
-                                                return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-                                        };
+                                const escapeRegExp = function (str) {
+                                        return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                                };
+
+                                const stripUnit = function (measurementText, unitText) {
+                                        if (!measurementText || !unitText) {
+                                                return measurementText;
+                                        }
+                                        const normalizedUnit = unitText.trim();
+                                        if (!normalizedUnit) {
+                                                return measurementText;
+                                        }
+                                        const escapedUnit = escapeRegExp(normalizedUnit);
+                                        const unitPattern = new RegExp(
+                                                `[\\s._-]*(?:[\(\[{])?${escapedUnit}(?:[\\)\]}])?$`,
+                                                "i"
+                                        );
+                                        const candidate = measurementText.replace(unitPattern, "").trim();
+                                        return candidate ? candidate : measurementText;
+                                };
 
                                         const measurementCells = document.querySelectorAll("td[data-measurement]");
                                         measurementCells.forEach(function (cell) {
                                                 const componentCell = cell.previousElementSibling;
-                                                const originalText = cell.textContent || "";
-                                                let measurementText = originalText.trim();
+                                        const originalText = cell.textContent || "";
+                                        let measurementText = originalText.trim();
 
-                                                if (!measurementText) {
-                                                        cell.textContent = "";
-                                                        return;
+                                        if (!measurementText) {
+                                                cell.textContent = "";
+                                                return;
                                                 }
 
                                                 if (componentCell) {
@@ -161,13 +178,19 @@
                                                                         measurementText = measurementText.replace(prefixRegex, "");
                                                                         measurementText = measurementText.replace(/^[\s._-]+/, "");
                                                                 }
-                                                        }
                                                 }
+                                        }
 
-                                                if (!measurementText) {
-                                                        cell.textContent = originalText.trim();
-                                                        return;
-                                                }
+                                        const unitCell = cell.nextElementSibling;
+                                        const unitText = unitCell ? (unitCell.textContent || "").trim() : "";
+                                        if (unitText) {
+                                                measurementText = stripUnit(measurementText, unitText);
+                                        }
+
+                                        if (!measurementText) {
+                                                cell.textContent = originalText.trim();
+                                                return;
+                                        }
 
                                                 const decimalNormalized = measurementText.replace(/(\d)[_-](\d)/g, "$1.$2");
                                                 let spaced = decimalNormalized
