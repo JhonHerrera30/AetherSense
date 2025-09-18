@@ -47,14 +47,14 @@ update credentials set employer_id = 3 where email = 'carlos.gomez@example.com';
 insert into app_group(credentials_id, id, project_id, name)values (2, 1, 1, 'Roma');
 insert into app_group(credentials_id, id, project_id, name)values (2, 2, 1, 'Milano');
 
-insert into type_of_device(id, name)values(1, '4Spark 1')
-insert into type_of_device(id, name)values(2, '4Spark 2')
-insert into type_of_device(id, name)values(3, '4Spark 3')
+insert into type_of_device(id, name)values(1, '4Spark 1');
+insert into type_of_device(id, name)values(2, '4Spark 2');
+insert into type_of_device(id, name)values(3, '4Spark 3');
 
 
-insert into project_tods(project_id, tods_id)values(1, 1)
-insert into project_tods(project_id, tods_id)values(51, 2)
-insert into project_tods(project_id, tods_id)values(101, 3)
+insert into project_tods(project_id, tods_id)values(1, 1);
+insert into project_tods(project_id, tods_id)values(51, 2);
+insert into project_tods(project_id, tods_id)values(101, 3);
 
 
 -- 5. Dispositivi (devono esistere i gruppi e i progetti)
@@ -83,36 +83,6 @@ insert into device(latitude, longitude, id, project_id, email_owner, mac_address
 insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(40.639470, 17.694360, 17, 101, 'jhon30.herrera@gmail.com', '7C:06:1C:EC:E7:36', 'Amber5', 3, 7, 'activated'); -- Lecce
 insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(38.193791, 15.554045, 18, 101, 'jhon30.herrera@gmail.com', '8D:06:1C:EC:E7:37', 'Amber6', 3, 7, 'deactivated'); -- Messina
 
-/*insert into spec(id, measurement, unit_of_measurement, component)values(1, 'Temperature', '°C' ,'Sen5x')
-insert into spec(id, measurement, unit_of_measurement, component)values(2, 'Relative Humidity', '%RH' ,'Sen5x')
-insert into spec(id, measurement, unit_of_measurement, component)values(3, 'VOC', 'Index (0-500)' ,'Sen5x')
-insert into spec(id, measurement, unit_of_measurement, component)values(4, 'PM 1.0', 'µg/m³' ,'Sen5x')
-insert into spec(id, measurement, unit_of_measurement, component)values(5, 'PM 2.5', 'µg/m³' ,'Sen5x')
-insert into spec(id, measurement, unit_of_measurement, component)values(6, 'PM 4.0', 'µg/m³' ,'Sen5x')
-insert into spec(id, measurement, unit_of_measurement, component)values(7, 'PM 10.0', 'µg/m³' ,'Sen5x')
-insert into spec(id, measurement, unit_of_measurement, component)values(8, 'NOx', 'index' ,'Sen5x')
-insert into spec(id, measurement, unit_of_measurement, component)values(9, 'Temperature', '°C' ,'SCD30')
-insert into spec(id, measurement, unit_of_measurement, component)values(10, 'PM 1.0', 'µg/m³' ,'SPS30')
-insert into spec(id, measurement, unit_of_measurement, component)values(11, 'PM 2.5', 'µg/m³' ,'SPS30')
-insert into spec(id, measurement, unit_of_measurement, component)values(12, 'PM 4.0', 'µg/m³' ,'SPS30')
-insert into spec(id, measurement, unit_of_measurement, component)values(13, 'PM 10.0', 'µg/m³' ,'SPS30')
-insert into spec(id, measurement, unit_of_measurement, component)values(14, 'Temperature', '°C' ,'Dallas')
-
-insert into type_of_device_specs(specs_id, type_of_device_id)values(1, 1)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(2, 1)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(3, 1)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(4, 1)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(5, 1)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(6, 1)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(7, 1)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(8, 1)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(9, 3)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(10, 3)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(11, 3)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(12, 3)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(13, 3)
-insert into type_of_device_specs(specs_id, type_of_device_id)values(14, 2)
-*/
 
 
 -- 6. Reset sequenze
