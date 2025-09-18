@@ -293,6 +293,28 @@
                         buildOrUpdateCharts(state.lastSamples);
                 }
 
+                function getDescriptorComponent(descriptor) {
+                        if (!descriptor) {
+                                return '';
+                        }
+                        if (descriptor.component) {
+                                return descriptor.component;
+                        }
+                        const label = typeof descriptor.label === 'string' ? descriptor.label.trim() : '';
+                        const displayName = typeof descriptor.displayName === 'string' ? descriptor.displayName.trim() : '';
+                        if (label) {
+                                if (displayName && label.toLowerCase() === displayName.toLowerCase()) {
+                                        return '';
+                                }
+                                const separator = label.indexOf(' - ');
+                                if (separator > -1) {
+                                        return label.substring(0, separator).trim();
+                                }
+                                return label;
+                        }
+                        return '';
+                }
+
                 function renderMetricCards() {
                         const container = document.getElementById('metrics-grid');
                         container.innerHTML = '';
@@ -300,13 +322,24 @@
                                 const card = document.createElement('div');
                                 card.className = 'metric-card';
                                 card.dataset.specKey = descriptor.key;
+                                const component = getDescriptorComponent(descriptor);
+                                const unit = descriptor.unit ? descriptor.unit : '';
                                 card.innerHTML = `
-                                        <div class="metric-header">
-                                                <span class="metric-name">${descriptor.displayName}</span>
+                                        <div class="metric-heading">
+                                                <span class="metric-title">${descriptor.displayName}</span>
+                                                <span class="metric-subtitle" data-component></span>
                                         </div>
-                                        <div class="metric-value" data-value>--</div>
+                                        <div class="metric-reading">
+                                                <span class="metric-value" data-value>--</span>
+                                                <span class="metric-unit" data-unit>${unit}</span>
+                                        </div>
                                         <div class="metric-range" data-range>${formatRange(descriptor.min, descriptor.max, descriptor.unit)}</div>
                                 `;
+                                const subtitleEl = card.querySelector('[data-component]');
+                                if (subtitleEl) {
+                                        subtitleEl.textContent = component || '';
+                                        subtitleEl.hidden = !component;
+                                }
                                 container.appendChild(card);
                         });
                         state.specCardsRendered = true;
@@ -331,13 +364,20 @@
                                 }
                                 const valueEl = card.querySelector('[data-value]');
                                 const rangeEl = card.querySelector('[data-range]');
+                                const unitEl = card.querySelector('[data-unit]');
                                 const measurement = measurements.get(descriptor.key);
                                 if (!measurement) {
                                         valueEl.textContent = '--';
+                                        if (unitEl) {
+                                                unitEl.textContent = descriptor.unit || '';
+                                        }
                                         rangeEl.textContent = formatRange(descriptor.min, descriptor.max, descriptor.unit);
                                         return;
                                 }
                                 valueEl.textContent = formatValue(measurement.value);
+                                if (unitEl) {
+                                        unitEl.textContent = measurement.unit || descriptor.unit || '';
+                                }
                                 rangeEl.textContent = formatRange(measurement.min, measurement.max, measurement.unit || descriptor.unit);
                         });
                 }
@@ -523,6 +563,7 @@
                                 key: spec.key,
                                 label: spec.label,
                                 displayName,
+                                component: spec.component,
                                 unit: spec.unit,
                                 min: spec.min,
                                 max: spec.max
@@ -537,6 +578,7 @@
                                 key: measurement.key,
                                 label: measurement.label,
                                 displayName: measurement.displayName || prettifyKey(measurement.label || measurement.key),
+                                component: measurement.component,
                                 unit: measurement.unit,
                                 min: measurement.min,
                                 max: measurement.max
@@ -554,6 +596,7 @@
                                 const a = previous[i] || {};
                                 const b = next[i] || {};
                                 if (a.key !== b.key || a.label !== b.label || a.displayName !== b.displayName
+                                        || a.component !== b.component
                                         || a.unit !== b.unit || a.min !== b.min || a.max !== b.max) {
                                         return true;
                                 }
