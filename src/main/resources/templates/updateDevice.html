@@ -139,6 +139,23 @@
                                         return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
                                 };
 
+                                const stripUnit = function (measurementText, unitText) {
+                                        if (!measurementText || !unitText) {
+                                                return measurementText;
+                                        }
+                                        const normalizedUnit = unitText.trim();
+                                        if (!normalizedUnit) {
+                                                return measurementText;
+                                        }
+                                        const escapedUnit = escapeRegExp(normalizedUnit);
+                                        const unitPattern = new RegExp(
+                                                `[\\s._-]*(?:[\(\[{])?${escapedUnit}(?:[\\)\]}])?$`,
+                                                "i"
+                                        );
+                                        const candidate = measurementText.replace(unitPattern, "").trim();
+                                        return candidate ? candidate : measurementText;
+                                };
+
                                 const measurementCells = document.querySelectorAll("td[data-measurement]");
                                 measurementCells.forEach(function (cell) {
                                         const componentCell = cell.previousElementSibling;
@@ -165,6 +182,12 @@
                                                                 measurementText = measurementText.replace(/^[\s._-]+/, "");
                                                         }
                                                 }
+                                        }
+
+                                        const unitCell = cell.nextElementSibling;
+                                        const unitText = unitCell ? (unitCell.textContent || "").trim() : "";
+                                        if (unitText) {
+                                                measurementText = stripUnit(measurementText, unitText);
                                         }
 
                                         if (!measurementText) {
