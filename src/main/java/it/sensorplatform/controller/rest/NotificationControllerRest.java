@@ -138,17 +138,21 @@ public class NotificationControllerRest {
                 if (label != null) {
                     String[] parts = label.split("-");
                     spec.setComponent(parts.length > 0 ? sanitize(parts[0]) : "");
-                    String measurementPart = parts.length > 1 ? sanitize(parts[1]) : "";
-                    spec.setMeasurement(specKey != null ? specKey : measurementPart);
                     spec.setUnitOfMeasurement(parts.length > 2 ? sanitize(parts[2]) : "");
                 } else {
-                    spec.setMeasurement(specKey != null ? specKey : "");
+                    spec.setComponent("");
+                    spec.setUnitOfMeasurement("");
                 }
+                String measurement = determineMeasurement(label, specKey);
+                spec.setMeasurement(measurement != null ? measurement : "");
                 if (spec.getComponent() == null) {
                     spec.setComponent("");
                 }
                 if (spec.getUnitOfMeasurement() == null) {
                     spec.setUnitOfMeasurement("");
+                }
+                if (spec.getMeasurement() == null) {
+                    spec.setMeasurement("");
                 }
                 Spec managedSpec = specService.findByFields(spec)
                         .orElseGet(() -> specService.save(spec));
@@ -162,6 +166,39 @@ public class NotificationControllerRest {
             tod.setSpecs(specs);
         }
         return updated;
+    }
+
+    private String determineMeasurement(String label, String specKey) {
+        String measurementFromLabel = extractMeasurementSegment(label);
+        if (measurementFromLabel != null) {
+            return measurementFromLabel;
+        }
+        String measurementFromKey = extractMeasurementSegment(specKey);
+        if (measurementFromKey != null) {
+            return measurementFromKey;
+        }
+        return sanitize(specKey);
+    }
+
+    private String extractMeasurementSegment(String value) {
+        String sanitized = sanitize(value);
+        if (sanitized == null) {
+            return null;
+        }
+        String[] parts = sanitized.split("-");
+        if (parts.length < 2) {
+            return null;
+        }
+        if (parts.length == 2) {
+            return sanitize(parts[1]);
+        }
+        for (int i = 1; i < parts.length - 1; i++) {
+            String candidate = sanitize(parts[i]);
+            if (candidate != null) {
+                return candidate;
+            }
+        }
+        return sanitize(parts[1]);
     }
 
     private boolean ensureIndicators(TypeOfDevice tod, List<String> indicatorEntries) {
