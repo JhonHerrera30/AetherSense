@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>Register Operator</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
+
+	<!-- (Opzionale) temi per progetto se li usi per ID -->
+	<link rel="stylesheet" th:if="${projectId == 1}" th:href="@{/css/formRegisterOperatorLtrad.css}" />
+	<link rel="stylesheet" th:if="${projectId == 51}" th:href="@{/css/formRegisterOperatorFire.css}" />
+	<link rel="stylesheet" th:if="${projectId == 101}" th:href="@{/css/formRegisterOperatorVolcano.css}" />
+
+	<!-- Stile specifico di pagina -->
+	<link rel="stylesheet" th:href="@{/css/registerOperator.css}" />
+</head>
+
+<body>
+	<header id="navbar" class="navbar">
+		<div class="nav-left">
+			<h1><a th:if="${projectId == 1}" th:href="@{'/admin/group/'+${projectId}}" class="nav-title-link">L-TRAD</a>
+			</h1>
+			<h1><a th:if="${projectId == 51}" th:href="@{'/admin/group/'+${projectId}}" class="nav-title-link">FIRE</a>
+			</h1>
+			<h1><a th:if="${projectId == 101}" th:href="@{'/admin/group/'+${projectId}}"
+					class="nav-title-link">VOLCANO</a></h1>
+
+		</div>
+		<div class="nav-right">
+			<div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+				<button type="button" class="dropdown-toggle" id="userDropdown">
+					Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+					<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+						height="16" fill="white">
+						<path d="M7 10l5 5 5-5z" />
+					</svg>
+				</button>
+				<div class="dropdown-menu" id="userDropdownMenu">
+					<form th:action="@{/logout}" method="post" th:csrf="true">
+						<button type="submit" class="dropdown-logout">Logout</button>
+					</form>
+				</div>
+			</div>
+			<a href="/" class="home-button" title="Homepage">
+				<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+					<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+				</svg>
+			</a>
+		</div>
+		</div>
+	</header>
+
+	<section class="page">
+		<!-- Messaggi di errore globali impostati nel controller -->
+		<section class="error-messages" >
+			<div th:if="${passwordMismatchError}" class="alert alert-error" th:text="${passwordMismatchError}"></div>
+			<div th:if="${usernameAlreadyInUse}" class="alert alert-error" th:text="${usernameAlreadyInUse}"></div>
+			<div th:if="${emailAlreadyInUse}" class="alert alert-error" th:text="${emailAlreadyInUse}"></div>
+		</section>
+
+			<section class="form-card">
+
+				<!-- Form -->
+				<div class="form-container">
+					<div class="back-btn">
+						<a th:href="@{'/admin/group/' + ${projectId}}" class="btn-back" title="Back to Devices">
+							⬅ Back
+						</a>
+					</div>
+					<form th:action="@{'/admin/registerOperator/'+${projectId}}" th:object="${credentials}"
+						method="post" th:csrf="true" class="form">
+
+						<div>
+							<h2>New operator</h2>
+						</div>
+
+						<div class="form-group">
+							<label>Email</label>
+							<span class="errorform" th:if="${emailAlreadyInUse}" th:text="${emailAlreadyInUse}"></span>
+							<span class="errorform" th:if="${noDevicesYet}" th:text="${noDevicesYet}"></span>
+							<span class="errorform" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+							<input type="email" th:field="*{email}" />
+						</div>
+
+						<div class="form-group">
+							<label>Username</label>
+							<span class="errorform" th:if="${usernameAlreadyInUse}"
+								th:text="${usernameAlreadyInUse}"></span>
+							<span class="errorform" th:if="${#fields.hasErrors('username')}"
+								th:errors="*{username}"></span>
+							<input type="text" th:field="*{username}" />
+						</div>
+
+						<div class="form-group">
+							<label>Password</label>
+							<span class="errorform" th:if="${#fields.hasErrors('password')}"
+								th:errors="*{password}"></span>
+							<input type="password" th:field="*{password}" />
+						</div>
+
+						<div class="form-group">
+							<label>Confirm Password</label>
+							<span class="errorform" th:if="${passwordMismatchError}"
+								th:text="${passwordMismatchError}"></span>
+							<input type="password" name="confirmPassword" />
+						</div>
+
+						<div class="form-buttons">
+							<button type="submit" class="btn-add">Submit</button>
+						</div>
+					</form>
+				</div>
+			</section>
+	</main>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const toggle = document.getElementById("userDropdown");
+			const menu = document.getElementById("userDropdownMenu");
+
+			toggle.addEventListener("click", function (e) {
+				e.stopPropagation();
+				menu.classList.toggle("show");
+			});
+
+			document.addEventListener("click", function (e) {
+				if (!toggle.contains(e.target)) {
+					menu.classList.remove("show");
+				}
+			});
+		});
+	</script>
+</body>
+
+</html>

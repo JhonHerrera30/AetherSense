@@ -1,0 +1,338 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #1B263B;
+    color: white;
+}
+
+.navbar {
+	border-bottom: 2px solid rgb(255, 191, 128);
+	background-color: #e67e00;
+	color: white;
+	position: sticky;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 1.5rem;
+	z-index: 10;
+	height: 3em;
+}
+
+#navbar h1 {
+	margin: 0;
+	font-size: 2rem;
+	margin-left: 3rem;
+	color: white;
+}
+
+.nav-left{
+	color:white;
+	text-decoration: none;
+}
+
+.nav-title-link {
+	color: white;
+	text-decoration: none;
+	font-weight: bold;
+	font-size: 2rem;
+}
+
+.nav-right {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.home-button {
+	color: white;
+	text-decoration: none;
+	display: flex;
+	align-items: center;
+	margin-right: 2rem;
+}
+
+.icon-home {
+	fill: currentColor;
+	width: 24px;
+	height: 24px;
+}
+
+/* Dropdown */
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-toggle {
+	background: none;
+	border: none;
+	color: white;
+	font-size: 1rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.dropdown-toggle:focus {
+	outline: none;
+}
+
+.dropdown-icon {
+	transition: transform 0.3s;
+}
+
+.dropdown:hover .dropdown-icon {
+	transform: rotate(180deg);
+}
+
+.dropdown-menu {
+	display: none;
+	position: absolute;
+	right: 0;
+	top: 2.2rem;
+	background-color: #1B263B;
+	border: 1px solid #e67e00;
+	border-radius: 8px;
+	padding: 0.5rem;
+	z-index: 999;
+	min-width: 120px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu.show {
+	display: block;
+}
+
+.dropdown:hover .dropdown-menu {
+	display: block;
+}
+
+.dropdown-logout {
+	width: 100%;
+	background: none;
+	border: none;
+	color: white;
+	font-size: 0.95rem;
+	padding: 0.5rem;
+	cursor: pointer;
+	text-align: left;
+	transition: background-color 0.2s;
+}
+
+.dropdown-logout:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+.icon-user {
+	width: 24px;
+	height: 24px;
+}
+.back-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.btn-back {
+    background-color: #546e7a;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+}
+.btn-back:hover {
+    background-color: #455a64;
+    transform: scale(1.03);
+}
+
+.form-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 2rem auto;
+    background-color: #324a5f;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+	position: relative;
+}
+
+.device-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.errorform{
+	color: red; 
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.checkbox-group label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+.form-group input,
+.form-group select {
+    padding: 0.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: 2px solid #e67e00;
+    background-color: rgb(198, 225, 255);
+    color: black;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-add {
+    background-color: #e67e00;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-add:hover {
+    background-color: #e67e00;
+    transform: scale(1.03);
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-spec {
+    background-color: #17a2b8; /* Azzurro diverso dal blu */
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 0.5rem;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-spec:hover {
+    background-color: #138496;
+    transform: scale(1.03);
+}
+
+/* Contenitore del select */
+.select2-container--default .select2-selection--single {
+    background-color: #f0f4ff;
+    border: 2px solid #2a4c8b;
+    border-radius: 8px;
+    height: 40px;
+    font-size: 16px;
+    color: #1a1a1a;
+}
+
+/* Testo selezionato */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #1a1a1a;
+    line-height: 32px;
+}
+
+/* Freccia */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 34px;
+    right: 10px;
+}
+
+/* Dropdown aperto */
+.select2-container--default .select2-results__option {
+    padding: 8px 12px;
+    font-size: 15px;
+	color:black;
+}
+
+/* Hover sugli elementi del dropdown */
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #2a4c8b;
+    color: white;
+}
+
+/* Dropdown box */
+.select2-container--default .select2-dropdown {
+    background-color: white;
+    border: 1px solid #2a4c8b;
+    border-radius: 0 0 8px 8px;
+}
+
+.alert-success {
+    background-color: #81c784;
+    color: #1b5e20;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+}
+
+.alert-error {
+	background-color: rgb(239, 158, 167);
+    color: #721c24;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 5px;
+}
+
+.spec-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.spec-row label {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	flex: 1;
+}
+
+.delete-icon {
+	text-decoration: none;
+	font-size: 1.2em;
+	cursor: pointer;
+	color: #fff;
+	margin-top: 3px; /* piccolo offset per centrare meglio */
+}

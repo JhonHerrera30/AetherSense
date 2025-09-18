@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<title>VOLCANO – Home</title>
+	<link rel="stylesheet" th:href="@{/css/volcanoHome.css}" />
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<header id="navbar" class="navbar">
+		<div class="nav-left">
+		    <h1><a th:if="${project.id == 1}" th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link">L-TRAD</a></h1>
+			<h1><a th:if="${project.id == 51}" th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link">FIRE</a></h1>
+			<h1><a th:if="${project.id == 101}" th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link">VOLCANO</a></h1>
+		</div>
+		<div class="nav-right">
+			<div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+				<button type="button" class="dropdown-toggle" id="userDropdown">
+					Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+					<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+						height="16" fill="white">
+						<path d="M7 10l5 5 5-5z" />
+					</svg>
+				</button>
+				<div class="dropdown-menu" id="userDropdownMenu">
+					<form th:action="@{/logout}" method="post" th:csrf="true">
+						<button type="submit" class="dropdown-logout">Logout</button>
+					</form>
+				</div>
+			</div>
+			<a href="/" class="home-button" title="Homepage">
+				<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+					<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+				</svg>
+			</a>
+		</div>
+	</header>
+
+	<div class="image-grid">
+		<img class="volcano" src="/img/volcanoHome.png">
+		<img class="sensor" src="/img/sensorVolcano.png">
+	</div>
+
+	<main class="main-text">
+		
+
+		<section>
+			<h2>🌋 VOLCANO – Volcanic Observation and Local Crater Anomaly Notification Operator</h2>
+			<p><strong>VOLCANO</strong> is a high-precision monitoring system for volcanic activity, focused on risk prevention and evacuation planning.</p>
+
+			<p>It integrates temperature and ground deformation sensors, gas and seismic monitoring systems, and thermal cameras positioned near active zones.</p>
+
+			<p>Data is analyzed with predictive models to anticipate eruptions and provide early alerts to local authorities.</p>
+
+			<p>Key feature? Continuous seismic and thermal data collection</p>
+		</section>
+	</main>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const toggle = document.getElementById("userDropdown");
+			const menu = document.getElementById("userDropdownMenu");
+
+			toggle.addEventListener("click", function (e) {
+				e.stopPropagation();
+				menu.classList.toggle("show");
+			});
+
+			document.addEventListener("click", function (e) {
+				if (!toggle.contains(e.target)) {
+					menu.classList.remove("show");
+				}
+			});
+		});
+	</script>
+</body>
+
+</html>

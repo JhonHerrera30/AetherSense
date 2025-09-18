@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Login</title>
+	<link rel="stylesheet" th:href="@{/css/formLogin.css}">
+	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+
+<body>
+	<header id="navbar">
+		<div class="nav-left">
+			<h1>AetherSense</h1>
+		</div>
+		<div class="nav-right">
+			<a href="/" class="home-button" title="Homepage">
+				<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+					<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+				</svg>
+			</a>
+		</div>
+	</header>
+
+	<main class="login-wrapper">
+		<form class="login-form" th:action="@{/login}" method="post">
+			<h2>Login</h2>
+			<div th:if="${error}" class="error-message">
+				<p>Invalid username or password for this project.</p>
+			</div>
+			<div>
+				<label for="usernameVisual">Username</label>
+				<input type="text" id="usernameVisual" />
+				<input type="hidden" name="username" />
+			</div>
+			<div>
+				<label for="password">Password</label>
+				<input type="password" name="password" />
+			</div>
+			<div>
+				<label for="projectId">Project</label>
+				<select class="project" name="projectId" id="projectId">
+					<optgroup class="option-select" label="Access Level">
+						<option value="SUPERADMIN" th:selected="${projectId == '0'}">SUPERADMIN</option>
+					</optgroup>
+					<optgroup class="option-select" label="Projects">
+						<option th:each="p : ${projects}" th:value="${p.id}" th:text="${p.name}"
+							th:selected="${p.id == projectId}">
+						</option>
+					</optgroup>
+				</select>
+			</div>
+			<div class="loginButton">
+				<button type="submit">Login</button>
+			</div>
+			<div>
+				<a id="signup-link" th:href="@{'/register?projectId=' + ${projectId}}">Sign up</a>
+			</div>
+		</form>
+	</main>
+
+	<script th:inline="javascript">
+		document.addEventListener('DOMContentLoaded', function () {
+			const loginForm = document.querySelector('.login-form');
+			const usernameVisual = document.querySelector('#usernameVisual');
+			const usernameHidden = document.querySelector('input[name="username"]');
+			const projectSelect = document.querySelector('#projectId');
+			const signupLink = document.querySelector('#signup-link');
+
+			// Aggiorna il link di registrazione in base al progetto selezionato
+			function updateSignupLink() {
+				const selectedProjectId = projectSelect.value;
+				signupLink.href = '/register?projectId=' + encodeURIComponent(selectedProjectId);
+			}
+
+			// Esegui aggiornamento al cambio di selezione
+			projectSelect.addEventListener('change', updateSignupLink);
+
+			// Aggiorna il valore nascosto del nome utente al submit
+			loginForm.addEventListener('submit', function (event) {
+				const selectedOption = projectSelect.options[projectSelect.selectedIndex];
+				const projectName = selectedOption.text.trim();
+
+				if (usernameVisual && usernameHidden && projectName) {
+					usernameHidden.value = usernameVisual.value + "|" + projectName;
+				}
+			});
+
+			// Inizializza il link al caricamento
+			updateSignupLink();
+		});
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,234 @@
+/* Base */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #778DA9;
+  color: #fff;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* Navbar LTRAD */
+.navbar {
+  border-bottom: 2px solid rgb(255, 142, 142);
+  background: #cc0000;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .75rem 1.5rem;
+  z-index: 2;
+  height: 3em;
+}
+.nav-title-link {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+}
+.nav-left {
+  margin-left: 3rem;
+}
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.home-button {
+  color: #fff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  margin-right: 2rem;
+  background-color: #cc0000;
+  border-style: none;
+}
+.icon-home {
+  fill: currentColor;
+  width: 24px;
+  height: 24px;
+}
+
+/* Dropdown */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+.dropdown-toggle {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+.dropdown-icon {
+  transition: transform .3s;
+}
+.dropdown:hover .dropdown-icon {
+  transform: rotate(180deg);
+}
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 2.2rem;
+  background: #1B263B;
+  border: 1px solid #cc0000;
+  border-radius: 8px;
+  padding: .5rem;
+  z-index: 999;
+  min-width: 120px;
+  box-shadow: 0 0 10px rgba(0,0,0,.3);
+}
+.dropdown-menu.show,
+.dropdown:hover .dropdown-menu {
+  display: block;
+}
+.dropdown-logout {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: .95rem;
+  padding: .5rem;
+  cursor: pointer;
+  text-align: left;
+}
+.dropdown-logout:hover {
+  background: rgba(255,255,255,.1);
+}
+
+/* Layout */
+.main-layout {
+  display: flex;
+  height: calc(100vh - 3em);
+  overflow: hidden;
+}
+.group-panel {
+  width: 40%;
+  background: #0b1a2f;
+  padding: 1.5rem 2rem;
+  box-shadow: inset -1px 0 5px rgba(0,0,0,.3);
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+#map {
+  width: 60%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+}
+.groups {
+  font-size: 1.2rem;
+}
+
+/* Search + titles */
+.title-with-search {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 2rem;
+}
+.title-with-search h2 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+.search-form {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.search-form input[type="text"] {
+  height: 1.5rem;
+  padding: .3rem .8rem;
+  border-radius: 6px;
+  border: none;
+  background: #fff;
+  color: #000;
+  font-size: .95rem;
+  box-shadow: 0 0 4px rgba(0,0,0,.25);
+  width: 180px;
+}
+.search-form input[type="text"]:focus {
+  outline: none;
+  border: 2px solid #cc0000;
+  box-shadow: 0 0 6px rgb(215,0,0);
+}
+.search-form button {
+  background: #cc0000;
+  border: none;
+  border-radius: 6px;
+  padding: .35rem .5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 4px rgba(0,0,0,.2);
+}
+.search-form button:hover {
+  background: rgb(153,0,0);
+}
+
+/* Groups list */
+details summary {
+  cursor: pointer;
+  font-weight: bold;
+  padding: 5px 0;
+}
+details[open] summary {
+  color: #fff;
+}
+.device-list {
+  padding-left: 2.3rem;
+  list-style: disc;
+  font-size: 1rem;
+}
+
+/* Table */
+.group-panel table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  margin-bottom: 6rem;
+}
+.group-panel th,
+.group-panel td {
+  padding: .6rem .8rem;
+  border: 1px solid #90a4ae;
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  font-size: .9rem;
+}
+.group-panel th {
+  background: #0d1b2a;
+  color: #fff;
+}
+.group-panel td {
+  background: #324a5f;
+  color: #fff;
+}
+
+/* Leaflet popup */
+.leaflet-popup-content {
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  color: #000;
+  background: #fff;
+  padding: 8px;
+}
+.leaflet-popup-content-wrapper {
+  background: #fff;
+  border: 2px solid #cc0000;
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(0,0,0,.4);
+}
+.leaflet-popup-tip {
+  background: #cc0000;
+}

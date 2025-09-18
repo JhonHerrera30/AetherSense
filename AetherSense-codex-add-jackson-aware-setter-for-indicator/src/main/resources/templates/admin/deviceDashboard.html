@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<head>
+        <title>Device dashboard</title>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+        <link rel="stylesheet" th:href="@{/css/deviceDashboard.css}" />
+        <script th:src="@{/js/chart.umd.min.js}"></script>
+</head>
+
+<body th:class="'dashboard-body theme-' + ${projectKey}" th:attr="data-theme=${projectKey}">
+        <header class="navbar">
+                <div class="nav-left">
+                        <h1>
+                                <a th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link" th:text="${project.name}">Project</a>
+                        </h1>
+                </div>
+                <div class="nav-right">
+                        <div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+                                <button type="button" class="dropdown-toggle" id="userDropdown">
+                                        Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+                                        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"
+                                                fill="white">
+                                                <path d="M7 10l5 5 5-5z" />
+                                        </svg>
+                                </button>
+                                <div class="dropdown-menu" id="userDropdownMenu">
+                                        <form th:action="@{/logout}" method="post" th:csrf="true">
+                                                <button type="submit" class="dropdown-logout">Logout</button>
+                                        </form>
+                                </div>
+                        </div>
+                        <a href="/" class="home-button" title="Homepage">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+                                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                                </svg>
+                        </a>
+                </div>
+        </header>
+
+        <div id="dashboard-error" class="error-banner" hidden></div>
+
+        <main class="dashboard-main">
+                <section class="device-header">
+                        <div>
+                                <h2 th:text="${device.name}">Device name</h2>
+                                <p class="device-meta">
+                                        <span th:if="${device.macAddress != null}">MAC: <strong th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">--</strong></span>
+                                        <span th:if="${device.macAddress == null}">DevEUI: <strong th:text="${device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui) : '--'}">--</strong></span>
+                                        <span th:if="${device.tod != null}">Type: <strong th:text="${device.tod.name}">Type</strong></span>
+                                        <span>Status: <strong th:text="${device.status}">--</strong></span>
+                                </p>
+                        </div>
+                        <div class="device-location" th:if="${device.latitude != null && device.longitude != null}">
+                                <span>Lat: <strong th:text="${#numbers.formatDecimal(device.latitude, 1, 6)}">0</strong></span>
+                                <span>Lng: <strong th:text="${#numbers.formatDecimal(device.longitude, 1, 6)}">0</strong></span>
+                        </div>
+                </section>
+
+                <section class="widgets-section">
+                        <div class="panel metrics-panel">
+                                <div class="panel-header">
+                                        <h3>Latest measurements</h3>
+                                        <span class="panel-subtitle">Last update: <span id="last-update">--</span></span>
+                                </div>
+                                <div id="metrics-grid" class="metrics-grid"></div>
+                                <p id="metrics-empty" class="empty-state">No measurement specs available for this device.</p>
+                        </div>
+
+                        <div class="panel chart-panel">
+                                <div class="panel-header">
+                                        <h3>Trend</h3>
+                                        <div class="history-controls">
+                                                <label for="history-window">Window</label>
+                                                <select id="history-window">
+                                                        <option value="30">30 samples</option>
+                                                        <option value="60" selected>60 samples</option>
+                                                        <option value="120">120 samples</option>
+                                                </select>
+                                        </div>
+                                </div>
+                                <canvas id="metrics-chart" aria-label="Telemetria" role="img"></canvas>
+                                <p id="chart-empty" class="empty-state">No telemetry received yet.</p>
+                        </div>
+                </section>
+
+                <section class="panel info-panel">
+                        <div class="panel-header">
+                                <h3>Device information</h3>
+                                <span class="panel-subtitle">Metadata sent with the latest packet</span>
+                        </div>
+                        <dl id="info-grid" class="info-grid"></dl>
+                        <p id="info-empty" class="empty-state">No additional information available.</p>
+                </section>
+
+                <section class="panel status-panel">
+                        <div class="panel-header">
+                                <h3>Status indicators</h3>
+                                <span class="panel-subtitle">SEN55 diagnostic bits (0 = OK, 1 = Fault)</span>
+                        </div>
+                        <div id="status-flags" class="status-flags"></div>
+                        <p id="status-empty" class="empty-state">No diagnostics were provided in the latest packet.</p>
+                </section>
+        </main>
+
+        <script th:inline="javascript">
+                /*<![CDATA[*/
+                const DEVICE_KEY = /*[[${device.macAddress != null ? device.macAddress : (device.devEui != null ? device.devEui : '')}]]*/ '';
+                const PROJECT_ID = /*[[${project.id}]]*/ 0;
+                const DEVICE_NAME = /*[[${device.name}]]*/ '';
+                const PROJECT_KEY = /*[[${projectKey}]]*/ 'default';
+                /*]]>*/
+        </script>
+
+        <script>
+                const state = {
+                        specDescriptors: [],
+                        specCardsRendered: false,
+                        chart: null,
+                        historyLimit: 60,
+                        lastSamples: [],
+                        latestTimestamp: null
+                };
+
+                const palettes = {
+                        'ltrad': ['#007bff', '#4dabf7', '#a5d8ff'],
+                        'fire': ['#e85d04', '#ff922b', '#ffba08'],
+                        'volcano': ['#6a040f', '#9d0208', '#f48c06'],
+                        'default': ['#2d6cdf', '#4c9f70', '#dd6b20']
+                };
+
+                document.addEventListener('DOMContentLoaded', () => {
+                        setupDropdown();
+                        initializeDashboard().catch(error => showError(error.message));
+                        const historySelect = document.getElementById('history-window');
+                        historySelect.addEventListener('change', async (event) => {
+                                state.historyLimit = parseInt(event.target.value, 10);
+                                await loadHistory();
+                        });
+                        setInterval(refreshLatestSample, 15000);
+                });
+
+                function setupDropdown() {
+                        const toggle = document.getElementById('userDropdown');
+                        const menu = document.getElementById('userDropdownMenu');
+                        if (!toggle || !menu) {
+                                return;
+                        }
+                        toggle.addEventListener('click', function (e) {
+                                e.stopPropagation();
+                                menu.classList.toggle('show');
+                        });
+                        document.addEventListener('click', function (e) {
+                                if (!toggle.contains(e.target)) {
+                                        menu.classList.remove('show');
+                                }
+                        });
+                }
+
+                async function initializeDashboard() {
+                        await loadSpecs();
+                        await loadHistory();
+                }
+
+                async function loadSpecs() {
+                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_KEY)}/specs`);
+                        if (response.status === 403) {
+                                throw new Error('Non sei autorizzato a visualizzare questo dispositivo.');
+                        }
+                        if (!response.ok) {
+                                throw new Error('Unable to load device specs.');
+                        }
+                        const specs = await response.json();
+                        const descriptors = Array.isArray(specs) ? specs.map(buildDescriptorFromSpec) : [];
+                        const changed = descriptorsDiffer(state.specDescriptors, descriptors);
+                        state.specDescriptors = descriptors;
+                        if (changed) {
+                                state.specCardsRendered = false;
+                                if (state.specDescriptors.length) {
+                                        renderMetricCards();
+                                        const latestSample = state.lastSamples[state.lastSamples.length - 1];
+                                        if (latestSample) {
+                                                updateFromSample(latestSample);
+                                                buildOrUpdateChart(state.lastSamples);
+                                        } else {
+                                                updateMetricCards(new Map());
+                                                resetChart();
+                                        }
+                                } else {
+                                        document.getElementById('metrics-grid').innerHTML = '';
+                                        resetChart();
+                                }
+                                const metricsEmpty = document.getElementById('metrics-empty');
+                                if (metricsEmpty) {
+                                        metricsEmpty.hidden = state.specDescriptors.length > 0;
+                                }
+                        }
+                }
+
+                async function loadHistory() {
+                        clearError();
+                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_KEY)}/telemetry/history?limit=${state.historyLimit}`);
+                        if (response.status === 403) {
+                                throw new Error('Non sei autorizzato a visualizzare questo dispositivo.');
+                        }
+                        if (!response.ok) {
+                                throw new Error('Unable to load telemetry history.');
+                        }
+                        const samples = await response.json();
+                        state.lastSamples = Array.isArray(samples) ? samples : [];
+
+                        const metricsGrid = document.getElementById('metrics-grid');
+                        const metricsEmpty = document.getElementById('metrics-empty');
+                        const chartEmpty = document.getElementById('chart-empty');
+
+                        if (!state.specDescriptors.length && state.lastSamples.length) {
+                                const fallback = buildDescriptorsFromSample(state.lastSamples[state.lastSamples.length - 1]);
+                                if (fallback.length) {
+                                        state.specDescriptors = fallback;
+                                        state.specCardsRendered = false;
+                                }
+                        }
+
+                        if (!state.specDescriptors.length) {
+                                metricsGrid.innerHTML = '';
+                                metricsEmpty.hidden = false;
+                        } else if (!state.specCardsRendered) {
+                                renderMetricCards();
+                                metricsEmpty.hidden = true;
+                        } else {
+                                metricsEmpty.hidden = true;
+                        }
+
+                        if (!state.lastSamples.length) {
+                                if (state.specDescriptors.length) {
+                                        updateMetricCards(new Map());
+                                } else {
+                                        metricsGrid.innerHTML = '';
+                                }
+                                chartEmpty.hidden = false;
+                                resetChart();
+                                updateStatusFlags([]);
+                                updateInfoPanel(null);
+                                state.latestTimestamp = null;
+                                document.getElementById('last-update').textContent = '--';
+                                return;
+                        }
+
+                        const latestSample = state.lastSamples[state.lastSamples.length - 1];
+                        updateFromSample(latestSample);
+                        buildOrUpdateChart(state.lastSamples);
+                        chartEmpty.hidden = state.chart !== null;
+                }
+
+                async function refreshLatestSample() {
+                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_KEY)}/telemetry/latest`);
+                        if (response.status === 403) {
+                                showError('Non sei autorizzato a visualizzare questo dispositivo.');
+                                return;
+                        }
+                        if (response.status === 204) {
+                                return;
+                        }
+                        if (!response.ok) {
+                                showError('Unable to refresh the latest sample.');
+                                return;
+                        }
+                        const sample = await response.json();
+                        if (!sample || !Array.isArray(sample.measurements)) {
+                                return;
+                        }
+                        if (state.latestTimestamp && state.latestTimestamp === sample.timestamp) {
+                                return;
+                        }
+                        state.lastSamples.push(sample);
+                        if (state.lastSamples.length > state.historyLimit) {
+                                state.lastSamples.splice(0, state.lastSamples.length - state.historyLimit);
+                        }
+                        updateFromSample(sample);
+                        buildOrUpdateChart(state.lastSamples);
+                }
+
+                function renderMetricCards() {
+                        const container = document.getElementById('metrics-grid');
+                        container.innerHTML = '';
+                        state.specDescriptors.forEach(descriptor => {
+                                const card = document.createElement('div');
+                                card.className = 'metric-card';
+                                card.dataset.specKey = descriptor.key;
+                                card.innerHTML = `
+                                        <div class="metric-header">
+                                                <span class="metric-name">${descriptor.displayName}</span>
+                                        </div>
+                                        <div class="metric-value" data-value>--</div>
+                                        <div class="metric-range" data-range>${formatRange(descriptor.min, descriptor.max, descriptor.unit)}</div>
+                                `;
+                                container.appendChild(card);
+                        });
+                        state.specCardsRendered = true;
+                }
+
+                function updateFromSample(sample) {
+                        if (!sample || !Array.isArray(sample.measurements)) {
+                                return;
+                        }
+                        const measurementMap = mapMeasurements(sample.measurements);
+                        updateMetricCards(measurementMap);
+                        updateStatusFlags(sample.indicators);
+                        updateInfoPanel(sample.info);
+                        updateTimestamp(sample.timestamp);
+                }
+
+                function updateMetricCards(measurements) {
+                        state.specDescriptors.forEach(descriptor => {
+                                const card = document.querySelector(`.metric-card[data-spec-key="${descriptor.key}"]`);
+                                if (!card) {
+                                        return;
+                                }
+                                const valueEl = card.querySelector('[data-value]');
+                                const rangeEl = card.querySelector('[data-range]');
+                                const measurement = measurements.get(descriptor.key);
+                                if (!measurement) {
+                                        valueEl.textContent = '--';
+                                        rangeEl.textContent = formatRange(descriptor.min, descriptor.max, descriptor.unit);
+                                        return;
+                                }
+                                valueEl.textContent = formatValue(measurement.value);
+                                rangeEl.textContent = formatRange(measurement.min, measurement.max, measurement.unit || descriptor.unit);
+                        });
+                }
+
+                function updateStatusFlags(indicators) {
+                        const container = document.getElementById('status-flags');
+                        const emptyState = document.getElementById('status-empty');
+                        container.innerHTML = '';
+
+                        if (!Array.isArray(indicators) || !indicators.length) {
+                                emptyState.hidden = false;
+                                return;
+                        }
+
+                        emptyState.hidden = true;
+                        indicators.forEach(indicator => {
+                                const flag = document.createElement('div');
+                                flag.className = 'status-flag';
+                                const numeric = toNumber(indicator.value);
+                                const isOn = numeric === 1;
+                                const valueClass = numeric === null ? 'flag-generic' : (isOn ? 'flag-on' : 'flag-off');
+                                const normalizedValue = numeric === null ? '--' : (isOn ? 'Issue' : 'OK');
+                                flag.innerHTML = `
+                                        <span class="flag-key">${indicator.label ?? prettifyKey(indicator.key)}</span>
+                                        <span class="flag-value ${valueClass}">${normalizedValue}</span>
+                                `;
+                                container.appendChild(flag);
+                        });
+                }
+
+                function buildOrUpdateChart(samples) {
+                        if (!samples.length) {
+                                resetChart();
+                                return;
+                        }
+                        const labels = samples.map(sample => formatTimestamp(sample.timestamp, true));
+                        const datasets = buildDatasets(samples);
+                        if (!datasets.length) {
+                                resetChart();
+                                return;
+                        }
+                        if (!state.chart) {
+                                const ctx = document.getElementById('metrics-chart').getContext('2d');
+                                state.chart = new Chart(ctx, {
+                                        type: 'line',
+                                        data: { labels, datasets },
+                                        options: {
+                                                responsive: true,
+                                                maintainAspectRatio: false,
+                                                interaction: { mode: 'index', intersect: false },
+                                                plugins: {
+                                                        legend: { labels: { color: '#ffffff' } },
+                                                        tooltip: {
+                                                                callbacks: {
+                                                                        label: (context) => `${context.dataset.label}: ${formatValue(context.parsed.y)}`
+                                                                }
+                                                        }
+                                                },
+                                                scales: {
+                                                        x: { ticks: { color: '#dde1f2' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                                                        y: { ticks: { color: '#dde1f2' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                                                }
+                                        }
+                                });
+                        } else {
+                                state.chart.data.labels = labels;
+                                state.chart.data.datasets = datasets;
+                                state.chart.update('none');
+                        }
+                        document.getElementById('chart-empty').hidden = true;
+                }
+
+                function resetChart() {
+                        if (state.chart) {
+                                state.chart.destroy();
+                                state.chart = null;
+                        }
+                        document.getElementById('chart-empty').hidden = false;
+                }
+
+                function buildDatasets(samples) {
+                        const theme = (PROJECT_KEY && palettes[PROJECT_KEY]) ? PROJECT_KEY : 'default';
+                        const palette = palettes[theme];
+                        const descriptors = state.specDescriptors;
+                        const measurementMaps = samples.map(sample => mapMeasurements(sample.measurements));
+                        let colorIndex = 0;
+                        return descriptors.map(descriptor => {
+                                const values = measurementMaps.map(measurements => {
+                                        const measurement = measurements.get(descriptor.key);
+                                        return measurement ? toNumber(measurement.value) : null;
+                                });
+                                if (values.every(value => value === null)) {
+                                        return null;
+                                }
+                                const color = palette[colorIndex % palette.length];
+                                colorIndex += 1;
+                                return {
+                                        label: descriptor.unit ? `${descriptor.displayName} (${descriptor.unit})` : descriptor.displayName,
+                                        data: values,
+                                        borderColor: color,
+                                        backgroundColor: color + '33',
+                                        spanGaps: true,
+                                        tension: 0.3
+                                };
+                        }).filter(Boolean);
+                }
+
+                function buildDescriptorFromSpec(spec) {
+                        const displayName = spec.displayName || prettifyKey(spec.label || spec.key);
+                        return {
+                                key: spec.key,
+                                label: spec.label,
+                                displayName,
+                                unit: spec.unit,
+                                min: spec.min,
+                                max: spec.max
+                        };
+                }
+
+                function buildDescriptorsFromSample(sample) {
+                        if (!sample || !Array.isArray(sample.measurements)) {
+                                return [];
+                        }
+                        return sample.measurements.map(measurement => ({
+                                key: measurement.key,
+                                label: measurement.label,
+                                displayName: measurement.displayName || prettifyKey(measurement.label || measurement.key),
+                                unit: measurement.unit,
+                                min: measurement.min,
+                                max: measurement.max
+                        }));
+                }
+
+                function descriptorsDiffer(previous, next) {
+                        if (!Array.isArray(previous) || !Array.isArray(next)) {
+                                return true;
+                        }
+                        if (previous.length !== next.length) {
+                                return true;
+                        }
+                        for (let i = 0; i < previous.length; i += 1) {
+                                const a = previous[i] || {};
+                                const b = next[i] || {};
+                                if (a.key !== b.key || a.label !== b.label || a.displayName !== b.displayName
+                                        || a.unit !== b.unit || a.min !== b.min || a.max !== b.max) {
+                                        return true;
+                                }
+                        }
+                        return false;
+                }
+
+                function mapMeasurements(measurements) {
+                        const map = new Map();
+                        if (!Array.isArray(measurements)) {
+                                return map;
+                        }
+                        measurements.forEach(measurement => {
+                                if (measurement && measurement.key) {
+                                        map.set(measurement.key, measurement);
+                                }
+                        });
+                        return map;
+                }
+
+                function updateInfoPanel(info) {
+                        const container = document.getElementById('info-grid');
+                        const emptyState = document.getElementById('info-empty');
+                        container.innerHTML = '';
+                        if (!info || Object.keys(info).length === 0) {
+                                emptyState.hidden = false;
+                                return;
+                        }
+                        emptyState.hidden = true;
+                        Object.entries(info).forEach(([key, value]) => {
+                                const row = document.createElement('div');
+                                row.className = 'info-row';
+                                row.innerHTML = `
+                                        <dt>${prettifyKey(key)}</dt>
+                                        <dd>${formatValue(value)}</dd>
+                                `;
+                                container.appendChild(row);
+                        });
+                }
+
+                function prettifyKey(key) {
+                        if (!key) {
+                                return '';
+                        }
+                        return key
+                                .replace(/_/g, ' ')
+                                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                                .replace(/\s+/g, ' ')
+                                .trim()
+                                .replace(/^./, c => c.toUpperCase());
+                }
+
+                function toNumber(value) {
+                        if (typeof value === 'number' && Number.isFinite(value)) {
+                                return value;
+                        }
+                        const parsed = Number(value);
+                        return Number.isFinite(parsed) ? parsed : null;
+                }
+
+                function formatValue(value) {
+                        const numeric = toNumber(value);
+                        if (numeric === null) {
+                                return value === null || value === undefined ? '--' : String(value);
+                        }
+                        return Math.abs(numeric) >= 100 ? numeric.toFixed(0) : numeric.toFixed(2).replace(/\.00$/, '');
+                }
+
+                function formatRange(min, max, unit) {
+                        if (min === null && max === null) {
+                                return unit ? `Range: -- ${unit}` : 'Range: --';
+                        }
+                        const formattedMin = min === null ? '--' : formatValue(min);
+                        const formattedMax = max === null ? '--' : formatValue(max);
+                        const suffix = unit ? ` ${unit}` : '';
+                        return `Range: ${formattedMin} – ${formattedMax}${suffix}`;
+                }
+
+                function updateTimestamp(timestamp) {
+                        state.latestTimestamp = timestamp;
+                        document.getElementById('last-update').textContent = formatTimestamp(timestamp, false);
+                }
+
+                function formatTimestamp(timestamp, short) {
+                        if (!timestamp) {
+                                return '--';
+                        }
+                        const date = new Date(timestamp);
+                        if (Number.isNaN(date.getTime())) {
+                                return '--';
+                        }
+                        const options = short ? { hour: '2-digit', minute: '2-digit', second: '2-digit' } : { dateStyle: 'short', timeStyle: 'medium' };
+                        return new Intl.DateTimeFormat(undefined, options).format(date);
+                }
+
+                function showError(message) {
+                        const banner = document.getElementById('dashboard-error');
+                        banner.textContent = message;
+                        banner.hidden = false;
+                }
+
+                function clearError() {
+                        const banner = document.getElementById('dashboard-error');
+                        banner.hidden = true;
+                }
+        </script>
+</body>
+
+</html>
+

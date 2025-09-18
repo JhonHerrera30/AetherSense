@@ -1,0 +1,229 @@
+html,
+body {
+	margin: 0;
+	padding: 0;
+	height: 100%;
+	font-family: 'Roboto', sans-serif;
+	background-color: #1B263B;
+	color: white;
+	overflow-x: hidden;
+}
+
+/* NAVBAR ROSSA */
+.navbar {
+	border-bottom: 2px solid rgb(255, 142, 142); /* rosso chiaro */
+	background-color: #cc0000; /* rosso principale */
+	color: white;
+	position: sticky;
+	top: 0;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 0.75rem 1.5rem;
+	z-index: 10;
+	height: 3em;
+}
+
+nav-left{
+	color:white;
+	text-decoration: none;
+}
+
+.nav-title-link {
+	color: white;
+	text-decoration: none;
+	font-weight: bold;
+	font-size: 2rem;
+}
+
+#navbar h1 {
+	margin: 0;
+	font-size: 2rem;
+	margin-left: 3rem;
+	color: white;
+}
+
+
+.nav-right {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.home-button {
+	color: white;
+	text-decoration: none;
+	display: flex;
+	align-items: center;
+	margin-right: 2rem;
+}
+
+.icon-home {
+	fill: currentColor;
+	width: 24px;
+	height: 24px;
+}
+
+/* Dropdown base */
+.dropdown {
+	position: relative;
+	display: inline-block;
+}
+
+.dropdown-toggle {
+	background: none;
+	border: none;
+	color: white;
+	font-size: 1rem;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.dropdown-toggle:focus {
+	outline: none;
+}
+
+/* Icona freccia giÃ¹ */
+.dropdown-icon {
+	transition: transform 0.3s;
+}
+
+.dropdown:hover .dropdown-icon {
+	transform: rotate(180deg);
+}
+
+/* Menu */
+.dropdown-menu {
+	display: none;
+	position: absolute;
+	right: 0;
+	top: 2.2rem;
+	background-color: #1B263B;
+	border: 1px solid #cc0000;
+	border-radius: 8px;
+	padding: 0.5rem;
+	z-index: 999;
+	min-width: 120px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.dropdown-menu.show {
+	display: block;
+}
+
+.dropdown:hover .dropdown-menu {
+	display: block;
+}
+
+/* Pulsante logout nel menu */
+.dropdown-logout {
+	width: 100%;
+	background: none;
+	border: none;
+	color: white;
+	font-size: 0.95rem;
+	padding: 0.5rem;
+	cursor: pointer;
+	text-align: left;
+	transition: background-color 0.2s;
+}
+
+.dropdown-logout:hover {
+	background-color: rgba(255, 255, 255, 0.1);
+}
+
+
+.icon-user {
+	width: 24px;
+	height: 24px;
+}
+
+
+
+/* Griglia immagini */
+.image-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	background-color: #0b1a2f;
+	justify-items: center;
+	align-items: center;
+}
+
+.woods {
+	width: 100%;
+	height: auto;
+}
+
+.rak {
+	width: 80%;
+	height: auto;
+}
+
+.auth-user {
+	display: flex;
+	align-items: center;
+	margin-left: 1rem;
+	margin-right: 1.5rem;
+}
+
+.btn-container {
+	display: flex;
+	justify-content: center;
+}
+
+.map-button-container {
+	text-align: center;
+}
+
+.map-button {
+	padding: 0.7rem 1.5rem;
+	font-size: 1rem;
+	font-weight: bold;
+	text-align: center;
+	text-decoration: none;
+	background-color: #cc0000;
+	color: white;
+	border: none;
+	border-radius: 10px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+	transition: background-color 0.3s ease, transform 0.2s ease;
+	width: auto;
+}
+
+.map-button:hover {
+	background-color: #ff1a1a;
+	transform: scale(1.02);
+}
+
+/* Testo */
+.main-text {
+	background-color: #1B263B;
+	padding: 3rem 2rem;
+	max-width: 900px;
+	margin: 0 auto;
+	line-height: 1.6;
+}
+
+.main-text h2 {
+	font-size: 2rem;
+	color: #ff6666;
+	margin-bottom: 1rem;
+}
+
+.main-text p {
+	margin: 1rem 0;
+	font-size: 1.1rem;
+}
+
+.main-text ul {
+	margin-left: 2rem;
+	margin-bottom: 1.5rem;
+}
+
+.main-text li {
+	margin-bottom: 0.5rem;
+}
