@@ -82,7 +82,7 @@
                                                 </select>
                                         </div>
                                 </div>
-                                <canvas id="metrics-chart" aria-label="Telemetria" role="img"></canvas>
+                                <div id="trend-grid" class="trend-grid"></div>
                                 <p id="chart-empty" class="empty-state">No telemetry received yet.</p>
                         </div>
                 </section>
@@ -119,7 +119,8 @@
                 const state = {
                         specDescriptors: [],
                         specCardsRendered: false,
-                        chart: null,
+                        chartCanvasesRendered: false,
+                        charts: new Map(),
                         historyLimit: 60,
                         lastSamples: [],
                         latestTimestamp: null
@@ -179,19 +180,23 @@
                         state.specDescriptors = descriptors;
                         if (changed) {
                                 state.specCardsRendered = false;
+                                state.chartCanvasesRendered = false;
+                                resetCharts();
+                                clearTrendCanvases();
                                 if (state.specDescriptors.length) {
                                         renderMetricCards();
+                                        ensureTrendCanvases();
                                         const latestSample = state.lastSamples[state.lastSamples.length - 1];
                                         if (latestSample) {
                                                 updateFromSample(latestSample);
-                                                buildOrUpdateChart(state.lastSamples);
+                                                buildOrUpdateCharts(state.lastSamples);
                                         } else {
                                                 updateMetricCards(new Map());
-                                                resetChart();
+                                                resetCharts();
                                         }
                                 } else {
                                         document.getElementById('metrics-grid').innerHTML = '';
-                                        resetChart();
+                                        resetCharts();
                                 }
                                 const metricsEmpty = document.getElementById('metrics-empty');
                                 if (metricsEmpty) {
@@ -221,17 +226,24 @@
                                 if (fallback.length) {
                                         state.specDescriptors = fallback;
                                         state.specCardsRendered = false;
+                                        state.chartCanvasesRendered = false;
+                                        resetCharts();
+                                        clearTrendCanvases();
                                 }
                         }
 
                         if (!state.specDescriptors.length) {
                                 metricsGrid.innerHTML = '';
                                 metricsEmpty.hidden = false;
+                                resetCharts();
+                                clearTrendCanvases();
                         } else if (!state.specCardsRendered) {
                                 renderMetricCards();
                                 metricsEmpty.hidden = true;
+                                ensureTrendCanvases();
                         } else {
                                 metricsEmpty.hidden = true;
+                                ensureTrendCanvases();
                         }
 
                         if (!state.lastSamples.length) {
@@ -240,8 +252,7 @@
                                 } else {
                                         metricsGrid.innerHTML = '';
                                 }
-                                chartEmpty.hidden = false;
-                                resetChart();
+                                resetCharts();
                                 updateStatusFlags([]);
                                 updateInfoPanel(null);
                                 state.latestTimestamp = null;
@@ -251,8 +262,7 @@
 
                         const latestSample = state.lastSamples[state.lastSamples.length - 1];
                         updateFromSample(latestSample);
-                        buildOrUpdateChart(state.lastSamples);
-                        chartEmpty.hidden = state.chart !== null;
+                        buildOrUpdateCharts(state.lastSamples);
                 }
 
                 async function refreshLatestSample() {
@@ -280,7 +290,7 @@
                                 state.lastSamples.splice(0, state.lastSamples.length - state.historyLimit);
                         }
                         updateFromSample(sample);
-                        buildOrUpdateChart(state.lastSamples);
+                        buildOrUpdateCharts(state.lastSamples);
                 }
 
                 function renderMetricCards() {
@@ -358,81 +368,153 @@
                         });
                 }
 
-                function buildOrUpdateChart(samples) {
-                        if (!samples.length) {
-                                resetChart();
+                function ensureTrendCanvases() {
+                        const container = document.getElementById('trend-grid');
+                        if (!container) {
                                 return;
                         }
+                        if (!state.specDescriptors.length) {
+                                clearTrendCanvases();
+                                return;
+                        }
+                        if (state.chartCanvasesRendered) {
+                                return;
+                        }
+                        container.innerHTML = '';
+                        state.specDescriptors.forEach(descriptor => {
+                                const canvas = document.createElement('canvas');
+                                canvas.dataset.specKey = descriptor.key;
+                                canvas.setAttribute('role', 'img');
+                                canvas.setAttribute('aria-label', `${descriptor.displayName} trend`);
+                                canvas.hidden = true;
+                                container.appendChild(canvas);
+                        });
+                        state.chartCanvasesRendered = true;
+                }
+
+                function clearTrendCanvases() {
+                        const container = document.getElementById('trend-grid');
+                        if (container) {
+                                container.innerHTML = '';
+                        }
+                        state.chartCanvasesRendered = false;
+                }
+
+                function buildOrUpdateCharts(samples) {
+                        const chartEmpty = document.getElementById('chart-empty');
+                        if (!samples.length || !state.specDescriptors.length) {
+                                resetCharts();
+                                if (chartEmpty) {
+                                        chartEmpty.hidden = false;
+                                }
+                                return;
+                        }
+
+                        ensureTrendCanvases();
+
                         const labels = samples.map(sample => formatTimestamp(sample.timestamp, true));
-                        const datasets = buildDatasets(samples);
-                        if (!datasets.length) {
-                                resetChart();
-                                return;
-                        }
-                        if (!state.chart) {
-                                const ctx = document.getElementById('metrics-chart').getContext('2d');
-                                state.chart = new Chart(ctx, {
-                                        type: 'line',
-                                        data: { labels, datasets },
-                                        options: {
-                                                responsive: true,
-                                                maintainAspectRatio: false,
-                                                interaction: { mode: 'index', intersect: false },
-                                                plugins: {
-                                                        legend: { labels: { color: '#ffffff' } },
-                                                        tooltip: {
-                                                                callbacks: {
-                                                                        label: (context) => `${context.dataset.label}: ${formatValue(context.parsed.y)}`
-                                                                }
-                                                        }
-                                                },
-                                                scales: {
-                                                        x: { ticks: { color: '#dde1f2' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-                                                        y: { ticks: { color: '#dde1f2' }, grid: { color: 'rgba(255,255,255,0.1)' } }
-                                                }
+                        const datasetsByKey = buildDatasetsByKey(samples);
+                        const descriptorKeys = new Set(state.specDescriptors.map(descriptor => descriptor.key));
+                        let hasAnyChart = false;
+
+                        Array.from(state.charts.keys()).forEach(key => {
+                                if (!descriptorKeys.has(key) || !datasetsByKey.has(key)) {
+                                        const chart = state.charts.get(key);
+                                        if (chart) {
+                                                chart.destroy();
                                         }
-                                });
-                        } else {
-                                state.chart.data.labels = labels;
-                                state.chart.data.datasets = datasets;
-                                state.chart.update('none');
+                                        state.charts.delete(key);
+                                }
+                        });
+
+                        state.specDescriptors.forEach(descriptor => {
+                                const dataset = datasetsByKey.get(descriptor.key);
+                                const canvas = document.querySelector(`canvas[data-spec-key="${descriptor.key}"]`);
+                                if (!canvas) {
+                                        return;
+                                }
+                                if (!dataset) {
+                                        canvas.hidden = true;
+                                        return;
+                                }
+                                canvas.hidden = false;
+                                hasAnyChart = true;
+                                let chart = state.charts.get(descriptor.key);
+                                if (!chart) {
+                                        const ctx = canvas.getContext('2d');
+                                        chart = new Chart(ctx, {
+                                                type: 'line',
+                                                data: { labels, datasets: [dataset] },
+                                                options: {
+                                                        responsive: true,
+                                                        maintainAspectRatio: false,
+                                                        interaction: { mode: 'index', intersect: false },
+                                                        plugins: {
+                                                                legend: { labels: { color: '#ffffff' } },
+                                                                tooltip: {
+                                                                        callbacks: {
+                                                                                label: (context) => `${context.dataset.label}: ${formatValue(context.parsed.y)}`
+                                                                        }
+                                                                }
+                                                        },
+                                                        scales: {
+                                                                x: { ticks: { color: '#dde1f2' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                                                                y: { ticks: { color: '#dde1f2' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                                                        }
+                                                }
+                                        });
+                                        state.charts.set(descriptor.key, chart);
+                                } else {
+                                        chart.data.labels = labels;
+                                        chart.data.datasets = [dataset];
+                                        chart.update('none');
+                                }
+                        });
+
+                        if (chartEmpty) {
+                                chartEmpty.hidden = hasAnyChart;
                         }
-                        document.getElementById('chart-empty').hidden = true;
                 }
 
-                function resetChart() {
-                        if (state.chart) {
-                                state.chart.destroy();
-                                state.chart = null;
+                function resetCharts() {
+                        state.charts.forEach(chart => chart.destroy());
+                        state.charts.clear();
+                        document.querySelectorAll('#trend-grid canvas').forEach(canvas => {
+                                canvas.hidden = true;
+                        });
+                        const chartEmpty = document.getElementById('chart-empty');
+                        if (chartEmpty) {
+                                chartEmpty.hidden = false;
                         }
-                        document.getElementById('chart-empty').hidden = false;
                 }
 
-                function buildDatasets(samples) {
+                function buildDatasetsByKey(samples) {
                         const theme = (PROJECT_KEY && palettes[PROJECT_KEY]) ? PROJECT_KEY : 'default';
                         const palette = palettes[theme];
                         const descriptors = state.specDescriptors;
                         const measurementMaps = samples.map(sample => mapMeasurements(sample.measurements));
                         let colorIndex = 0;
-                        return descriptors.map(descriptor => {
+                        const datasets = new Map();
+                        descriptors.forEach(descriptor => {
                                 const values = measurementMaps.map(measurements => {
                                         const measurement = measurements.get(descriptor.key);
                                         return measurement ? toNumber(measurement.value) : null;
                                 });
                                 if (values.every(value => value === null)) {
-                                        return null;
+                                        return;
                                 }
                                 const color = palette[colorIndex % palette.length];
                                 colorIndex += 1;
-                                return {
+                                datasets.set(descriptor.key, {
                                         label: descriptor.unit ? `${descriptor.displayName} (${descriptor.unit})` : descriptor.displayName,
                                         data: values,
                                         borderColor: color,
                                         backgroundColor: color + '33',
                                         spanGaps: true,
                                         tension: 0.3
-                                };
-                        }).filter(Boolean);
+                                });
+                        });
+                        return datasets;
                 }
 
                 function buildDescriptorFromSpec(spec) {

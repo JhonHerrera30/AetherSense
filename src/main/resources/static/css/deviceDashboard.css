@@ -259,12 +259,17 @@
 
 .chart-panel {
         position: relative;
-        min-height: 320px;
 }
 
-.chart-panel canvas {
+.trend-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+}
+
+.trend-grid canvas {
         width: 100% !important;
-        height: 100% !important;
+        height: 150px !important;
 }
 
 .history-controls {
