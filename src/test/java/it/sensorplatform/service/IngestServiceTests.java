@@ -2,6 +2,7 @@ package it.sensorplatform.service;
 
 import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.model.Device;
+import it.sensorplatform.model.Indicator;
 import it.sensorplatform.model.Spec;
 import it.sensorplatform.model.TypeOfDevice;
 import org.junit.jupiter.api.Test;
@@ -92,6 +93,39 @@ class IngestServiceTests {
         assertEquals("Voc Index", measurement.displayName());
         assertEquals("index", measurement.unit());
         assertEquals(123.0, measurement.value());
+    }
+
+    @Test
+    void usesSavedIndicatorsForLabels() {
+        IngestService ingestService = new IngestService();
+
+        Indicator indicator = new Indicator();
+        indicator.setKey("sen55_fan_err");
+        indicator.setName("SEN55 Fan Error");
+
+        TypeOfDevice typeOfDevice = new TypeOfDevice();
+        typeOfDevice.setName("Indicator Test");
+        typeOfDevice.setIndicators(List.of(indicator));
+
+        Device device = new Device();
+        device.setMacAddress("22:33:44:55:66:77");
+        device.setTod(typeOfDevice);
+
+        ingestService.process(
+                device,
+                Instant.parse("2024-03-01T00:00:00Z"),
+                Map.of("sen55_fan_err", 1),
+                List.of(),
+                List.of()
+        );
+
+        List<IngestService.Sample> samples = ingestService.last(device.getMacAddress(), 1);
+        assertEquals(1, samples.size());
+        IngestService.IndicatorSample indicatorSample = samples.get(0).indicators().get(0);
+
+        assertEquals("sen55_fan_err", indicatorSample.key());
+        assertEquals("SEN55 Fan Error", indicatorSample.label());
+        assertEquals(1, indicatorSample.value());
     }
 }
 
