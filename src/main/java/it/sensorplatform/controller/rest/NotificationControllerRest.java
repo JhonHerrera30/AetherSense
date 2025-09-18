@@ -135,15 +135,20 @@ public class NotificationControllerRest {
                     continue;
                 }
                 Spec spec = new Spec();
+                String normalizedMeasurement = null;
                 if (label != null) {
                     String[] parts = label.split("-");
                     spec.setComponent(parts.length > 0 ? sanitize(parts[0]) : "");
-                    String measurementPart = parts.length > 1 ? sanitize(parts[1]) : "";
-                    spec.setMeasurement(specKey != null ? specKey : measurementPart);
+                    normalizedMeasurement = parts.length > 1 ? normalizeMeasurement(parts[1]) : null;
                     spec.setUnitOfMeasurement(parts.length > 2 ? sanitize(parts[2]) : "");
                 } else {
-                    spec.setMeasurement(specKey != null ? specKey : "");
+                    spec.setComponent("");
+                    spec.setUnitOfMeasurement("");
                 }
+                if (normalizedMeasurement == null) {
+                    normalizedMeasurement = normalizeMeasurement(specKey);
+                }
+                spec.setMeasurement(normalizedMeasurement != null ? normalizedMeasurement : "");
                 if (spec.getComponent() == null) {
                     spec.setComponent("");
                 }
@@ -162,6 +167,11 @@ public class NotificationControllerRest {
             tod.setSpecs(specs);
         }
         return updated;
+    }
+
+    private String normalizeMeasurement(String value) {
+        String sanitized = sanitize(value);
+        return sanitized != null ? sanitized.toLowerCase(Locale.ROOT) : null;
     }
 
     private boolean ensureIndicators(TypeOfDevice tod, List<String> indicatorEntries) {

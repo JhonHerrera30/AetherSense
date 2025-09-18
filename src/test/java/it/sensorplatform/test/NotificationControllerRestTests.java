@@ -5,6 +5,7 @@ import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.dto.UnknownDeviceNotification;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.Project;
+import it.sensorplatform.model.Spec;
 import it.sensorplatform.model.TypeOfDevice;
 import it.sensorplatform.repository.DeviceRepository;
 import it.sensorplatform.repository.ProjectRepository;
@@ -28,6 +29,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(OutputCaptureExtension.class)
@@ -129,6 +131,61 @@ class NotificationControllerRestTests {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         verify(deviceRepository, never()).existsByDevEui(any());
+    }
+
+    @Test
+    void addDeviceExtractsMeasurementFromSpecLabel() {
+        UnknownDeviceService unknownDeviceService = mock(UnknownDeviceService.class);
+        DeviceRepository deviceRepository = mock(DeviceRepository.class);
+        TypeOfDeviceRepository typeOfDeviceRepository = mock(TypeOfDeviceRepository.class);
+        SpecService specService = mock(SpecService.class);
+        IndicatorService indicatorService = mock(IndicatorService.class);
+        ProjectRepository projectRepository = mock(ProjectRepository.class);
+
+        Long projectId = 1L;
+        String key = "key";
+        String normalizedKey = MacAddressUtils.normalize(key);
+
+        PacketDTO.SpecEntry specEntry = new PacketDTO.SpecEntry();
+        specEntry.setLabel("node-TEMPERATURE-celsius");
+        specEntry.setKey("node-TEMPERATURE-celsius");
+
+        UnknownDeviceNotification notif = new UnknownDeviceNotification(
+                normalizedKey,
+                "AA:BB:CC:DD:EE:FF",
+                "DEV123",
+                projectId,
+                "type",
+                Map.of(),
+                List.of(specEntry),
+                List.of(),
+                Instant.now()
+        );
+
+        when(unknownDeviceService.consume(projectId, normalizedKey)).thenReturn(notif);
+        when(typeOfDeviceRepository.findByName("type")).thenReturn(Optional.of(new TypeOfDevice()));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(new Project()));
+        when(deviceRepository.existsByMacAddress(anyString())).thenReturn(false);
+        when(deviceRepository.existsByDevEui(anyString())).thenReturn(false);
+        when(deviceRepository.save(any(Device.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(specService.findByFields(any(Spec.class))).thenReturn(Optional.empty());
+        when(specService.save(any(Spec.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        NotificationControllerRest controller = new NotificationControllerRest(
+                unknownDeviceService,
+                deviceRepository,
+                typeOfDeviceRepository,
+                specService,
+                indicatorService,
+                projectRepository
+        );
+
+        controller.addDevice(projectId, key);
+
+        ArgumentCaptor<Spec> specCaptor = ArgumentCaptor.forClass(Spec.class);
+        verify(specService).save(specCaptor.capture());
+        Spec savedSpec = specCaptor.getValue();
+        assertEquals("temperature", savedSpec.getMeasurement());
     }
 }
 
