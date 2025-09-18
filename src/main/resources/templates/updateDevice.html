@@ -89,13 +89,13 @@
 			        </tr>
 			    </thead>
 			    <tbody>
-			        <tr th:each="spec : ${device.tod.specs}">
-			            <td th:text="${spec.component}">Component</td>
-			            <td th:text="${spec.measurement}">Measurement</td>
-			            <td th:text="${spec.unitOfMeasurement}">Unit</td>
-			        </tr>
-			    </tbody>
-			</table>
+                                <tr th:each="spec : ${device.tod.specs}">
+                                    <td th:text="${spec.component}">Component</td>
+                                    <td data-measurement th:text="${spec.measurement}">Measurement</td>
+                                    <td th:text="${spec.unitOfMeasurement}">Unit</td>
+                                </tr>
+                            </tbody>
+                        </table>
 
             <!-- Form di modifica -->
 			<div class="card-edit-device">
@@ -120,21 +120,102 @@
     </div>
 	
 	<script>
-			document.addEventListener("DOMContentLoaded", function () {
-				const toggle = document.getElementById("userDropdown");
-				const menu = document.getElementById("userDropdownMenu");
+                        document.addEventListener("DOMContentLoaded", function () {
+                                const toggle = document.getElementById("userDropdown");
+                                const menu = document.getElementById("userDropdownMenu");
 
-				toggle.addEventListener("click", function (e) {
-					e.stopPropagation();
-					menu.classList.toggle("show");
-				});
+                                toggle.addEventListener("click", function (e) {
+                                        e.stopPropagation();
+                                        menu.classList.toggle("show");
+                                });
 
-				document.addEventListener("click", function (e) {
-					if (!toggle.contains(e.target)) {
-						menu.classList.remove("show");
-					}
-				});
-			});
-		</script>
+                                document.addEventListener("click", function (e) {
+                                        if (!toggle.contains(e.target)) {
+                                                menu.classList.remove("show");
+                                        }
+                                });
+
+                                const escapeRegExp = function (str) {
+                                        return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                                };
+
+                                const measurementCells = document.querySelectorAll("td[data-measurement]");
+                                measurementCells.forEach(function (cell) {
+                                        const componentCell = cell.previousElementSibling;
+                                        const originalText = cell.textContent || "";
+                                        let measurementText = originalText.trim();
+
+                                        if (!measurementText) {
+                                                cell.textContent = "";
+                                                return;
+                                        }
+
+                                        if (componentCell) {
+                                                const componentText = (componentCell.textContent || "").trim();
+                                                if (componentText) {
+                                                        const tokens = componentText.match(/[A-Za-z0-9]+/g);
+                                                        if (tokens) {
+                                                                const prefixPattern = tokens
+                                                                        .map(function (token) {
+                                                                                return escapeRegExp(token);
+                                                                        })
+                                                                        .join("[\\s._-]*");
+                                                                const prefixRegex = new RegExp("^" + prefixPattern, "i");
+                                                                measurementText = measurementText.replace(prefixRegex, "");
+                                                                measurementText = measurementText.replace(/^[\s._-]+/, "");
+                                                        }
+                                                }
+                                        }
+
+                                        if (!measurementText) {
+                                                cell.textContent = originalText.trim();
+                                                return;
+                                        }
+
+                                        const decimalNormalized = measurementText.replace(/(\d)[_-](\d)/g, "$1.$2");
+                                        let spaced = decimalNormalized
+                                                .replace(/[_-]+/g, " ")
+                                                .replace(/([a-z\d])([A-Z])/g, "$1 $2")
+                                                .replace(/([A-Za-z])(\d)/g, "$1 $2")
+                                                .replace(/(\d)([A-Za-z])/g, "$1 $2")
+                                                .replace(/\s+/g, " ")
+                                                .trim();
+
+                                        if (!spaced) {
+                                                cell.textContent = originalText.trim();
+                                                return;
+                                        }
+
+                                        const friendly = spaced
+                                                .split(" ")
+                                                .map(function (word) {
+                                                        if (!word) {
+                                                                return word;
+                                                        }
+                                                        if (!/[A-Za-z]/.test(word)) {
+                                                                return word;
+                                                        }
+                                                        const hasUpper = /[A-Z]/.test(word);
+                                                        const hasLower = /[a-z]/.test(word);
+                                                        if (hasUpper && hasLower) {
+                                                                return word;
+                                                        }
+                                                        if (word === word.toUpperCase()) {
+                                                                return word;
+                                                        }
+                                                        if (/\d/.test(word)) {
+                                                                return word.toUpperCase();
+                                                        }
+                                                        if (word.length <= 3 && !/[aeiou]/i.test(word)) {
+                                                                return word.toUpperCase();
+                                                        }
+                                                        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+                                                })
+                                                .join(" ");
+
+                                        cell.textContent = friendly;
+                                });
+                        });
+                </script>
 </body>
 </html>
