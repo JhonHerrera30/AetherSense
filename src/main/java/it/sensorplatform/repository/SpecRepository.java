@@ -1,5 +1,6 @@
 package it.sensorplatform.repository;
 
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -11,13 +12,23 @@ import it.sensorplatform.model.Spec;
 @Repository
 public interface SpecRepository extends CrudRepository<Spec, Long>{
 
-	@Query(value = """
-		    SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
-		    FROM spec
-		    WHERE measurement = :#{#spec.measurement}
-		      AND unit_of_measurement = :#{#spec.unitOfMeasurement}
-		      AND component = :#{#spec.component}
-		    """, nativeQuery = true)
-		boolean existsByFields(@Param("spec") Spec spec);
-	
+        @Query(value = """
+                    SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+                    FROM spec
+                    WHERE measurement = :#{#spec.measurement}
+                      AND unit_of_measurement = :#{#spec.unitOfMeasurement}
+                      AND component = :#{#spec.component}
+                    """, nativeQuery = true)
+                boolean existsByFields(@Param("spec") Spec spec);
+
+        @Query(value = """
+                    SELECT *
+                    FROM spec
+                    WHERE measurement = :#{#spec.measurement}
+                      AND unit_of_measurement = :#{#spec.unitOfMeasurement}
+                      AND component = :#{#spec.component}
+                    LIMIT 1
+                    """, nativeQuery = true)
+                Optional<Spec> findByFields(@Param("spec") Spec spec);
+
 }

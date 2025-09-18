@@ -91,10 +91,9 @@ public class NotificationControllerRest {
                     if (spec.getUnitOfMeasurement() == null) {
                         spec.setUnitOfMeasurement("");
                     }
-                    if (!specService.existsByFields(spec)) {
-                        specService.save(spec);
-                    }
-                    specs.add(spec);
+                    Spec managedSpec = specService.findByFields(spec)
+                            .orElseGet(() -> specService.save(spec));
+                    specs.add(managedSpec);
                 }
             }
             tod.setSpecs(specs);
