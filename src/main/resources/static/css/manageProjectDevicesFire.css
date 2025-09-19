@@ -257,8 +257,27 @@ navbar h1 {
     transform: scale(1.03);
 }
 
+.btn-assign-gsheet {
+    background-color: #8ecae6;
+    color: #0d1b2a;
+    margin-bottom: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-assign-gsheet:hover {
+    background-color: #219ebc;
+    transform: scale(1.03);
+}
+
 .btn-assign-owner:disabled,
-.btn-assign-owner.btn-disabled {
+.btn-assign-owner.btn-disabled,
+.btn-assign-gsheet:disabled,
+.btn-assign-gsheet.btn-disabled {
     background-color: #546e7a;
     color: #d0d7de;
     cursor: not-allowed;
@@ -347,6 +366,13 @@ td:last-child {
     align-items: center;
     margin-bottom: 1rem;
     gap: 1rem;
+}
+
+.top-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .search-form {
@@ -492,6 +518,20 @@ body.modal-open {
     color: #ffffff;
 }
 
+.gsheet-cell {
+    overflow-wrap: anywhere;
+}
+
+.gsheet-cell a {
+    color: #8ecae6;
+    text-decoration: underline;
+    word-break: break-word;
+}
+
+.gsheet-cell a:hover {
+    text-decoration: none;
+}
+
 .checkbox-cell {
     text-align: center;
 }
@@ -512,7 +552,8 @@ body.modal-open {
 }
 
 .select-input,
-.form-row input[type="email"] {
+.form-row input[type="email"],
+.form-row input[type="url"] {
     background-color: #203047;
     border: 1px solid #324a5f;
     border-radius: 6px;
@@ -526,7 +567,8 @@ body.modal-open {
     cursor: not-allowed;
 }
 
-.form-row input[type="email"]::placeholder {
+.form-row input[type="email"]::placeholder,
+.form-row input[type="url"]::placeholder {
     color: rgba(255, 255, 255, 0.6);
 }
 
