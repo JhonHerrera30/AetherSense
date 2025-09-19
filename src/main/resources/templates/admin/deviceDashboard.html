@@ -501,8 +501,9 @@
                                 const isOn = numeric === 1;
                                 const valueClass = numeric === null ? 'flag-generic' : (isOn ? 'flag-on' : 'flag-off');
                                 const normalizedValue = numeric === null ? '--' : (isOn ? 'Issue' : 'OK');
+                                const displayLabel = shortenIndicatorLabel(indicator.label ?? prettifyKey(indicator.key));
                                 flag.innerHTML = `
-                                        <span class="flag-key">${indicator.label ?? prettifyKey(indicator.key)}</span>
+                                        <span class="flag-key">${displayLabel}</span>
                                         <span class="flag-value ${valueClass}">${normalizedValue}</span>
                                 `;
                                 container.appendChild(flag);
@@ -774,6 +775,75 @@
                                 .replace(/\s+/g, ' ')
                                 .trim()
                                 .replace(/^./, c => c.toUpperCase());
+                }
+
+                const STATUS_SUFFIXES = new Set(['error', 'warning', 'active', 'fault', 'issue', 'alarm']);
+
+                function shortenIndicatorLabel(label) {
+                        if (!label) {
+                                return '';
+                        }
+                        const segments = extractIndicatorSegments(String(label));
+                        if (!segments.length) {
+                                return '';
+                        }
+                        const trimmedSegments = dropTrailingStatusSegments(segments);
+                        const meaningfulSegments = trimmedSegments.length ? trimmedSegments : segments;
+                        return meaningfulSegments.slice(0, 2).join('-');
+                }
+
+                function extractIndicatorSegments(rawLabel) {
+                        return rawLabel
+                                .trim()
+                                .split(/[-_\s]+/)
+                                .flatMap(segment => splitCamelCaseSegment(segment.trim()))
+                                .filter(segment => segment.length > 0);
+                }
+
+                function splitCamelCaseSegment(segment) {
+                        if (!segment) {
+                                return [];
+                        }
+                        const parts = [];
+                        let current = '';
+                        for (let i = 0; i < segment.length; i += 1) {
+                                const char = segment[i];
+                                const prev = i > 0 ? segment[i - 1] : '';
+                                const next = i < segment.length - 1 ? segment[i + 1] : '';
+                                const shouldSplit =
+                                        i > 0 && isUpperCase(char) &&
+                                        (isLowerCase(prev) || isDigit(prev) || (isUpperCase(prev) && isLowerCase(next)));
+                                if (shouldSplit) {
+                                        parts.push(current);
+                                        current = char;
+                                } else {
+                                        current += char;
+                                }
+                        }
+                        if (current) {
+                                parts.push(current);
+                        }
+                        return parts;
+                }
+
+                function dropTrailingStatusSegments(segments) {
+                        const result = segments.slice();
+                        while (result.length && STATUS_SUFFIXES.has(result[result.length - 1].toLowerCase())) {
+                                result.pop();
+                        }
+                        return result;
+                }
+
+                function isUpperCase(char) {
+                        return char >= 'A' && char <= 'Z';
+                }
+
+                function isLowerCase(char) {
+                        return char >= 'a' && char <= 'z';
+                }
+
+                function isDigit(char) {
+                        return char >= '0' && char <= '9';
                 }
 
                 function toNumber(value) {
