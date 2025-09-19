@@ -135,21 +135,62 @@ public class NotificationControllerRest {
                     continue;
                 }
                 Spec spec = new Spec();
+                String component;
+                String unitOfMeasurement;
                 if (label != null) {
                     String[] parts = label.split("-");
-                    spec.setComponent(parts.length > 0 ? sanitize(parts[0]) : "");
-                    String measurementPart = parts.length > 1 ? sanitize(parts[1]) : "";
-                    spec.setMeasurement(specKey != null ? specKey : measurementPart);
-                    spec.setUnitOfMeasurement(parts.length > 2 ? sanitize(parts[2]) : "");
+                    component = parts.length > 0 ? sanitize(parts[0]) : "";
+                    unitOfMeasurement = parts.length > 2 ? sanitize(parts[2]) : "";
                 } else {
-                    spec.setMeasurement(specKey != null ? specKey : "");
+                    component = "";
+                    unitOfMeasurement = "";
                 }
-                if (spec.getComponent() == null) {
-                    spec.setComponent("");
+                String measurement = determineMeasurement(label, specKey);
+                String normalizedComponent = component != null ? component : "";
+                String normalizedUnitOfMeasurement = unitOfMeasurement != null ? unitOfMeasurement : "";
+                String normalizedMeasurement = measurement != null ? measurement : "";
+
+                List<String> legacyCandidates = new ArrayList<>();
+                String sanitizedLabel = label != null ? sanitize(label) : null;
+                if (sanitizedLabel != null) {
+                    legacyCandidates.add(sanitizedLabel);
                 }
-                if (spec.getUnitOfMeasurement() == null) {
-                    spec.setUnitOfMeasurement("");
+                if (specKey != null) {
+                    legacyCandidates.add(specKey);
                 }
+
+                if (!legacyCandidates.isEmpty()) {
+                    final String componentKey = normalizedComponent;
+                    Spec legacySpec = specs.stream()
+                            .filter(existing -> componentKey.equals(existing.getComponent())
+                                    && legacyCandidates.contains(existing.getMeasurement()))
+                            .findFirst()
+                            .orElse(null);
+                    if (legacySpec != null) {
+                        boolean changed = false;
+                        if (!normalizedMeasurement.equals(legacySpec.getMeasurement())) {
+                            legacySpec.setMeasurement(normalizedMeasurement);
+                            changed = true;
+                        }
+                        if (!normalizedUnitOfMeasurement.equals(legacySpec.getUnitOfMeasurement())) {
+                            legacySpec.setUnitOfMeasurement(normalizedUnitOfMeasurement);
+                            changed = true;
+                        }
+                        if (changed) {
+                            Spec savedLegacy = specService.save(legacySpec);
+                            int index = specs.indexOf(legacySpec);
+                            if (index >= 0) {
+                                specs.set(index, savedLegacy);
+                            }
+                            updated = true;
+                        }
+                        continue;
+                    }
+                }
+
+                spec.setComponent(normalizedComponent);
+                spec.setUnitOfMeasurement(normalizedUnitOfMeasurement);
+                spec.setMeasurement(normalizedMeasurement);
                 Spec managedSpec = specService.findByFields(spec)
                         .orElseGet(() -> specService.save(spec));
                 if (!specs.contains(managedSpec)) {
@@ -162,6 +203,39 @@ public class NotificationControllerRest {
             tod.setSpecs(specs);
         }
         return updated;
+    }
+
+    private String determineMeasurement(String label, String specKey) {
+        String measurementFromLabel = extractMeasurementSegment(label);
+        if (measurementFromLabel != null) {
+            return measurementFromLabel;
+        }
+        String measurementFromKey = extractMeasurementSegment(specKey);
+        if (measurementFromKey != null) {
+            return measurementFromKey;
+        }
+        return sanitize(specKey);
+    }
+
+    private String extractMeasurementSegment(String value) {
+        String sanitized = sanitize(value);
+        if (sanitized == null) {
+            return null;
+        }
+        String[] parts = sanitized.split("-");
+        if (parts.length < 2) {
+            return null;
+        }
+        if (parts.length == 2) {
+            return sanitize(parts[1]);
+        }
+        for (int i = 1; i < parts.length - 1; i++) {
+            String candidate = sanitize(parts[i]);
+            if (candidate != null) {
+                return candidate;
+            }
+        }
+        return sanitize(parts[1]);
     }
 
     private boolean ensureIndicators(TypeOfDevice tod, List<String> indicatorEntries) {
