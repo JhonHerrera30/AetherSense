@@ -318,6 +318,100 @@
                         return '';
                 }
 
+                const KNOWN_UNIT_TOKENS = new Set([
+                        'ppm',
+                        'ppb',
+                        'ppt',
+                        'percent',
+                        '%',
+                        'ug/m3',
+                        'µg/m3',
+                        'mg/m3',
+                        'g/m3',
+                        '°c',
+                        '°f',
+                        '°k',
+                        'pa',
+                        'kpa',
+                        'hpa',
+                        'mbar',
+                        'bar',
+                        'psi',
+                        'rh',
+                        'lux',
+                        'db',
+                        'mv',
+                        'ma',
+                        'kw'
+                ]);
+
+                function escapeRegExp(value) {
+                        return value.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+                }
+
+                function isUnitToken(token, descriptorUnit) {
+                        if (!token) {
+                                return false;
+                        }
+                        const normalized = token
+                                .toLowerCase()
+                                .replace(/[.,]/g, '')
+                                .replace(/³/g, '3')
+                                .trim();
+                        const normalizedDescriptorUnit = typeof descriptorUnit === 'string'
+                                ? descriptorUnit.toLowerCase().replace(/[.,]/g, '').replace(/³/g, '3').trim()
+                                : '';
+                        if (!normalized) {
+                                return false;
+                        }
+                        if (normalizedDescriptorUnit && normalized === normalizedDescriptorUnit) {
+                                return true;
+                        }
+                        if (KNOWN_UNIT_TOKENS.has(normalized)) {
+                                return true;
+                        }
+                        if (/^%+$/.test(token.trim())) {
+                                return true;
+                        }
+                        if (/^[°]/.test(token.trim())) {
+                                return true;
+                        }
+                        return false;
+                }
+
+                function getDescriptorTitle(descriptor) {
+                        if (!descriptor) {
+                                return '';
+                        }
+                        const baseTitle = typeof descriptor.displayName === 'string' && descriptor.displayName.trim()
+                                ? descriptor.displayName.trim()
+                                : (typeof descriptor.label === 'string' ? descriptor.label.trim() : '');
+                        if (!baseTitle) {
+                                return '';
+                        }
+                        const originalTitle = baseTitle;
+                        let cleaned = baseTitle;
+                        const component = getDescriptorComponent(descriptor);
+                        if (component) {
+                                const prefixRegex = new RegExp(`^${escapeRegExp(component)}\\s*[-–:_]*\\s*`, 'i');
+                                cleaned = cleaned.replace(prefixRegex, '');
+                        }
+                        cleaned = cleaned.replace(/\([^)]*\)/g, ' ');
+                        cleaned = cleaned.replace(/\s+/g, ' ').trim();
+                        if (!cleaned) {
+                                return originalTitle;
+                        }
+                        const parts = cleaned.split(' ');
+                        while (parts.length > 1 && isUnitToken(parts[parts.length - 1], descriptor.unit)) {
+                                parts.pop();
+                        }
+                        cleaned = parts.join(' ').trim();
+                        if (!cleaned) {
+                                return originalTitle;
+                        }
+                        return cleaned;
+                }
+
                 function renderMetricCards() {
                         const container = document.getElementById('metrics-grid');
                         container.innerHTML = '';
@@ -326,10 +420,11 @@
                                 card.className = 'metric-card';
                                 card.dataset.specKey = descriptor.key;
                                 const component = getDescriptorComponent(descriptor);
+                                const title = getDescriptorTitle(descriptor);
                                 const unit = descriptor.unit ? descriptor.unit : '';
                                 card.innerHTML = `
                                         <div class="metric-heading">
-                                                <span class="metric-title">${descriptor.displayName}</span>
+                                                <span class="metric-title">${title}</span>
                                                 <span class="metric-subtitle" data-component></span>
                                         </div>
                                         <div class="metric-reading">
