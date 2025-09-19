@@ -498,8 +498,9 @@
                                 const isOn = numeric === 1;
                                 const valueClass = numeric === null ? 'flag-generic' : (isOn ? 'flag-on' : 'flag-off');
                                 const normalizedValue = numeric === null ? '--' : (isOn ? 'Issue' : 'OK');
+                                const displayLabel = shortenIndicatorLabel(indicator.label ?? prettifyKey(indicator.key));
                                 flag.innerHTML = `
-                                        <span class="flag-key">${indicator.label ?? prettifyKey(indicator.key)}</span>
+                                        <span class="flag-key">${displayLabel}</span>
                                         <span class="flag-value ${valueClass}">${normalizedValue}</span>
                                 `;
                                 container.appendChild(flag);
@@ -771,6 +772,20 @@
                                 .replace(/\s+/g, ' ')
                                 .trim()
                                 .replace(/^./, c => c.toUpperCase());
+                }
+
+                function shortenIndicatorLabel(label) {
+                        if (!label) {
+                                return '';
+                        }
+                        const segments = String(label)
+                                .split('-')
+                                .map(part => part.trim())
+                                .filter(part => part.length > 0);
+                        if (segments.length >= 2) {
+                                return `${segments[0]}-${segments[1]}`;
+                        }
+                        return label;
                 }
 
                 function toNumber(value) {
