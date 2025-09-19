@@ -87,7 +87,7 @@
                         </form>
                 </div>
 
-		<table>
+                <table id="devicesTable" class="device-table">
 			<thead>
 				<tr>
 					<th scope="col">Name</th>
@@ -108,8 +108,9 @@
                                         <td th:text="${device.tod}">Type Of Device</td>
 				</tr>
 			</tbody>
-		</table>
-	</div>
+                </table>
+                <div id="devicesTablePagination" class="table-pagination-controls"></div>
+        </div>
 
 	<!-- Right panel: map -->
         <div id="map"></div>
@@ -368,6 +369,8 @@
                         const assignGsheetOverlay = document.getElementById("assignGsheetOverlay");
                         const closeAssignGsheetModal = document.getElementById("closeAssignGsheetModal");
                         const gsheetLinkInput = document.getElementById("gsheetLinkInput");
+                        const devicesTable = document.getElementById("devicesTable");
+                        const paginationContainer = document.getElementById("devicesTablePagination");
 
                         if (toggle && menu) {
                                 toggle.addEventListener("click", function (e) {
@@ -383,6 +386,103 @@
                         });
 
                         let activeModalContext = null;
+
+                        function initializeDeviceTablePagination() {
+                                if (!devicesTable || !paginationContainer) {
+                                        return;
+                                }
+
+                                const rows = Array.from(devicesTable.querySelectorAll("tbody tr"));
+                                const rowsPerPage = 8;
+
+                                if (rows.length === 0) {
+                                        paginationContainer.innerHTML = "";
+                                        paginationContainer.style.display = "none";
+                                        return;
+                                }
+
+                                let currentPage = 1;
+                                const totalPages = Math.ceil(rows.length / rowsPerPage);
+
+                                function updateVisibleRows(page) {
+                                        const startIndex = (page - 1) * rowsPerPage;
+                                        const endIndex = startIndex + rowsPerPage;
+
+                                        rows.forEach((row, index) => {
+                                                row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+                                        });
+                                }
+
+                                function createButton(label, targetPage, { disabled = false, active = false, ariaLabel } = {}) {
+                                        const button = document.createElement("button");
+                                        button.type = "button";
+                                        button.textContent = label;
+                                        button.classList.add("pagination-button");
+
+                                        if (ariaLabel) {
+                                                button.setAttribute("aria-label", ariaLabel);
+                                        }
+
+                                        if (disabled) {
+                                                button.disabled = true;
+                                        } else {
+                                                button.addEventListener("click", () => {
+                                                        currentPage = targetPage;
+                                                        updateVisibleRows(currentPage);
+                                                        renderControls();
+                                                });
+                                        }
+
+                                        if (active) {
+                                                button.classList.add("active");
+                                                button.setAttribute("aria-current", "page");
+                                        }
+
+                                        return button;
+                                }
+
+                                function renderControls() {
+                                        paginationContainer.innerHTML = "";
+
+                                        if (totalPages <= 1) {
+                                                paginationContainer.style.display = "none";
+                                                rows.forEach(row => {
+                                                        row.style.display = "";
+                                                });
+                                                return;
+                                        }
+
+                                        paginationContainer.style.display = "flex";
+
+                                        const prevPage = Math.max(1, currentPage - 1);
+                                        paginationContainer.appendChild(
+                                                createButton("‹", prevPage, {
+                                                        disabled: currentPage === 1,
+                                                        ariaLabel: "Previous page"
+                                                })
+                                        );
+
+                                        for (let page = 1; page <= totalPages; page++) {
+                                                paginationContainer.appendChild(
+                                                        createButton(String(page), page, {
+                                                                active: page === currentPage,
+                                                                ariaLabel: `Go to page ${page}`
+                                                        })
+                                                );
+                                        }
+
+                                        const nextPage = Math.min(totalPages, currentPage + 1);
+                                        paginationContainer.appendChild(
+                                                createButton("›", nextPage, {
+                                                        disabled: currentPage === totalPages,
+                                                        ariaLabel: "Next page"
+                                                })
+                                        );
+                                }
+
+                                updateVisibleRows(currentPage);
+                                renderControls();
+                        }
 
                         function openModal(modal, overlay, hooks = {}) {
                                 if (!modal || !overlay) {
@@ -478,6 +578,8 @@
                                         }
                                 }
                         });
+
+                        initializeDeviceTablePagination();
 
                         if (existingEmailSelect) {
                                 existingEmailSelect.dataset.defaultDisabled = existingEmailSelect.disabled ? "true" : "false";

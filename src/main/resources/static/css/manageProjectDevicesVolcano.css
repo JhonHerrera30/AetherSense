@@ -129,7 +129,50 @@ html, body {
 }
 
 .dropdown-logout:hover {
-	background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Pagination controls */
+.table-pagination-controls {
+        display: none;
+        margin-top: 1.5rem;
+        gap: 0.5rem;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+}
+
+.table-pagination-controls .pagination-button {
+        background-color: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 999px;
+        color: #ffffff;
+        cursor: pointer;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.95rem;
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.table-pagination-controls .pagination-button:hover,
+.table-pagination-controls .pagination-button:focus-visible {
+        background-color: rgba(255, 191, 128, 0.25);
+        border-color: #ffbf80;
+        color: #ffbf80;
+        transform: translateY(-1px);
+        outline: none;
+}
+
+.table-pagination-controls .pagination-button.active {
+        background-color: #ffbf80;
+        border-color: #ffbf80;
+        color: #1b263b;
+        cursor: default;
+}
+
+.table-pagination-controls .pagination-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
 }
 
 .icon-user {
