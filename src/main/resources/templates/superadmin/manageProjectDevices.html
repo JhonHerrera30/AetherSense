@@ -188,7 +188,7 @@
                                 No devices available to assign a GSheet link.
                         </p>
                         <div th:if="${!#lists.isEmpty(devices)}">
-                                <table class="modal-table">
+                                <table class="modal-table gsheet-table">
                                         <thead>
                                                 <tr>
                                                         <th scope="col">Name</th>
@@ -207,7 +207,13 @@
                                                         </td>
                                                         <td class="gsheet-cell">
                                                                 <span th:if="${#strings.isEmpty(device.gsheet)}">—</span>
-                                                                <a th:if="${!#strings.isEmpty(device.gsheet)}" th:href="${device.gsheet}" target="_blank" rel="noopener noreferrer" th:text="${device.gsheet}"></a>
+                                                                <a th:if="${!#strings.isEmpty(device.gsheet)}"
+                                                                   class="gsheet-link"
+                                                                   th:href="${device.gsheet}"
+                                                                   target="_blank"
+                                                                   rel="noopener noreferrer"
+                                                                   th:title="${device.gsheet}"
+                                                                   th:text="${device.gsheet}"></a>
                                                         </td>
                                                         <td class="checkbox-cell">
                                                                 <input type="checkbox" name="selectedDeviceIds" th:value="${device.id}" />
