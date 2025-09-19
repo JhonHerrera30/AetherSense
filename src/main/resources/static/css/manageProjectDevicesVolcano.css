@@ -137,7 +137,7 @@ html, body {
         justify-content: center;
         align-items: center;
         gap: 0.75rem;
-        margin-top: 1.5rem;
+        margin-top: 0.75rem;
         flex-wrap: wrap;
 }
 
@@ -558,9 +558,9 @@ td {
 
 .table-actions {
         display: flex;
-        justify-content: flex-end;
+        justify-content: flex-start;
         width: 100%;
-        margin-top: 1.25rem;
+        margin-top: 0.75rem;
 }
 
 .top-bar-actions{
@@ -568,7 +568,7 @@ td {
         align-items: center;
         gap: 1rem;
         flex-wrap: wrap;
-        justify-content: flex-end;
+        justify-content: flex-start;
         width: 100%;
 }
 
