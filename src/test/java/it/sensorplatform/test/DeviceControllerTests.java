@@ -4,14 +4,19 @@ import it.sensorplatform.controller.DeviceController;
 import it.sensorplatform.dto.DeviceDTO;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.TypeOfDevice;
+import it.sensorplatform.service.DeviceService;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.ui.ExtendedModelMap;
 import org.springframework.ui.Model;
+import org.springframework.web.servlet.mvc.support.RedirectAttributesModelMap;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class DeviceControllerTests {
 
@@ -64,5 +69,66 @@ class DeviceControllerTests {
         assertNotNull(withoutOwner);
         assertEquals(1, withoutOwner.size());
         assertTrue(withoutOwner.get(0).isEmailOwnerMissing());
+    }
+
+    @Test
+    void assignGsheetReturnsErrorWhenNoDevicesSelected() {
+        DeviceController controller = new DeviceController();
+        RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+
+        String viewName = controller.assignGsheet(1L, null, "https://sheet", redirectAttributes);
+
+        assertEquals("redirect:/superadmin/manageProjectDevices/1", viewName);
+        assertEquals("Select at least one device to assign a Google Sheet link.",
+                redirectAttributes.getFlashAttributes().get("errorMessage"));
+    }
+
+    @Test
+    void assignGsheetReturnsErrorWhenLinkMissing() {
+        DeviceController controller = new DeviceController();
+        RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+
+        String viewName = controller.assignGsheet(1L, List.of(1L), "   ", redirectAttributes);
+
+        assertEquals("redirect:/superadmin/manageProjectDevices/1", viewName);
+        assertEquals("Provide a Google Sheet link to assign to the selected devices.",
+                redirectAttributes.getFlashAttributes().get("errorMessage"));
+    }
+
+    @Test
+    void assignGsheetPersistsTrimmedLinkForSelectedDevices() {
+        DeviceService deviceService = mock(DeviceService.class);
+        DeviceController controller = new DeviceController();
+        ReflectionTestUtils.setField(controller, "deviceService", deviceService);
+
+        Long projectId = 7L;
+        Device device1 = new Device();
+        device1.setId(1L);
+        Device device2 = new Device();
+        device2.setId(2L);
+        Device otherDevice = new Device();
+        otherDevice.setId(3L);
+
+        when(deviceService.findAllByProjectId(projectId))
+                .thenReturn(new HashSet<>(Arrays.asList(device1, device2, otherDevice)));
+
+        RedirectAttributesModelMap redirectAttributes = new RedirectAttributesModelMap();
+        List<Long> selectedDeviceIds = Arrays.asList(1L, 2L, 1L);
+
+        String viewName = controller.assignGsheet(projectId, selectedDeviceIds, " https://sheet.example/ ", redirectAttributes);
+
+        assertEquals("redirect:/superadmin/manageProjectDevices/" + projectId, viewName);
+
+        verify(deviceService).findAllByProjectId(projectId);
+        verify(deviceService).save(device1);
+        verify(deviceService).save(device2);
+        verify(deviceService, never()).save(otherDevice);
+
+        assertEquals("https://sheet.example/", device1.getGsheet());
+        assertEquals("https://sheet.example/", device2.getGsheet());
+        assertNull(otherDevice.getGsheet());
+
+        assertEquals("Google Sheet link assigned to 2 devices.",
+                redirectAttributes.getFlashAttributes().get("successMessage"));
     }
 }

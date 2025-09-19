@@ -19,6 +19,8 @@ import it.sensorplatform.service.SuperadminService;
 import it.sensorplatform.util.MacAddressUtils;
 import jakarta.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -43,8 +45,10 @@ import java.util.stream.Collectors;
 @Controller
 public class DeviceController {
 
-	@Autowired
-	private DeviceService deviceService;
+        private static final Logger logger = LoggerFactory.getLogger(DeviceController.class);
+
+        @Autowired
+        private DeviceService deviceService;
 
 	@Autowired
 	private ProjectService projectService;
@@ -133,6 +137,64 @@ public class DeviceController {
                                 devicesToUpdate.size() == 1
                                                 ? "Email owner assigned to 1 device."
                                                 : "Email owner assigned to " + devicesToUpdate.size() + " devices.");
+
+                return "redirect:/superadmin/manageProjectDevices/" + projectId;
+        }
+
+        @PostMapping("/superadmin/assignGsheet/{projectId}")
+        public String assignGsheet(@PathVariable("projectId") Long projectId,
+                        @RequestParam(value = "selectedDeviceIds", required = false) List<Long> selectedDeviceIds,
+                        @RequestParam(value = "gsheetLink", required = false) String gsheetLink,
+                        RedirectAttributes redirectAttributes) {
+
+                if (selectedDeviceIds == null || selectedDeviceIds.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Select at least one device to assign a Google Sheet link.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
+
+                if (!StringUtils.hasText(gsheetLink)) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Provide a Google Sheet link to assign to the selected devices.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
+
+                Set<Long> deviceIdsToAssign = selectedDeviceIds.stream().filter(Objects::nonNull)
+                                .collect(Collectors.toSet());
+
+                if (deviceIdsToAssign.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Select at least one device to assign a Google Sheet link.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
+
+                Set<Device> projectDevices = deviceService.findAllByProjectId(projectId);
+                if (projectDevices == null) {
+                        projectDevices = Collections.emptySet();
+                }
+
+                List<Device> devicesToUpdate = projectDevices.stream()
+                                .filter(device -> deviceIdsToAssign.contains(device.getId()))
+                                .collect(Collectors.toList());
+
+                if (devicesToUpdate.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("errorMessage",
+                                        "Unable to locate the selected devices.");
+                        return "redirect:/superadmin/manageProjectDevices/" + projectId;
+                }
+
+                String trimmedLink = gsheetLink.trim();
+                devicesToUpdate.forEach(device -> {
+                        device.setGsheet(trimmedLink);
+                        deviceService.save(device);
+                });
+
+                logger.info("Assigned Google Sheet link to {} device(s) for project {}", devicesToUpdate.size(), projectId);
+
+                redirectAttributes.addFlashAttribute("successMessage",
+                                devicesToUpdate.size() == 1
+                                                ? "Google Sheet link assigned to 1 device."
+                                                : "Google Sheet link assigned to " + devicesToUpdate.size() + " devices.");
 
                 return "redirect:/superadmin/manageProjectDevices/" + projectId;
         }
