@@ -61,22 +61,29 @@
                 <div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}"></div>
 
                 <div class="top-bar">
-                        <a th:href="@{'/superadmin/formNewDevice/' + ${project.id}}" class="btn-action btn-add">➕ Add new device</a>
-                        <button type="button" id="openAssignOwnerModal" class="btn-action btn-assign-owner"
-                                th:classappend="${#lists.isEmpty(devicesWithoutOwner)} ? ' btn-disabled' : ''"
-                                th:disabled="${#lists.isEmpty(devicesWithoutOwner)}">
-                                📧 Assign owner
-                        </button>
+                        <div class="top-bar-actions">
+                                <a th:href="@{'/superadmin/formNewDevice/' + ${project.id}}" class="btn-action btn-add">➕ Add new device</a>
+                                <button type="button" id="openAssignOwnerModal" class="btn-action btn-assign-owner"
+                                        th:classappend="${#lists.isEmpty(devicesWithoutOwner)} ? ' btn-disabled' : ''"
+                                        th:disabled="${#lists.isEmpty(devicesWithoutOwner)}">
+                                        📧 Assign owner
+                                </button>
+                                <button type="button" id="openAssignGsheetModal" class="btn-action btn-assign-gsheet"
+                                        th:classappend="${#lists.isEmpty(devices)} ? ' btn-disabled' : ''"
+                                        th:disabled="${#lists.isEmpty(devices)}">
+                                        📄 Assign GSheet
+                                </button>
+                        </div>
                         <form th:action="@{'/superadmin/manageProjectDevices/' + ${project.id}}" method="get" class="search-form">
                                 <input type="text" name="deviceQuery" placeholder="Search..." th:value="${param.deviceQuery}" />
                                 <button type="submit" title="Search">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
-						<circle cx="11" cy="11" r="8" stroke="white" stroke-width="2" fill="none"/>
-						<line x1="17" y1="17" x2="22" y2="22" stroke="white" stroke-width="2"/>
-					</svg>
-				</button>
-			</form>
-		</div>
+                                                <circle cx="11" cy="11" r="8" stroke="white" stroke-width="2" fill="none"/>
+                                                <line x1="17" y1="17" x2="22" y2="22" stroke="white" stroke-width="2"/>
+                                        </svg>
+                                </button>
+                        </form>
+                </div>
 
 		<table>
 			<thead>
@@ -107,6 +114,7 @@
 </div>
 
 <div id="assignEmailOverlay" class="modal-overlay"></div>
+<div id="assignGsheetOverlay" class="modal-overlay"></div>
 
 <div id="assignEmailModal" class="modal-container"
         th:classappend="${project.id == 1} ? ' ltrad' : (${project.id == 51} ? ' fire' : (${project.id == 101} ? ' volcano' : ''))">
@@ -161,6 +169,60 @@
                 <div class="modal-footer">
                         <button type="submit" class="btn-save-modal"
                                 th:disabled="${#lists.isEmpty(devicesWithoutOwner)}">Save</button>
+                </div>
+        </form>
+</div>
+
+<div id="assignGsheetModal" class="modal-container"
+        th:classappend="${project.id == 1} ? ' ltrad' : (${project.id == 51} ? ' fire' : (${project.id == 101} ? ' volcano' : ''))">
+        <div class="modal-header">
+                <h2>Assign GSheet link</h2>
+                <button type="button" class="modal-close" id="closeAssignGsheetModal" aria-label="Close">&times;</button>
+        </div>
+        <form id="assignGsheetForm" th:action="@{'/superadmin/assignGsheet/' + ${project.id}}" method="post" class="assign-gsheet-form">
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                <div class="modal-body">
+                        <p class="empty-modal-message" th:if="${#lists.isEmpty(devices)}">
+                                No devices available to assign a GSheet link.
+                        </p>
+                        <div th:if="${!#lists.isEmpty(devices)}">
+                                <table class="modal-table">
+                                        <thead>
+                                                <tr>
+                                                        <th scope="col">Name</th>
+                                                        <th scope="col">Identifier</th>
+                                                        <th scope="col">Current GSheet</th>
+                                                        <th scope="col">Select</th>
+                                                </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr th:each="device : ${devices}">
+                                                        <td th:text="${device.name != null ? device.name : 'N/A'}">Name</td>
+                                                        <td>
+                                                                <span th:text="${device.macAddress != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress) : (device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui) : 'N/A')}"></span>
+                                                                <span th:if="${device.macAddress != null && device.devEui != null}"
+                                                                      th:text="${' / ' + T(it.sensorplatform.util.MacAddressUtils).format(device.devEui)}"></span>
+                                                        </td>
+                                                        <td class="gsheet-cell">
+                                                                <span th:if="${#strings.isEmpty(device.gsheet)}">—</span>
+                                                                <a th:if="${!#strings.isEmpty(device.gsheet)}" th:href="${device.gsheet}" target="_blank" rel="noopener noreferrer" th:text="${device.gsheet}"></a>
+                                                        </td>
+                                                        <td class="checkbox-cell">
+                                                                <input type="checkbox" name="selectedDeviceIds" th:value="${device.id}" />
+                                                        </td>
+                                                </tr>
+                                        </tbody>
+                                </table>
+
+                                <div class="form-row">
+                                        <label for="gsheetLinkInput">New GSheet link</label>
+                                        <input type="url" id="gsheetLinkInput" name="gsheetLink" placeholder="https://..."
+                                               th:disabled="${#lists.isEmpty(devices)}" />
+                                </div>
+                        </div>
+                </div>
+                <div class="modal-footer">
+                        <button type="submit" class="btn-save-modal" th:disabled="${#lists.isEmpty(devices)}">Save</button>
                 </div>
         </form>
 </div>
@@ -287,68 +349,125 @@
                 document.addEventListener("DOMContentLoaded", function () {
                         const toggle = document.getElementById("userDropdown");
                         const menu = document.getElementById("userDropdownMenu");
-                        const openModalButton = document.getElementById("openAssignOwnerModal");
-                        const modal = document.getElementById("assignEmailModal");
-                        const overlay = document.getElementById("assignEmailOverlay");
-                        const closeModalButton = document.getElementById("closeAssignEmailModal");
                         const existingEmailSelect = document.getElementById("existingEmailSelect");
                         const newEmailInput = document.getElementById("newEmailInput");
+                        const openAssignOwnerModal = document.getElementById("openAssignOwnerModal");
+                        const assignEmailModal = document.getElementById("assignEmailModal");
+                        const assignEmailOverlay = document.getElementById("assignEmailOverlay");
+                        const closeAssignEmailModal = document.getElementById("closeAssignEmailModal");
+                        const openAssignGsheetModal = document.getElementById("openAssignGsheetModal");
+                        const assignGsheetModal = document.getElementById("assignGsheetModal");
+                        const assignGsheetOverlay = document.getElementById("assignGsheetOverlay");
+                        const closeAssignGsheetModal = document.getElementById("closeAssignGsheetModal");
+                        const gsheetLinkInput = document.getElementById("gsheetLinkInput");
 
-                        toggle.addEventListener("click", function (e) {
-                                e.stopPropagation();
-                                menu.classList.toggle("show");
-                        });
+                        if (toggle && menu) {
+                                toggle.addEventListener("click", function (e) {
+                                        e.stopPropagation();
+                                        menu.classList.toggle("show");
+                                });
+                        }
 
                         document.addEventListener("click", function (e) {
-                                if (!toggle.contains(e.target)) {
+                                if (toggle && menu && !toggle.contains(e.target)) {
                                         menu.classList.remove("show");
                                 }
                         });
 
-                        function openModal() {
-                                if (openModalButton && openModalButton.disabled) {
+                        let activeModalContext = null;
+
+                        function openModal(modal, overlay, hooks = {}) {
+                                if (!modal || !overlay) {
                                         return;
                                 }
-                                if (modal) {
-                                        modal.classList.add("show");
+                                if (activeModalContext && activeModalContext.modal !== modal) {
+                                        closeModal(activeModalContext.modal, activeModalContext.overlay);
                                 }
-                                if (overlay) {
-                                        overlay.classList.add("show");
+                                if (typeof hooks.onBeforeOpen === "function") {
+                                        hooks.onBeforeOpen();
                                 }
+                                modal.classList.add("show");
+                                overlay.classList.add("show");
                                 document.body.classList.add("modal-open");
-                        }
-
-                        function closeModal() {
-                                if (modal) {
-                                        modal.classList.remove("show");
+                                activeModalContext = { modal, overlay, hooks };
+                                if (typeof hooks.onAfterOpen === "function") {
+                                        hooks.onAfterOpen();
                                 }
-                                if (overlay) {
-                                        overlay.classList.remove("show");
+                        }
+
+                        function closeModal(modal, overlay) {
+                                if (!modal || !overlay || !modal.classList.contains("show")) {
+                                        return;
                                 }
-                                document.body.classList.remove("modal-open");
+                                modal.classList.remove("show");
+                                overlay.classList.remove("show");
+                                if (!document.querySelector(".modal-container.show")) {
+                                        document.body.classList.remove("modal-open");
+                                }
+                                if (activeModalContext && activeModalContext.modal === modal) {
+                                        const hooks = activeModalContext.hooks || {};
+                                        if (typeof hooks.onClose === "function") {
+                                                hooks.onClose();
+                                        }
+                                        activeModalContext = null;
+                                }
                         }
 
-                        if (openModalButton) {
-                                openModalButton.addEventListener("click", function () {
-                                        openModal();
-                                });
-                        }
+                        function registerModal({ openButton, closeButton, modal, overlay, hooks = {} }) {
+                                if (!modal || !overlay) {
+                                        return;
+                                }
 
-                        if (closeModalButton) {
-                                closeModalButton.addEventListener("click", function () {
-                                        closeModal();
-                                });
-                        }
+                                if (openButton) {
+                                        openButton.addEventListener("click", () => {
+                                                if (openButton.disabled) {
+                                                        return;
+                                                }
+                                                openModal(modal, overlay, hooks);
+                                        });
+                                }
 
-                        if (overlay) {
-                                overlay.addEventListener("click", function () {
-                                        closeModal();
-                                });
+                                if (closeButton) {
+                                        closeButton.addEventListener("click", () => closeModal(modal, overlay));
+                                }
+
+                                overlay.addEventListener("click", () => closeModal(modal, overlay));
                         }
 
                         document.addEventListener("keydown", function (event) {
-                                if (event.key === "Escape") {
-                                        closeModal();
+                                if (event.key === "Escape" && activeModalContext) {
+                                        closeModal(activeModalContext.modal, activeModalContext.overlay);
+                                }
+                        });
+
+                        registerModal({
+                                openButton: openAssignOwnerModal,
+                                closeButton: closeAssignEmailModal,
+                                modal: assignEmailModal,
+                                overlay: assignEmailOverlay
+                        });
+
+                        registerModal({
+                                openButton: openAssignGsheetModal,
+                                closeButton: closeAssignGsheetModal,
+                                modal: assignGsheetModal,
+                                overlay: assignGsheetOverlay,
+                                hooks: {
+                                        onBeforeOpen: () => {
+                                                if (gsheetLinkInput) {
+                                                        gsheetLinkInput.value = "";
+                                                }
+                                        },
+                                        onAfterOpen: () => {
+                                                if (gsheetLinkInput && !gsheetLinkInput.disabled) {
+                                                        gsheetLinkInput.focus();
+                                                }
+                                        },
+                                        onClose: () => {
+                                                if (gsheetLinkInput) {
+                                                        gsheetLinkInput.value = "";
+                                                }
+                                        }
                                 }
                         });
 
@@ -385,6 +504,8 @@
                         if (newEmailInput) {
                                 newEmailInput.addEventListener("input", handleNewEmailInput);
                         }
+
+                        handleNewEmailInput();
                 });
         </script>
 </html>
