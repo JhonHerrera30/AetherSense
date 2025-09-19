@@ -138,6 +138,7 @@ html, body {
         align-items: center;
         gap: 0.75rem;
         margin-top: 1.5rem;
+        flex-wrap: wrap;
 }
 
 .table-pagination-controls .pagination-button {
@@ -148,16 +149,22 @@ html, body {
         border-radius: 999px;
         cursor: pointer;
         font-size: 0.95rem;
-        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .table-pagination-controls .pagination-button:hover {
         background-color: rgba(255, 255, 255, 0.15);
         border-color: rgba(255, 255, 255, 0.8);
+        transform: translateY(-1px);
 }
 
-.table-pagination-controls .pagination-button.active,
-.table-pagination-controls .pagination-button:focus {
+.table-pagination-controls .pagination-button:focus,
+.table-pagination-controls .pagination-button:focus-visible {
+        outline: 2px solid rgba(255, 255, 255, 0.4);
+        outline-offset: 2px;
+}
+
+.table-pagination-controls .pagination-button.active {
         background-color: #e67e00;
         border-color: #e67e00;
         color: #ffffff;
