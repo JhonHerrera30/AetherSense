@@ -55,8 +55,8 @@
             <!-- Informazioni generali -->
             <table>
                 <tr>
-                    <th>MAC Address</th>
-                    <td th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}"></td>
+                    <th>Device Key</th>
+                    <td th:text="${device.deviceKey != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.deviceKey) : 'N/A'}"></td>
                 </tr>
                 <tr>
                     <th>Owner Email</th>
@@ -64,7 +64,7 @@
                 </tr>
                 <tr>
                     <th>DevEUI</th>
-                    <td th:text="${device.devEui} ?: 'N/A'"></td>
+                    <td th:text="${device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui) : 'N/A'}"></td>
                 </tr>
                 <tr>
                     <th>Group</th>
@@ -99,7 +99,7 @@
 			<div class="card-edit-device">
 			    <h2>Edit Device</h2>
 				<span class="success" th:if="${success}" th:text="${success}"></span>
-			    <form th:action="@{'/superadmin/updateDevice/' + ${project.id} + '/' + ${device.macAddress}}" method="post" class="device-form">
+                            <form th:action="@{'/superadmin/updateDevice/' + ${project.id} + '/' + ${device.deviceKey}}" method="post" class="device-form">
 			        
 					<label for="name">Name:</label>
 					<span class="errorform" th:if="${error}" th:text="${error}"></span>

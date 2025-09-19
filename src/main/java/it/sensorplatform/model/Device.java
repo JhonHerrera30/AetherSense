@@ -110,9 +110,9 @@ public class Device {
 	}
 	
 	
-	public void setDevEui(String devEui) {
-		this.devEui = devEui;
-	}
+        public void setDevEui(String devEui) {
+                this.devEui = MacAddressUtils.normalize(devEui);
+        }
 
 
 	public String getMacAddress() {
@@ -202,10 +202,20 @@ public class Device {
 		return Objects.equals(id, other.id) && Objects.equals(macAddress, other.macAddress);
 	}
 	
-	public String getVisibleUsername() {
-		if(operator!=null) 
-			return operator.getVisibleUsername();
-		return null;
-	}
+        public String getVisibleUsername() {
+                if(operator!=null)
+                        return operator.getVisibleUsername();
+                return null;
+        }
+
+        public String getDeviceKey() {
+                if (macAddress != null && !macAddress.isBlank()) {
+                        return macAddress;
+                }
+                if (devEui != null && !devEui.isBlank()) {
+                        return devEui;
+                }
+                return null;
+        }
 }
 

@@ -39,6 +39,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.Comparator;
@@ -181,9 +182,22 @@ private AdminService adminService;
         @PostMapping("/group/{projectId}/{groupId}/removeDevice/{macAddress}")
         public String removeDeviceFromGroup(@PathVariable Long projectId, @PathVariable Long groupId,
                         @PathVariable String macAddress, RedirectAttributes redirectAttributes) {
-                macAddress = MacAddressUtils.normalize(macAddress);
+                String normalizedKey = MacAddressUtils.normalize(macAddress);
+                if (normalizedKey == null || normalizedKey.isBlank()) {
+                        redirectAttributes.addFlashAttribute("error", "Device not found");
+                        return "redirect:/manageGroups/" + projectId;
+                }
                 Group group = groupService.findGroupById(groupId);
-                Device device = deviceService.findByMacAddress(macAddress);
+                if (group == null) {
+                        redirectAttributes.addFlashAttribute("error", "Group not found");
+                        return "redirect:/manageGroups/" + projectId;
+                }
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
+                if (deviceOpt.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("error", "Device not found");
+                        return "redirect:/manageGroups/" + projectId;
+                }
+                Device device = deviceOpt.get();
                 List<Device> devices = group.getDevices();
                 devices.remove(device);
                 group.setDevices(devices);
@@ -197,23 +211,28 @@ private AdminService adminService;
         @PostMapping("/group/{groupId}/add-device/{macAddress}")
         public String addDeviceToGroup(@PathVariable Long groupId, @PathVariable("macAddress") String macAddress,
                         Principal principal, RedirectAttributes redirectAttributes) {
-                macAddress = MacAddressUtils.normalize(macAddress);
                 Group group = groupService.findGroupById(groupId);
                 if (group == null) {
                         redirectAttributes.addFlashAttribute("error", "Group not found");
                         return "error";
                 }
-                Device device = deviceService.findByMacAddress(macAddress);
-		if (device == null) {
-			redirectAttributes.addFlashAttribute("error", "Device not found");
-		} else {
-			device.setGroup(group);
-			deviceService.save(device);
-			redirectAttributes.addFlashAttribute("success", "Device added successfully.");
-		}
+                String normalizedKey = MacAddressUtils.normalize(macAddress);
+                if (normalizedKey == null || normalizedKey.isBlank()) {
+                        redirectAttributes.addFlashAttribute("error", "Device not found");
+                        return "redirect:/manageGroups/" + group.getProject().getId();
+                }
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
+                if (deviceOpt.isEmpty()) {
+                        redirectAttributes.addFlashAttribute("error", "Device not found");
+                } else {
+                        Device device = deviceOpt.get();
+                        device.setGroup(group);
+                        deviceService.save(device);
+                        redirectAttributes.addFlashAttribute("success", "Device added successfully.");
+                }
 
-		return "redirect:/manageGroups/" + group.getProject().getId();
-	}
+                return "redirect:/manageGroups/" + group.getProject().getId();
+        }
 	
 	
 	/*OPERATOR*/
