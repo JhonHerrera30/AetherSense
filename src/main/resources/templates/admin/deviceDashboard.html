@@ -54,9 +54,12 @@
                                         <span>Status: <strong th:text="${device.status}">--</strong></span>
                                 </p>
                         </div>
-                        <div class="device-location" th:if="${device.latitude != null && device.longitude != null}">
-                                <span>Lat: <strong th:text="${#numbers.formatDecimal(device.latitude, 1, 6)}">0</strong></span>
-                                <span>Lng: <strong th:text="${#numbers.formatDecimal(device.longitude, 1, 6)}">0</strong></span>
+                        <div class="device-actions">
+                                <a th:href="@{'/admin/group/' + ${project.id}}" class="back-to-map">Back to map</a>
+                                <div class="device-location" th:if="${device.latitude != null && device.longitude != null}">
+                                        <span>Lat: <strong th:text="${#numbers.formatDecimal(device.latitude, 1, 6)}">0</strong></span>
+                                        <span>Lng: <strong th:text="${#numbers.formatDecimal(device.longitude, 1, 6)}">0</strong></span>
+                                </div>
                         </div>
                 </section>
 
@@ -626,7 +629,33 @@
                                 return;
                         }
                         emptyState.hidden = true;
+
+                        const preferredOrder = [
+                                'currentDate',
+                                'currentTime',
+                                'macAddress',
+                                'latitude',
+                                'longitude',
+                                'bat_pct',
+                                'bat_V'
+                        ];
+                        const appended = new Set();
+                        const orderedEntries = [];
+
+                        preferredOrder.forEach(key => {
+                                if (Object.prototype.hasOwnProperty.call(info, key)) {
+                                        orderedEntries.push([key, info[key]]);
+                                        appended.add(key);
+                                }
+                        });
+
                         Object.entries(info).forEach(([key, value]) => {
+                                if (!appended.has(key)) {
+                                        orderedEntries.push([key, value]);
+                                }
+                        });
+
+                        orderedEntries.forEach(([key, value]) => {
                                 const row = document.createElement('div');
                                 row.className = 'info-row';
                                 row.innerHTML = `
