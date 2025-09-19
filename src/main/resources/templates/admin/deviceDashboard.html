@@ -774,18 +774,73 @@
                                 .replace(/^./, c => c.toUpperCase());
                 }
 
+                const STATUS_SUFFIXES = new Set(['error', 'warning', 'active', 'fault', 'issue', 'alarm']);
+
                 function shortenIndicatorLabel(label) {
                         if (!label) {
                                 return '';
                         }
-                        const segments = String(label)
-                                .split('-')
-                                .map(part => part.trim())
-                                .filter(part => part.length > 0);
-                        if (segments.length >= 2) {
-                                return `${segments[0]}-${segments[1]}`;
+                        const segments = extractIndicatorSegments(String(label));
+                        if (!segments.length) {
+                                return '';
                         }
-                        return label;
+                        const trimmedSegments = dropTrailingStatusSegments(segments);
+                        const meaningfulSegments = trimmedSegments.length ? trimmedSegments : segments;
+                        return meaningfulSegments.slice(0, 2).join('-');
+                }
+
+                function extractIndicatorSegments(rawLabel) {
+                        return rawLabel
+                                .trim()
+                                .split(/[-_\s]+/)
+                                .flatMap(segment => splitCamelCaseSegment(segment.trim()))
+                                .filter(segment => segment.length > 0);
+                }
+
+                function splitCamelCaseSegment(segment) {
+                        if (!segment) {
+                                return [];
+                        }
+                        const parts = [];
+                        let current = '';
+                        for (let i = 0; i < segment.length; i += 1) {
+                                const char = segment[i];
+                                const prev = i > 0 ? segment[i - 1] : '';
+                                const next = i < segment.length - 1 ? segment[i + 1] : '';
+                                const shouldSplit =
+                                        i > 0 && isUpperCase(char) &&
+                                        (isLowerCase(prev) || isDigit(prev) || (isUpperCase(prev) && isLowerCase(next)));
+                                if (shouldSplit) {
+                                        parts.push(current);
+                                        current = char;
+                                } else {
+                                        current += char;
+                                }
+                        }
+                        if (current) {
+                                parts.push(current);
+                        }
+                        return parts;
+                }
+
+                function dropTrailingStatusSegments(segments) {
+                        const result = segments.slice();
+                        while (result.length && STATUS_SUFFIXES.has(result[result.length - 1].toLowerCase())) {
+                                result.pop();
+                        }
+                        return result;
+                }
+
+                function isUpperCase(char) {
+                        return char >= 'A' && char <= 'Z';
+                }
+
+                function isLowerCase(char) {
+                        return char >= 'a' && char <= 'z';
+                }
+
+                function isDigit(char) {
+                        return char >= '0' && char <= '9';
                 }
 
                 function toNumber(value) {
