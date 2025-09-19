@@ -90,7 +90,11 @@
 			<tbody>
 				<tr th:each="device : ${devices}">
 					<td th:text="${device.name}">Name</td>
-                                        <td th:text="${device.macAddress != null ? (device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress) + '/' + device.devEui : T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)) : device.devEui}">Mac Address</td>
+                                        <td>
+                                                <span th:text="${device.macAddress != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress) : (device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui) : 'N/A')}"></span>
+                                                <span th:if="${device.macAddress != null && device.devEui != null}"
+                                                      th:text="${' / ' + T(it.sensorplatform.util.MacAddressUtils).format(device.devEui)}"></span>
+                                        </td>
                                         <td th:text="${device.emailOwner}">Email</td>
                                         <td th:text="${device.tod}">Type Of Device</td>
 				</tr>
@@ -126,8 +130,10 @@
                                         </thead>
                                         <tbody>
                                                 <tr th:each="device : ${devicesWithoutOwner}">
-                                                        <td th:text="${device.macAddress != null ? (device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress) + '/' + device.devEui : T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)) : device.devEui}">
-                                                                Device identifier
+                                                        <td>
+                                                                <span th:text="${device.macAddress != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress) : (device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui) : 'N/A')}"></span>
+                                                                <span th:if="${device.macAddress != null && device.devEui != null}"
+                                                                      th:text="${' / ' + T(it.sensorplatform.util.MacAddressUtils).format(device.devEui)}"></span>
                                                         </td>
                                                         <td class="checkbox-cell">
                                                                 <input type="checkbox" name="selectedDeviceIds" th:value="${device.id}" />
@@ -170,17 +176,36 @@
 		attribution: '&copy; OpenStreetMap contributors'
 	}).addTo(map);
 
-        let markerByMac = new Map();
+        let markerByDeviceKey = new Map();
 
         let allLatLngs = [];
 
-        function formatMac(mac) {
-                if (!mac) {
+        function formatIdentifier(value) {
+                if (!value) {
                         return '';
                 }
-                const cleaned = mac.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+                const cleaned = String(value).replace(/[^a-fA-F0-9]/g, '').toUpperCase();
                 const pairs = cleaned.match(/.{1,2}/g);
-                return pairs ? pairs.join(':') : '';
+                return pairs ? pairs.join(':') : cleaned;
+        }
+
+        function resolveDeviceKey(device) {
+                if (!device) {
+                        return '';
+                }
+                return device.deviceKey || device.devEui || '';
+        }
+
+        function buildIdentifierDisplay(device) {
+                if (!device) {
+                        return 'N/A';
+                }
+                const mac = device.macAddress ? formatIdentifier(device.macAddress) : '';
+                const devEui = device.devEui ? formatIdentifier(device.devEui) : '';
+                if (mac && devEui) {
+                        return `${mac}/${devEui}`;
+                }
+                return mac || devEui || 'N/A';
         }
 
         initialDevices.forEach(function (d) {
@@ -189,8 +214,10 @@
                         allLatLngs.push(latlng);
 
                         const marker = L.marker(latlng).addTo(map);
-                        const popupContent = "Device: " + d.name + "<br>" +
-                                "MacAddress/DevEui: " + (d.macAddress ? formatMac(d.macAddress) : "") + (d.devEui ? '/' + d.devEui : "") + "<br>" +
+                        const key = resolveDeviceKey(d);
+                        const identifierLabel = buildIdentifierDisplay(d);
+                        const popupContent = "Device: " + (d.name || '') + "<br>" +
+                                "Identifier: " + identifierLabel + "<br>" +
                                 "Latitude: " + d.latitude + "<br>" +
                                 "Longitude: " + d.longitude;
 
@@ -198,7 +225,9 @@
                         marker.on("mouseover", function () { this.openPopup(); });
                         marker.on("mouseout", function () { this.closePopup(); });
 
-                        markerByMac.set(d.macAddress ? d.macAddress : d.devEui, marker);
+                        if (key) {
+                                markerByDeviceKey.set(key, marker);
+                        }
                 }
         });
 
@@ -224,11 +253,19 @@
 					const details = summary.parentElement;
 					const ul = details.querySelector('.device-list');
 					ul.innerHTML = '';
-					devices.forEach(device => {
-						const li = document.createElement('li');
-                                                li.textContent = `${device.name} (${formatMac(device.macAddress)})`;
-						ul.appendChild(li);
-					});
+                                        devices.forEach(device => {
+                                                const li = document.createElement('li');
+                                                const identifier = buildIdentifierDisplay(device);
+                                                const name = device.name || '';
+                                                if (name && identifier && identifier !== 'N/A') {
+                                                        li.textContent = `${name} (${identifier})`;
+                                                } else if (name) {
+                                                        li.textContent = name;
+                                                } else {
+                                                        li.textContent = identifier;
+                                                }
+                                                ul.appendChild(li);
+                                        });
 				});
 			});
 	}

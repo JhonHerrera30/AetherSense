@@ -61,13 +61,23 @@ public class DeviceDTO {
 		this.devEui = devEui;
 	}
 
-	public String getMacAddress() {
-		return macAddress;
-	}
+        public String getMacAddress() {
+                return macAddress;
+        }
 
-	public void setMacAddress(String macAddress) {
-		this.macAddress = macAddress;
-	}
+        public void setMacAddress(String macAddress) {
+                this.macAddress = macAddress;
+        }
+
+        public String getDeviceKey() {
+                if (macAddress != null && !macAddress.isBlank()) {
+                        return macAddress;
+                }
+                if (devEui != null && !devEui.isBlank()) {
+                        return devEui;
+                }
+                return null;
+        }
 
 	public Double getLongitude() {
 		return longitude;

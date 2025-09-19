@@ -1,5 +1,6 @@
 package it.sensorplatform.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -38,20 +39,33 @@ public class DeviceService {
                 }
         }
 
-	public Device findById(Long deviceId) {
-		return this.deviceRepository.findById(deviceId).get();
-	}
+        public Device findById(Long deviceId) {
+                return this.deviceRepository.findById(deviceId).get();
+        }
 
-    public Device findByMacAddress(String macAddress) {
-                return this.deviceRepository.findByMacAddress(MacAddressUtils.normalize(macAddress)).get();
+        public Device findByMacAddress(String macAddress) {
+                String normalizedMac = MacAddressUtils.normalize(macAddress);
+                if (normalizedMac == null || normalizedMac.isBlank()) {
+                        throw new IllegalArgumentException("MAC address is required");
+                }
+                return this.deviceRepository.findByMacAddress(normalizedMac)
+                                .orElseThrow(() -> new IllegalArgumentException("Device not found for key: " + normalizedMac));
         }
 
         public Optional<Device> findOptionalByMacAddress(String macAddress) {
-                return this.deviceRepository.findByMacAddress(MacAddressUtils.normalize(macAddress));
+                String normalizedMac = MacAddressUtils.normalize(macAddress);
+                if (normalizedMac == null || normalizedMac.isBlank()) {
+                        return Optional.empty();
+                }
+                return this.deviceRepository.findByMacAddress(normalizedMac);
         }
 
         public Optional<Device> findOptionalByDevEui(String devEui) {
-                return this.deviceRepository.findByDevEui(MacAddressUtils.normalize(devEui));
+                String normalizedDevEui = MacAddressUtils.normalize(devEui);
+                if (normalizedDevEui == null || normalizedDevEui.isBlank()) {
+                        return Optional.empty();
+                }
+                return this.deviceRepository.findByDevEui(normalizedDevEui);
         }
 
         public Optional<Device> findOptionalByDeviceKey(String deviceKey) {
@@ -79,7 +93,11 @@ public class DeviceService {
         }
 
         public boolean existsByMacAddress(String macAddress) {
-                return this.deviceRepository.existsByMacAddress(MacAddressUtils.normalize(macAddress));
+                String normalizedMac = MacAddressUtils.normalize(macAddress);
+                if (normalizedMac == null || normalizedMac.isBlank()) {
+                        return false;
+                }
+                return this.deviceRepository.existsByMacAddress(normalizedMac);
         }
 
 	public Set<Device> findByNameStartingWithIgnoreCase(String deviceInfo) {
@@ -87,7 +105,11 @@ public class DeviceService {
     }
 
     public Set<Device> findByMacAddressStartingWithIgnoreCase(String deviceInfo) {
-        return this.deviceRepository.findByMacAddressStartingWithIgnoreCase(MacAddressUtils.normalize(deviceInfo));
+        String normalizedInfo = MacAddressUtils.normalize(deviceInfo);
+        if (normalizedInfo == null || normalizedInfo.isBlank()) {
+            return Collections.emptySet();
+        }
+        return this.deviceRepository.findByMacAddressStartingWithIgnoreCase(normalizedInfo);
     }
 
     public Set<Device> findByEmailOwnerStartingWithIgnoreCase(String deviceQuery) {

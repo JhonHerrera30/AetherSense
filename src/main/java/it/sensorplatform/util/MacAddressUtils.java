@@ -1,5 +1,7 @@
 package it.sensorplatform.util;
 
+import java.util.Locale;
+
 public final class MacAddressUtils {
 
     private MacAddressUtils() {
@@ -7,7 +9,14 @@ public final class MacAddressUtils {
     }
 
     public static String normalize(String mac) {
-        return mac == null ? null : mac.replace(":", "").toUpperCase();
+        if (mac == null) {
+            return null;
+        }
+        String cleaned = mac.replaceAll("[^0-9A-Fa-f]", "");
+        if (cleaned.isEmpty()) {
+            return null;
+        }
+        return cleaned.toUpperCase(Locale.ROOT);
     }
 
     public static String format(String mac) {

@@ -111,7 +111,7 @@
 
         <script th:inline="javascript">
                 /*<![CDATA[*/
-                const DEVICE_KEY = /*[[${device.macAddress != null ? device.macAddress : (device.devEui != null ? device.devEui : '')}]]*/ '';
+                const DEVICE_KEY = /*[[${device.deviceKey != null ? device.deviceKey : ''}]]*/ '';
                 const PROJECT_ID = /*[[${project.id}]]*/ 0;
                 const DEVICE_NAME = /*[[${device.name}]]*/ '';
                 const PROJECT_KEY = /*[[${projectKey}]]*/ 'default';
