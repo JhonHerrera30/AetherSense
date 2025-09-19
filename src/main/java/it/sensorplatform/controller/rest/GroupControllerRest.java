@@ -33,7 +33,18 @@ public class GroupControllerRest {
     public List<DeviceDTO> getDevicesByGroupId(@PathVariable("groupId") Long groupId) {
         List<Device> devices = groupService.findGroupById(groupId).getDevices();
         return devices.stream()
-                .map(d -> new DeviceDTO(d.getId(), d.getName(), d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))
+                .map(d -> new DeviceDTO(
+                        d.getId(),
+                        d.getName(),
+                        d.getMacAddress(),
+                        d.getEmailOwner(),
+                        d.getDevEui(),
+                        d.getLongitude(),
+                        d.getLatitude(),
+                        d.getTod() != null ? d.getTod().getName() : null,
+                        d.getVisibleUsername(),
+                        d.getStatus(),
+                        d.getGsheet()))
                 .collect(Collectors.toList());
     }
     
@@ -43,7 +54,18 @@ public class GroupControllerRest {
 		Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
         List<Device> devices = groupService.findGroupByNameAndCredentials(groupName, credentials).getDevices();
         return devices.stream()
-                .map(d -> new DeviceDTO(d.getId(), d.getName(), d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(), d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))
+                .map(d -> new DeviceDTO(
+                        d.getId(),
+                        d.getName(),
+                        d.getMacAddress(),
+                        d.getEmailOwner(),
+                        d.getDevEui(),
+                        d.getLongitude(),
+                        d.getLatitude(),
+                        d.getTod() != null ? d.getTod().getName() : null,
+                        d.getVisibleUsername(),
+                        d.getStatus(),
+                        d.getGsheet()))
                 .collect(Collectors.toList());
     }
     
@@ -64,7 +86,8 @@ public class GroupControllerRest {
                 device.getLatitude(),
                 device.getTod() != null ? device.getTod().getName() : null,
                 device.getVisibleUsername(),
-                device.getStatus()
+                device.getStatus(),
+                device.getGsheet()
             ))
             .toList();
     }

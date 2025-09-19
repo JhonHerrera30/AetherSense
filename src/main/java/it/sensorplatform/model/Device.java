@@ -37,6 +37,9 @@ public class Device {
         @Column(nullable = true)
         private String emailOwner;
 
+        @Column(nullable = true)
+        private String gsheet;
+
         @Column(name="status")
         private String status = "deactivated";
 	
@@ -144,6 +147,14 @@ public class Device {
                 this.emailOwner = emailOwner;
         }
 
+        public String getGsheet() {
+                return normalizeBlank(gsheet);
+        }
+
+        public void setGsheet(String gsheet) {
+                this.gsheet = normalizeBlank(gsheet);
+        }
+
         public String getStatus() {
                 return status;
         }
@@ -216,6 +227,13 @@ public class Device {
                         return devEui;
                 }
                 return null;
+        }
+
+        private static String normalizeBlank(String value) {
+                if (value == null || value.isBlank()) {
+                        return null;
+                }
+                return value;
         }
 }
 
