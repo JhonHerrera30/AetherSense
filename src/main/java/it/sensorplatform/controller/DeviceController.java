@@ -470,7 +470,8 @@ public class DeviceController {
         public void loadDeviceDTO(List<Device> devices, Model model) {
                 List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getId(), d.getName(),
                                 d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(),
-                                d.getTod().getName(), d.getVisibleUsername(), d.getStatus()))
+                                d.getTod() != null ? d.getTod().getName() : null, d.getVisibleUsername(), d.getStatus(),
+                                d.getGsheet()))
                                 .collect(Collectors.toList());
                 Comparator<DeviceDTO> cmp = Comparator.comparing(DeviceDTO::getEmailOwner,
                                 Comparator.nullsFirst(String::compareTo));

@@ -15,8 +15,9 @@ public class DeviceDTO {
         private String tod;
         private String operator;
         private String status;
+        private String gsheet;
 
-        public DeviceDTO(Long id, String name, String macAddress, String emailOwner, String devEui, Double longitude, Double latitude, String tod, String operator, String status) {
+        public DeviceDTO(Long id, String name, String macAddress, String emailOwner, String devEui, Double longitude, Double latitude, String tod, String operator, String status, String gsheet) {
                 this.id = id;
                 this.name = name;
                 this.macAddress = macAddress;
@@ -27,6 +28,7 @@ public class DeviceDTO {
                 this.tod=tod;
                 this.operator=operator;
                 this.status = status;
+                this.gsheet = gsheet;
         }
 
         public Long getId() {
@@ -118,6 +120,14 @@ public class DeviceDTO {
 
         public void setStatus(String status) {
                 this.status = status;
+        }
+
+        public String getGsheet() {
+                return gsheet;
+        }
+
+        public void setGsheet(String gsheet) {
+                this.gsheet = gsheet;
         }
 
         public boolean isEmailOwnerMissing() {
