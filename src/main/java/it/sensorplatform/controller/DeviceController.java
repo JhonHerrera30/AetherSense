@@ -364,7 +364,7 @@ public class DeviceController {
 		model.addAttribute("credentials", new Credentials());
 		model.addAttribute("projectId", projectId);
 
-		return "/admin/formRegisterOperator";
+            return "admin/formRegisterOperator";
 
 	}
 
@@ -401,7 +401,7 @@ public class DeviceController {
 				model.addAttribute("projectId", projectId);
 //				List<Project> projects = (List<Project>) projectService.getAllProjects();
 //				model.addAttribute("projects", projects);
-				return "/admin/formRegisterOperator";
+                            return "admin/formRegisterOperator";
 			}
 
 			credentials.setUsername(username);
@@ -424,7 +424,7 @@ public class DeviceController {
 			return "redirect:/admin/group/" + projectId;
 		}
 				
-		return "/admin/formRegisterOperator";
+            return "admin/formRegisterOperator";
 
 	}
 
