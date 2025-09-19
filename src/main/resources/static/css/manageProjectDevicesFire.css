@@ -542,6 +542,12 @@ body.modal-open {
 .gsheet-table th:nth-child(4),
 .gsheet-table td:nth-child(4) {
     width: 10%;
+    text-align: center;
+}
+
+.gsheet-table th:nth-child(4) {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .modal-table th,
@@ -581,6 +587,9 @@ body.modal-open {
 
 .checkbox-cell {
     text-align: center;
+    vertical-align: middle;
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .checkbox-cell input {
