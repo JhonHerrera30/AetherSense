@@ -384,6 +384,36 @@
         font-weight: 500;
 }
 
+.gsheet-link-wrapper {
+        margin-top: 1.5rem;
+}
+
+.gsheet-link-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 1.2rem;
+        border-radius: 0.6rem;
+        background: var(--accent-color);
+        color: var(--accent-contrast);
+        text-decoration: none;
+        font-weight: 600;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.gsheet-link-button:hover,
+.gsheet-link-button:focus-visible {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        opacity: 0.95;
+}
+
+.gsheet-link-button:focus-visible {
+        outline: 2px solid var(--accent-contrast);
+        outline-offset: 3px;
+}
+
 .status-panel {
         display: flex;
         flex-direction: column;
