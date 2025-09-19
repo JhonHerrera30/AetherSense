@@ -96,6 +96,9 @@
                                 <span class="panel-subtitle">Metadata sent with the latest packet</span>
                         </div>
                         <dl id="info-grid" class="info-grid"></dl>
+                        <div class="gsheet-link-wrapper" th:if="${device.gsheet != null}">
+                                <a class="gsheet-link-button" th:href="${device.gsheet}" target="_blank" rel="noopener noreferrer">View Gsheet</a>
+                        </div>
                         <p id="info-empty" class="empty-state">No additional information available.</p>
                 </section>
 
