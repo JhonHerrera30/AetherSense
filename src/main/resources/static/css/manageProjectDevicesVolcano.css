@@ -129,7 +129,39 @@ html, body {
 }
 
 .dropdown-logout:hover {
-	background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.1);
+}
+
+.table-pagination-controls {
+        display: none;
+        justify-content: center;
+        align-items: center;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+}
+
+.table-pagination-controls .pagination-button {
+        background-color: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        color: #ffffff;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        cursor: pointer;
+        font-size: 0.95rem;
+        transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.table-pagination-controls .pagination-button:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.8);
+}
+
+.table-pagination-controls .pagination-button.active,
+.table-pagination-controls .pagination-button:focus {
+        background-color: #e67e00;
+        border-color: #e67e00;
+        color: #ffffff;
+        outline: none;
 }
 
 .icon-user {

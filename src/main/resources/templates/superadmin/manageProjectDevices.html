@@ -87,10 +87,10 @@
                         </form>
                 </div>
 
-               <table class="device-table">
-			<thead>
-				<tr>
-					<th scope="col">Name</th>
+               <table id="devicesTable" class="device-table">
+                        <thead>
+                                <tr>
+                                        <th scope="col">Name</th>
                                         <th scope="col">Mac Address/DevEui</th>
                                         <th scope="col">Owner Email</th>
                                         <th scope="col">Type Of Device</th>
@@ -106,10 +106,11 @@
                                         </td>
                                         <td th:text="${device.emailOwner}">Email</td>
                                         <td th:text="${device.tod}">Type Of Device</td>
-				</tr>
-			</tbody>
-		</table>
-	</div>
+                                </tr>
+                        </tbody>
+                </table>
+                <div id="devicesTablePagination" class="table-pagination-controls"></div>
+        </div>
 
 	<!-- Right panel: map -->
         <div id="map"></div>
@@ -368,6 +369,65 @@
                         const assignGsheetOverlay = document.getElementById("assignGsheetOverlay");
                         const closeAssignGsheetModal = document.getElementById("closeAssignGsheetModal");
                         const gsheetLinkInput = document.getElementById("gsheetLinkInput");
+                        const tablePaginationContainer = document.getElementById("devicesTablePagination");
+
+                        function initializeDevicesTablePagination() {
+                                const table = document.getElementById("devicesTable");
+                                if (!table || !tablePaginationContainer) {
+                                        return;
+                                }
+
+                                const tbody = table.querySelector("tbody");
+                                const rows = tbody ? Array.from(tbody.querySelectorAll("tr")) : [];
+                                const rowsPerPage = 8;
+                                const totalPages = Math.ceil(rows.length / rowsPerPage);
+                                let currentPage = 1;
+
+                                function showPage(pageNumber) {
+                                        currentPage = pageNumber;
+                                        const startIndex = (pageNumber - 1) * rowsPerPage;
+                                        const endIndex = startIndex + rowsPerPage;
+
+                                        rows.forEach((row, index) => {
+                                                row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+                                        });
+
+                                        tablePaginationContainer.querySelectorAll("button[data-page]").forEach((button) => {
+                                                const buttonPage = Number(button.dataset.page);
+                                                button.classList.toggle("active", buttonPage === currentPage);
+                                        });
+                                }
+
+                                function renderPagination() {
+                                        tablePaginationContainer.innerHTML = "";
+
+                                        if (totalPages <= 1) {
+                                                rows.forEach((row) => {
+                                                        row.style.display = "";
+                                                });
+                                                tablePaginationContainer.style.display = "none";
+                                                return;
+                                        }
+
+                                        tablePaginationContainer.style.display = "flex";
+
+                                        for (let page = 1; page <= totalPages; page++) {
+                                                const button = document.createElement("button");
+                                                button.type = "button";
+                                                button.dataset.page = String(page);
+                                                button.textContent = String(page);
+                                                button.classList.add("pagination-button");
+                                                button.addEventListener("click", () => {
+                                                        showPage(page);
+                                                });
+                                                tablePaginationContainer.appendChild(button);
+                                        }
+
+                                        showPage(1);
+                                }
+
+                                renderPagination();
+                        }
 
                         if (toggle && menu) {
                                 toggle.addEventListener("click", function (e) {
@@ -514,6 +574,7 @@
                         }
 
                         handleNewEmailInput();
+                        initializeDevicesTablePagination();
                 });
         </script>
 </html>
