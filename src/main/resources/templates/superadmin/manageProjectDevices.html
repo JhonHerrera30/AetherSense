@@ -55,12 +55,8 @@
 <div class="main-layout">
 	<!-- Left panel: device management -->
                 <div class="devices-panel">
-                <h1 th:text="'Device Manager - ' + ${project.name}">Device Manager</h1>
-
-                <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
-                <div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}"></div>
-
-                <div class="top-bar">
+                <div class="devices-header">
+                        <h1>Device Manager</h1>
                         <div class="top-bar-actions">
                                 <a th:href="@{'/superadmin/formNewDevice/' + ${project.id}}" class="btn-action btn-add">➕ Add new device</a>
                                 <button type="button" id="openAssignOwnerModal" class="btn-action btn-assign-owner"
@@ -74,6 +70,12 @@
                                         📄 Assign GSheet
                                 </button>
                         </div>
+                </div>
+
+                <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
+                <div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}"></div>
+
+                <div class="top-bar">
                         <form th:action="@{'/superadmin/manageProjectDevices/' + ${project.id}}" method="get" class="search-form">
                                 <input type="text" name="deviceQuery" placeholder="Search..." th:value="${param.deviceQuery}" />
                                 <button type="submit" title="Search">
