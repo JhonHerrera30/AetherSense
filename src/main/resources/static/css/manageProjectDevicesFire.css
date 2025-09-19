@@ -520,6 +520,30 @@ body.modal-open {
     margin-bottom: 0.5rem;
 }
 
+.gsheet-table {
+    table-layout: fixed;
+}
+
+.gsheet-table th:nth-child(1),
+.gsheet-table td:nth-child(1) {
+    width: 25%;
+}
+
+.gsheet-table th:nth-child(2),
+.gsheet-table td:nth-child(2) {
+    width: 25%;
+}
+
+.gsheet-table th:nth-child(3),
+.gsheet-table td:nth-child(3) {
+    width: 40%;
+}
+
+.gsheet-table th:nth-child(4),
+.gsheet-table td:nth-child(4) {
+    width: 10%;
+}
+
 .modal-table th,
 .modal-table td {
     border: 1px solid #324a5f;
@@ -538,16 +562,20 @@ body.modal-open {
 }
 
 .gsheet-cell {
-    overflow-wrap: anywhere;
+    overflow: hidden;
 }
 
-.gsheet-cell a {
+.gsheet-link {
     color: #8ecae6;
     text-decoration: underline;
-    word-break: break-word;
+    display: inline-block;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.gsheet-cell a:hover {
+.gsheet-link:hover {
     text-decoration: none;
 }
 
