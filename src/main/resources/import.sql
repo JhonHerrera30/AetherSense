@@ -83,6 +83,13 @@ insert into device(latitude, longitude, id, project_id, email_owner, mac_address
 insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(40.639470, 17.694360, 17, 101, 'jhon30.herrera@gmail.com', '7C:06:1C:EC:E7:36', 'Amber5', 3, 7, 'activated'); -- Lecce
 insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(38.193791, 15.554045, 18, 101, 'jhon30.herrera@gmail.com', '8D:06:1C:EC:E7:37', 'Amber6', 3, 7, 'deactivated'); -- Messina
 
+/* Dispositivi aggiuntivi VOLCANO */
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(37.502328, 14.165223, 19, 101, 'jhon30.herrera@gmail.com', '9E:06:1C:EC:E7:38', 'Amber7', 3, 7, 'activated'); -- Enna
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(41.125667, 16.869817, 20, 101, 'jhon30.herrera@gmail.com', 'AF:06:1C:EC:E7:39', 'Amber8', 3, 7, 'activated'); -- Bari
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(40.728333, 8.560833, 21, 101, 'jhon30.herrera@gmail.com', 'B0:06:1C:EC:E7:3A', 'Amber9', 3, 7, 'activated'); -- Sassari
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(38.910986, 16.587678, 22, 101, 'jhon30.herrera@gmail.com', 'C1:06:1C:EC:E7:3B', 'Amber10', 3, 7, 'deactivated'); -- Catanzaro
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, status)values(36.921984, 14.730344, 23, 101, 'jhon30.herrera@gmail.com', 'D2:06:1C:EC:E7:3C', 'Amber11', 3, 7, 'activated'); -- Ragusa
+
 insert into spec(id, measurement, unit_of_measurement, component)values(1, 'Temperature', '°C' ,'Sen5x')
 insert into spec(id, measurement, unit_of_measurement, component)values(2, 'Relative Humidity', '%RH' ,'Sen5x')
 insert into spec(id, measurement, unit_of_measurement, component)values(3, 'VOC', 'Index (0-500)' ,'Sen5x')
