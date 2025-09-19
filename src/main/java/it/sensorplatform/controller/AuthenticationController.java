@@ -262,16 +262,16 @@ public class AuthenticationController {
 	    }
 	    model.addAttribute("project", project);
 	    
-	    switch (project.getName()) {
-	        case "LTRAD":
-	            return "/project/ltradHome";
-	        case "FIRE":
-	            return "/project/fireHome";
-	        case "VOLCANO":
-	            return "/project/volcanoHome";
-	        default:
-	            return "error";
-	    }
+            switch (project.getName()) {
+                case "LTRAD":
+                    return "project/ltradHome";
+                case "FIRE":
+                    return "project/fireHome";
+                case "VOLCANO":
+                    return "project/volcanoHome";
+                default:
+                    return "error";
+            }
 	}
 
 }
