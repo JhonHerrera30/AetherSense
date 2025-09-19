@@ -454,6 +454,11 @@ td {
     display: table-cell;
 }
 
+.modal-table th:last-child,
+.modal-table td:last-child {
+    width: 6rem;
+}
+
 .modal-table .checkbox-cell {
     display: flex;
     justify-content: center;
