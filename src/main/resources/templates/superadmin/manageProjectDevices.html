@@ -57,19 +57,6 @@
                 <div class="devices-panel">
                 <div class="devices-header">
                         <h1>Device Manager</h1>
-                        <div class="top-bar-actions">
-                                <a th:href="@{'/superadmin/formNewDevice/' + ${project.id}}" class="btn-action btn-add">➕ Add new device</a>
-                                <button type="button" id="openAssignOwnerModal" class="btn-action btn-assign-owner"
-                                        th:classappend="${#lists.isEmpty(devicesWithoutOwner)} ? ' btn-disabled' : ''"
-                                        th:disabled="${#lists.isEmpty(devicesWithoutOwner)}">
-                                        📧 Assign owner
-                                </button>
-                                <button type="button" id="openAssignGsheetModal" class="btn-action btn-assign-gsheet"
-                                        th:classappend="${#lists.isEmpty(devices)} ? ' btn-disabled' : ''"
-                                        th:disabled="${#lists.isEmpty(devices)}">
-                                        📄 Assign GSheet
-                                </button>
-                        </div>
                 </div>
 
                 <div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"></div>
@@ -109,6 +96,21 @@
                                 </tr>
                         </tbody>
                 </table>
+                <div class="table-actions">
+                        <div class="top-bar-actions">
+                                <a th:href="@{'/superadmin/formNewDevice/' + ${project.id}}" class="btn-action btn-add">➕ Add new device</a>
+                                <button type="button" id="openAssignOwnerModal" class="btn-action btn-assign-owner"
+                                        th:classappend="${#lists.isEmpty(devicesWithoutOwner)} ? ' btn-disabled' : ''"
+                                        th:disabled="${#lists.isEmpty(devicesWithoutOwner)}">
+                                        📧 Assign owner
+                                </button>
+                                <button type="button" id="openAssignGsheetModal" class="btn-action btn-assign-gsheet"
+                                        th:classappend="${#lists.isEmpty(devices)} ? ' btn-disabled' : ''"
+                                        th:disabled="${#lists.isEmpty(devices)}">
+                                        📄 Assign GSheet
+                                </button>
+                        </div>
+                </div>
                 <div id="devicesTablePagination" class="table-pagination-controls"></div>
         </div>
 
