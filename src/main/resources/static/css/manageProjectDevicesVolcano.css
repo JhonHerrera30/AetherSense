@@ -479,9 +479,28 @@ td:last-child {
     display: block;
 }
 
-.top-bar{
+
+.devices-header {
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+}
+
+.devices-header h1 {
+        margin: 0;
+        font-size: 2rem;
+}
+
+.devices-header .btn-action {
+        margin-bottom: 0;
+}
+
+.top-bar{
+        display: flex;
+        justify-content: flex-end;
         align-items: center;
         margin-bottom: 1rem;
         gap: 1rem;
