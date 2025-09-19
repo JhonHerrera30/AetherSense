@@ -284,7 +284,6 @@ html, body {
 .btn-add {
     background-color: #2e7d32;
     color: white;
-    margin-bottom: 1rem;
     padding: 0.5rem 1rem;
     border-radius: 6px;
     font-weight: bold;
@@ -302,7 +301,6 @@ html, body {
 .btn-assign-owner {
     background-color: #ffb347;
     color: #331600;
-    margin-bottom: 1rem;
     padding: 0.5rem 1rem;
     border-radius: 6px;
     font-weight: bold;
@@ -319,7 +317,6 @@ html, body {
 .btn-assign-gsheet {
     background-color: #76c893;
     color: #10201a;
-    margin-bottom: 1rem;
     padding: 0.5rem 1rem;
     border-radius: 6px;
     font-weight: bold;
@@ -506,11 +503,27 @@ td:last-child {
         gap: 1rem;
 }
 
-.top-bar-actions{
+.table-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1.5rem;
+        width: 100%;
+}
+
+.table-actions .top-bar-actions {
         display: flex;
         align-items: center;
         gap: 1rem;
         flex-wrap: wrap;
+        justify-content: flex-end;
+        width: 100%;
+}
+
+@media (max-width: 768px) {
+        .table-actions,
+        .table-actions .top-bar-actions {
+                justify-content: flex-start;
+        }
 }
 
 .modal-overlay {
