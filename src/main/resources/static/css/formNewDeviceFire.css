@@ -456,10 +456,10 @@ body {
     align-items: center;
     padding: 1.25rem 1.6rem;
     border-radius: 18px;
-    background: linear-gradient(145deg, rgba(53, 12, 17, 0.96), rgba(38, 9, 14, 0.92));
-    border: 1px solid rgba(255, 107, 107, 0.22);
-    border-left: 4px solid rgba(255, 107, 107, 0.6);
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    background: linear-gradient(145deg, rgba(218, 82, 69, 0.96), rgba(187, 58, 52, 0.92));
+    border: 1px solid rgba(255, 150, 130, 0.25);
+    border-left: 4px solid rgba(255, 150, 130, 0.55);
+    box-shadow: 0 16px 36px rgba(120, 32, 32, 0.4);
     position: relative;
     overflow: hidden;
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
@@ -468,8 +468,8 @@ body {
 
 .notification-box:hover {
     transform: translateY(-4px);
-    box-shadow: 0 26px 52px rgba(255, 96, 86, 0.32);
-    border-color: rgba(255, 107, 107, 0.5);
+    box-shadow: 0 24px 48px rgba(255, 142, 120, 0.34);
+    border-color: rgba(255, 150, 130, 0.5);
 }
 
 .notification-icon {
@@ -479,9 +479,9 @@ body {
     display: grid;
     place-items: center;
     font-size: 1.45rem;
-    background: rgba(255, 107, 107, 0.15);
-    color: #ffd9d9;
-    box-shadow: 0 0 0 1px rgba(255, 107, 107, 0.32) inset;
+    background: rgba(255, 150, 130, 0.2);
+    color: #fff1ee;
+    box-shadow: 0 0 0 1px rgba(255, 150, 130, 0.32) inset;
 }
 
 .notification-main {
@@ -512,15 +512,15 @@ body {
     letter-spacing: 0.1em;
     padding: 0.25rem 0.75rem;
     border-radius: 999px;
-    background: rgba(255, 107, 107, 0.22);
-    color: #ffb4b4;
+    background: rgba(255, 150, 130, 0.28);
+    color: #fff5f3;
     font-weight: 600;
 }
 
 .notifications-panel .time {
     margin: 0;
     font-size: 0.85rem;
-    color: rgba(255, 214, 214, 0.78);
+    color: rgba(255, 235, 232, 0.86);
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
