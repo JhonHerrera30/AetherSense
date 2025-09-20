@@ -34,9 +34,9 @@
                     </svg>
                 </button>
                 <div class="dropdown-menu" id="userDropdownMenu" role="menu" aria-labelledby="userDropdown">
-                    <a class="dropdown-link" th:href="@{'/personal-area'(projectId=${selectedProjectId})}">Area personale</a>
+                    <a class="dropdown-link" th:href="@{/personal-area}" role="menuitem">Personal Area</a>
                     <form th:action="@{/logout}" method="post" th:csrf="true">
-                        <button type="submit" class="dropdown-logout">Logout</button>
+                        <button type="submit" class="dropdown-logout" role="menuitem">Logout</button>
                     </form>
                 </div>
             </div>

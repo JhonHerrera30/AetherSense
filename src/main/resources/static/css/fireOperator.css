@@ -98,6 +98,27 @@ html, body {
   cursor: pointer;
   text-align: left;
 }
+
+.dropdown-link {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 0.95rem;
+  padding: 0.5rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+
+.dropdown-link:hover {
+  background: rgba(255,255,255,.1);
+}
+
+
 .dropdown-logout:hover {
   background: rgba(255,255,255,.1);
 }

@@ -16,20 +16,22 @@
 		<div class="nav-left">
 			<h1>AetherSense <span class="admin-label">SuperAdmin</span></h1>
 		</div>
-		<div class="nav-right">
-			<div sec:authorize="isAuthenticated()" class="auth-user">
-				<span class="username">Hi, <strong th:text="${user.visibleUsername}">utente</strong></span>
-				<form th:action="@{/logout}" method="post" th:csrf="true" class="logout-form">
-					<button type="submit" class="icon-button" title="Logout">
-						<svg xmlns="http://www.w3.org/2000/svg" class="icon-user" viewBox="0 0 24 24"
-							fill="currentColor" width="24" height="24">
-							<path
-								d="M16 13v-2H7v-3l-5 4 5 4v-3zM20 3h-8v2h8v14h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z" />
-						</svg>
-					</button>
-				</form>
-			</div>
-		</div>
+                <div class="nav-right">
+                        <div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+                                <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true" aria-expanded="false">
+                                        Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+                                        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+                                                <path d="M7 10l5 5 5-5z" />
+                                        </svg>
+                                </button>
+                                <div class="dropdown-menu" id="userDropdownMenu" role="menu" aria-labelledby="userDropdown">
+                                        <a th:href="@{/personal-area}" class="dropdown-link" role="menuitem">Personal Area</a>
+                                        <form th:action="@{/logout}" method="post" th:csrf="true" class="logout-form">
+                                                <button type="submit" class="dropdown-logout" role="menuitem">Logout</button>
+                                        </form>
+                                </div>
+                        </div>
+                </div>
 	</header>
 	<section class="hero">
 		<video class="hero_video" autoplay muted loop playsinline preload="auto">
@@ -108,9 +110,34 @@
 		<p>Interested in our projects? <a href="https://www.4spark.it/" target="_blank">Contact us</a>.</p>
 	</section>
 
-	<footer>
-		<p>&copy; 2025 - 4Spark Sensor Platform</p>
-	</footer>
+        <footer>
+                <p>&copy; 2025 - 4Spark Sensor Platform</p>
+        </footer>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+                const toggle = document.getElementById('userDropdown');
+                const menu = document.getElementById('userDropdownMenu');
+
+                if (!toggle || !menu) {
+                        return;
+                }
+
+                toggle.addEventListener('click', function (event) {
+                        event.stopPropagation();
+                        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                        toggle.setAttribute('aria-expanded', (!isExpanded).toString());
+                        menu.classList.toggle('show');
+                });
+
+                document.addEventListener('click', function (event) {
+                        if (!menu.contains(event.target) && event.target !== toggle) {
+                                menu.classList.remove('show');
+                                toggle.setAttribute('aria-expanded', 'false');
+                        }
+                });
+        });
+</script>
 
 </body>
 
