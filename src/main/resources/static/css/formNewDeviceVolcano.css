@@ -330,9 +330,27 @@ body {
 }
 
 .delete-icon {
-	text-decoration: none;
-	font-size: 1.2em;
-	cursor: pointer;
-	color: #fff;
-	margin-top: 3px; /* piccolo offset per centrare meglio */
+        text-decoration: none;
+        font-size: 1.2em;
+        cursor: pointer;
+        color: #fff;
+        margin-top: 3px; /* piccolo offset per centrare meglio */
+}
+
+.notification-box .device-identifiers {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem;
+}
+
+.notification-box .device-address {
+    font-weight: 700;
+}
+
+.notification-box .device-type {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.75);
 }
