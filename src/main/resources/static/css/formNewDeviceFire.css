@@ -456,7 +456,7 @@ body {
     align-items: center;
     padding: 1.25rem 1.6rem;
     border-radius: 18px;
-    background: linear-gradient(145deg, rgba(218, 82, 69, 0.96), rgba(187, 58, 52, 0.92));
+    background: #b30000;
     border: 1px solid rgba(255, 150, 130, 0.25);
     border-left: 4px solid rgba(255, 150, 130, 0.55);
     box-shadow: 0 16px 36px rgba(120, 32, 32, 0.4);
