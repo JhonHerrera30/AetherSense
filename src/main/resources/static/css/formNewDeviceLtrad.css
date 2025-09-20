@@ -549,7 +549,7 @@ body {
 }
 
 .notifications-panel .btn-add {
-    background: linear-gradient(135deg, #63b7ff, #1f6feb);
+    background-color: #007bff;
     color: #ffffff;
     padding: 0.65rem 1.4rem;
     border-radius: 999px;
@@ -561,8 +561,8 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    box-shadow: 0 14px 30px rgba(31, 111, 235, 0.35);
-    transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+    box-shadow: 0 14px 30px rgba(0, 123, 255, 0.35);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
 }
 
 .notifications-panel .btn-add::before {
@@ -572,8 +572,8 @@ body {
 
 .notifications-panel .btn-add:hover {
     transform: translateY(-2px);
-    box-shadow: 0 20px 40px rgba(31, 111, 235, 0.45);
-    filter: brightness(1.05);
+    box-shadow: 0 20px 40px rgba(0, 123, 255, 0.45);
+    background-color: #0069d9;
 }
 
 .notifications-panel .btn-add:focus-visible {
