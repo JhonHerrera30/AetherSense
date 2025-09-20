@@ -1,22 +1,19 @@
 :root {
     --font-family: 'Roboto', sans-serif;
-    --text-color: #e2e8f0;
-    --muted-text: #94a3b8;
-    --background-color: #1b263b;
-    --card-background: #243b53;
-    --surface-elevated: #2d3e5f;
-    --input-background: #1a2b44;
-    --border-color: rgba(148, 163, 184, 0.45);
-    --border-radius-lg: 18px;
-    --border-radius-sm: 12px;
-    --shadow-soft: 0 18px 32px rgba(8, 15, 32, 0.45);
-    --shadow-hover: 0 24px 46px rgba(8, 15, 32, 0.55);
+    --text-color: #f8fafc;
+    --muted-text: #c7d2e8;
+    --background-color: #1B263B;
+    --panel-background: rgba(13, 28, 43, 0.85);
+    --panel-border: rgba(119, 141, 169, 0.4);
+    --input-background: rgba(11, 24, 38, 0.95);
+    --input-border: rgba(119, 141, 169, 0.45);
+    --border-radius-lg: 16px;
+    --border-radius-sm: 10px;
     --transition-base: 0.25s ease;
     --success-color: #22c55e;
     --error-color: #f87171;
     --primary-color: #007bff;
     --primary-rgb: 0, 123, 255;
-    --primary-soft: rgba(var(--primary-rgb), 0.18);
     --primary-contrast: #ffffff;
     --primary-border: #8ec4ff;
 }
@@ -34,7 +31,6 @@ body.personal-area {
 body.theme-ltrad {
     --primary-color: #007bff;
     --primary-rgb: 0, 123, 255;
-    --primary-soft: rgba(var(--primary-rgb), 0.18);
     --primary-contrast: #ffffff;
     --primary-border: #8ec4ff;
 }
@@ -42,7 +38,6 @@ body.theme-ltrad {
 body.theme-fire {
     --primary-color: #cc0000;
     --primary-rgb: 204, 0, 0;
-    --primary-soft: rgba(var(--primary-rgb), 0.18);
     --primary-contrast: #ffffff;
     --primary-border: #ff8e8e;
 }
@@ -50,7 +45,6 @@ body.theme-fire {
 body.theme-volcano {
     --primary-color: #e67e00;
     --primary-rgb: 230, 126, 0;
-    --primary-soft: rgba(var(--primary-rgb), 0.18);
     --primary-contrast: #ffffff;
     --primary-border: #ffbf80;
 }
@@ -58,41 +52,43 @@ body.theme-volcano {
 body.theme-superadmin {
     --primary-color: #7c3aed;
     --primary-rgb: 124, 58, 237;
-    --primary-soft: rgba(var(--primary-rgb), 0.2);
     --primary-contrast: #ffffff;
     --primary-border: #c4b5fd;
 }
 
 .navbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding: 1.2rem 2.5rem;
-    background: var(--primary-color);
-    color: var(--primary-contrast);
     position: sticky;
     top: 0;
-    z-index: 20;
-    box-shadow: 0 12px 28px rgba(8, 15, 32, 0.45);
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: var(--primary-contrast);
     border-bottom: 2px solid var(--primary-border);
+    height: 3em;
+    z-index: 20;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-left: 3rem;
 }
 
 .brand {
     color: var(--primary-contrast);
     font-weight: 700;
-    font-size: 1.3rem;
+    font-size: 1.6rem;
     text-decoration: none;
     letter-spacing: 0.02em;
 }
 
 .project-name {
-    margin-left: 1rem;
-    padding: 0.4rem 0.9rem;
-    border-radius: 999px;
-    background: rgba(var(--primary-rgb), 0.22);
-    border: 1px solid var(--primary-border);
-    font-size: 0.9rem;
+    font-size: 2rem;
     font-weight: 600;
     color: var(--primary-contrast);
 }
@@ -101,90 +97,83 @@ body.theme-superadmin {
     display: flex;
     align-items: center;
     gap: 1rem;
+    margin-right: 3rem;
 }
 
 .home-button {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    background: rgba(0, 0, 0, 0.18);
     color: var(--primary-contrast);
-    display: grid;
-    place-items: center;
-    transition: background var(--transition-base), transform var(--transition-base);
     text-decoration: none;
+    display: flex;
+    align-items: center;
+    margin-right: 2rem;
 }
 
 .home-button:hover {
-    background: rgba(255, 255, 255, 0.22);
-    transform: translateY(-1px);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .dropdown {
     position: relative;
+    display: inline-flex;
 }
 
 .dropdown-toggle {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.65rem 0.9rem;
-    border-radius: 999px;
-    border: 1px solid rgba(var(--primary-rgb), 0.35);
-    background: rgba(var(--primary-rgb), 0.2);
+    gap: 0.35rem;
+    padding: 0;
+    background: none;
+    border: none;
     color: var(--primary-contrast);
-    font-weight: 600;
+    font-size: 1rem;
     cursor: pointer;
-    transition: background var(--transition-base), transform var(--transition-base);
-}
-
-.dropdown-toggle:hover {
-    background: rgba(var(--primary-rgb), 0.32);
-    transform: translateY(-1px);
 }
 
 .dropdown-icon {
-    pointer-events: none;
+    width: 16px;
+    height: 16px;
+    transition: transform 0.3s ease;
+}
+
+.dropdown-toggle[aria-expanded="true"] .dropdown-icon {
+    transform: rotate(180deg);
 }
 
 .dropdown-menu {
     position: absolute;
     right: 0;
-    top: calc(100% + 0.5rem);
+    top: 2.2rem;
     display: none;
-    flex-direction: column;
-    gap: 0.4rem;
-    background: var(--surface-elevated);
+    background-color: #1B263B;
     color: var(--text-color);
-    border-radius: var(--border-radius-sm);
-    min-width: 200px;
-    padding: 0.75rem;
-    box-shadow: var(--shadow-soft);
-    border: 1px solid rgba(var(--primary-rgb), 0.35);
+    border-radius: 8px;
+    min-width: 150px;
+    padding: 0.5rem;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--primary-border);
+    z-index: 999;
 }
 
 .dropdown-menu.show {
-    display: flex;
+    display: block;
 }
 
 .dropdown-link,
 .dropdown-logout {
-    padding: 0.65rem 0.85rem;
-    border-radius: 10px;
+    padding: 0.5rem;
     border: none;
-    background: transparent;
+    background: none;
     color: inherit;
     font-size: 0.95rem;
     text-align: left;
     text-decoration: none;
     cursor: pointer;
-    transition: background var(--transition-base);
+    transition: background-color 0.2s ease;
 }
 
 .dropdown-link:hover,
 .dropdown-logout:hover {
-    background: rgba(var(--primary-rgb), 0.2);
+    background-color: rgba(255, 255, 255, 0.12);
 }
 
 .personal-area-content {
@@ -201,28 +190,27 @@ body.theme-superadmin {
     gap: 1.75rem;
 }
 
+
 .card {
-    background: var(--card-background);
-    border: 1px solid var(--border-color);
+    background: var(--panel-background);
+    border: 1px solid var(--panel-border);
     border-radius: var(--border-radius-lg);
-    padding: 1.8rem;
-    box-shadow: var(--shadow-soft);
+    padding: 1.75rem;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    transition: transform var(--transition-base), box-shadow var(--transition-base);
+    transition: border-color var(--transition-base), background-color var(--transition-base);
 }
 
 .card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-hover);
+    border-color: var(--primary-border);
 }
 
 .card-header h2 {
     margin: 0;
     font-size: 1.35rem;
     font-weight: 600;
-    color: var(--primary-color);
+    color: var(--primary-contrast);
 }
 
 .card-header p {
@@ -258,25 +246,23 @@ body.theme-superadmin {
 .form-group input,
 .project-selector select {
     border-radius: var(--border-radius-sm);
-    border: 1px solid var(--border-color);
-    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--input-border);
+    padding: 0.7rem 0.9rem;
     font-size: 1rem;
     background: var(--input-background);
     color: var(--text-color);
-    transition: border-color var(--transition-base), box-shadow var(--transition-base), background var(--transition-base);
+    transition: border-color var(--transition-base), background-color var(--transition-base);
 }
 
 .form-group input:focus,
 .project-selector select:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.3);
-    background: var(--surface-elevated);
+    background-color: rgba(21, 40, 64, 0.95);
 }
 
 .form-group.has-error input {
     border-color: var(--error-color);
-    box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.28);
 }
 
 .error-message {
@@ -311,34 +297,34 @@ body.theme-superadmin {
 
 .primary-button,
 .secondary-button {
-    border-radius: 999px;
-    padding: 0.75rem 1.6rem;
+    border-radius: 10px;
+    padding: 0.65rem 1.4rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform var(--transition-base), box-shadow var(--transition-base), background var(--transition-base), color var(--transition-base);
+    transition: background-color var(--transition-base), color var(--transition-base), border-color var(--transition-base);
 }
 
 .primary-button {
-    background: var(--primary-color);
-    color: var(--primary-contrast);
-    box-shadow: 0 12px 22px rgba(var(--primary-rgb), 0.25);
-    border: 1px solid rgba(var(--primary-rgb), 0.45);
+    background-color: #1F3A5F;
+    border: 1px solid #778DA9;
+    color: #ffffff;
 }
 
 .primary-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 28px rgba(var(--primary-rgb), 0.3);
+    background-color: #162D47;
+    border-color: #A9BCD0;
 }
 
 .secondary-button {
-    background: rgba(var(--primary-rgb), 0.18);
-    color: var(--primary-contrast);
-    border: 1px solid var(--primary-border);
+    background-color: transparent;
+    border: 1px solid #778DA9;
+    color: #778DA9;
 }
 
 .secondary-button:hover {
-    background: rgba(var(--primary-rgb), 0.3);
-    color: var(--primary-contrast);
+    background-color: rgba(119, 141, 169, 0.2);
+    color: #ffffff;
+    border-color: #A9BCD0;
 }
 
 .superadmin-panel {
@@ -372,8 +358,8 @@ body.theme-superadmin {
 .table-wrapper {
     overflow-x: auto;
     border-radius: var(--border-radius-sm);
-    border: 1px solid var(--border-color);
-    background: rgba(15, 25, 43, 0.65);
+    border: 1px solid var(--panel-border);
+    background: var(--panel-background);
 }
 
 .users-table {
@@ -419,12 +405,22 @@ body.theme-superadmin {
         align-items: flex-start;
         gap: 1rem;
         padding: 1rem 1.5rem;
+        height: auto;
+    }
+
+    .nav-left {
+        margin-left: 0;
+    }
+
+    .home-button {
+        margin-right: 0;
     }
 
     .nav-right {
         align-self: stretch;
         justify-content: space-between;
         width: 100%;
+        margin-right: 0;
     }
 
     .forms-grid {
@@ -436,6 +432,11 @@ body.theme-superadmin {
     .personal-area-content {
         margin: 1.5rem auto 2rem;
         width: min(95%, 600px);
+    }
+
+    .brand,
+    .project-name {
+        font-size: 1.5rem;
     }
 
     .card {
