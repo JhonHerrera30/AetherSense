@@ -329,6 +329,7 @@ body {
 	flex: 1;
 }
 
+
 .delete-icon {
         text-decoration: none;
         font-size: 1.2em;
@@ -342,7 +343,7 @@ body {
     width: 100%;
     margin: 3.5rem auto;
     padding: 2.5rem 2.25rem;
-    background: linear-gradient(135deg, #3d2012 0%, #c9662a 100%);
+    background-colour: #c9662a;
     border-radius: 22px;
     box-shadow: 0 28px 60px rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(255, 157, 77, 0.32);
