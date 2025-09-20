@@ -450,7 +450,7 @@ body {
     align-items: center;
     padding: 1.25rem 1.6rem;
     border-radius: 18px;
-    background: linear-gradient(145deg, rgba(190, 94, 38, 0.96), rgba(154, 72, 26, 0.9));
+    background: #cc6f00;
     border: 1px solid rgba(255, 189, 120, 0.26);
     border-left: 4px solid rgba(255, 189, 120, 0.58);
     box-shadow: 0 16px 36px rgba(92, 39, 16, 0.42);
