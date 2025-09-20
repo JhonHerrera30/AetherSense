@@ -343,7 +343,7 @@ body {
     width: 100%;
     margin: 3.5rem auto;
     padding: 2.5rem 2.25rem;
-    background-colour: #c9662a;
+    background-color: #c9662a;
     border-radius: 22px;
     box-shadow: 0 28px 60px rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(255, 157, 77, 0.32);
@@ -627,3 +627,4 @@ body {
         transform: translateY(0);
     }
 }
+
