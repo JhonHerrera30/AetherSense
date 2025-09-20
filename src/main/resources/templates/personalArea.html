@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${activeProject != null ? activeProject.name + ' – Area Personale' : 'Area Personale'}">Area Personale</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/personalArea.css}">
+</head>
+
+<body class="personal-area"
+      th:with="theme=${selectedProjectId} == 1 ? 'theme-ltrad' :
+                    (${selectedProjectId} == 51 ? 'theme-fire' :
+                    (${selectedProjectId} == 101 ? 'theme-volcano' : 'theme-superadmin'))}"
+      th:classappend="' ' + ${theme}">
+    <header class="navbar">
+        <div class="nav-left">
+            <a class="brand" th:href="@{/}">AetherSense</a>
+            <span class="project-name" th:if="${activeProject != null}" th:text="${activeProject.name}">Project</span>
+            <span class="project-name" th:if="${activeProject == null}">Nessun progetto selezionato</span>
+        </div>
+        <div class="nav-right">
+            <a class="home-button" th:href="@{/}" title="Torna alla home">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor" />
+                </svg>
+            </a>
+            <div class="auth-user dropdown" sec:authorize="isAuthenticated()">
+                <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true" aria-expanded="false">
+                    Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+                    <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                        <path d="M7 10l5 5 5-5z" fill="currentColor" />
+                    </svg>
+                </button>
+                <div class="dropdown-menu" id="userDropdownMenu" role="menu" aria-labelledby="userDropdown">
+                    <a class="dropdown-link" th:href="@{'/personal-area'(projectId=${selectedProjectId})}">Area personale</a>
+                    <form th:action="@{/logout}" method="post" th:csrf="true">
+                        <button type="submit" class="dropdown-logout">Logout</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="personal-area-content">
+        <section class="forms-grid">
+            <article class="card">
+                <header class="card-header">
+                    <h2>Informazioni personali</h2>
+                    <p>Aggiorna i tuoi dati anagrafici per tenere l'account sempre allineato.</p>
+                </header>
+
+                <div th:if="${personalInfoSuccessMessage}" class="alert success" th:text="${personalInfoSuccessMessage}"></div>
+                <div th:if="${personalInfoErrorMessage}" class="alert error" th:text="${personalInfoErrorMessage}"></div>
+
+                <form th:action="@{/personal-area/update-info}" th:object="${personalInfoForm}" method="post" th:csrf="true" class="form">
+                    <input type="hidden" name="projectId" th:value="${selectedProjectId}" th:if="${isSuperadmin}" />
+
+                    <div class="form-row">
+                        <div class="form-group" th:classappend="${#fields.hasErrors('name')} ? ' has-error'">
+                            <label for="name">Nome</label>
+                            <input type="text" id="name" th:field="*{name}" maxlength="100" autocomplete="given-name" required />
+                            <p class="error-message" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
+                        </div>
+                        <div class="form-group" th:classappend="${#fields.hasErrors('surname')} ? ' has-error'">
+                            <label for="surname">Cognome</label>
+                            <input type="text" id="surname" th:field="*{surname}" maxlength="100" autocomplete="family-name" required />
+                            <p class="error-message" th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" th:classappend="${#fields.hasErrors('dateOfBirth')} ? ' has-error'">
+                            <label for="dateOfBirth">Data di nascita</label>
+                            <input type="date" id="dateOfBirth" th:field="*{dateOfBirth}" required
+                                   th:attr="max=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" />
+                            <p class="error-message" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></p>
+                        </div>
+                        <div class="form-group" th:classappend="${#fields.hasErrors('phoneNumber')} ? ' has-error'">
+                            <label for="phoneNumber">Telefono</label>
+                            <input type="tel" id="phoneNumber" th:field="*{phoneNumber}" required inputmode="tel"
+                                   pattern="^\+?[0-9\s]{6,20}$" placeholder="+39 123 456 789" />
+                            <p class="error-message" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="primary-button">Salva modifiche</button>
+                    </div>
+                </form>
+            </article>
+
+            <article class="card">
+                <header class="card-header">
+                    <h2>Credenziali di accesso</h2>
+                    <p>Gestisci username e password per proteggere il tuo account.</p>
+                </header>
+
+                <div th:if="${credentialsSuccessMessage}" class="alert success" th:text="${credentialsSuccessMessage}"></div>
+                <div th:if="${credentialsErrorMessage}" class="alert error" th:text="${credentialsErrorMessage}"></div>
+
+                <form th:action="@{/personal-area/update-credentials}" th:object="${credentialsUpdateForm}" method="post" th:csrf="true" class="form">
+                    <input type="hidden" name="projectId" th:value="${selectedProjectId}" th:if="${isSuperadmin}" />
+
+                    <div class="form-group" th:classappend="${#fields.hasErrors('username')} ? ' has-error'">
+                        <label for="username">Username visibile</label>
+                        <input type="text" id="username" th:field="*{username}" minlength="3" maxlength="50" autocomplete="username" required />
+                        <p class="error-message" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></p>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group" th:classappend="${#fields.hasErrors('password')} ? ' has-error'">
+                            <label for="password">Nuova password</label>
+                            <input type="password" id="password" th:field="*{password}" autocomplete="new-password"
+                                   placeholder="Minimo 8 caratteri" />
+                            <p class="error-message" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+                        </div>
+                        <div class="form-group" th:classappend="${#fields.hasErrors('confirmPassword')} ? ' has-error'">
+                            <label for="confirmPassword">Conferma password</label>
+                            <input type="password" id="confirmPassword" th:field="*{confirmPassword}" autocomplete="new-password" />
+                            <p class="error-message" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="primary-button">Aggiorna credenziali</button>
+                    </div>
+                </form>
+            </article>
+        </section>
+
+        <section class="superadmin-panel" th:if="${isSuperadmin}">
+            <article class="card">
+                <header class="card-header">
+                    <h2>Gestione utenti progetto</h2>
+                    <p>Seleziona un progetto per visualizzare gli utenti associati.</p>
+                </header>
+
+                <form class="project-selector" th:action="@{/personal-area}" method="get">
+                    <label for="projectId">Progetto</label>
+                    <div class="project-selector-controls">
+                        <select id="projectId" name="projectId">
+                            <option value="" th:selected="${selectedProjectId} == null">Seleziona un progetto</option>
+                            <option th:each="project : ${projects}" th:value="${project.id}" th:text="${project.name}"
+                                    th:selected="${project.id} == ${selectedProjectId}"></option>
+                        </select>
+                        <button type="submit" class="secondary-button">Carica</button>
+                    </div>
+                </form>
+
+                <p class="table-placeholder" th:if="${selectedProjectId == null}">Seleziona un progetto per visualizzare gli utenti.</p>
+
+                <div class="table-wrapper" th:if="${selectedProjectId != null}">
+                    <table class="users-table">
+                        <caption th:text="${activeProject != null ? 'Utenti del progetto ' + activeProject.name : 'Utenti del progetto'}">Utenti del progetto</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Username</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Ruolo</th>
+                                <th scope="col">Nome</th>
+                                <th scope="col">Cognome</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(projectUsers)}">
+                                <td colspan="5">Nessun utente trovato per il progetto selezionato.</td>
+                            </tr>
+                            <tr th:each="projUser : ${projectUsers}">
+                                <td th:text="${projUser.visibleUsername != null ? projUser.visibleUsername : projUser.username}">username</td>
+                                <td th:text="${projUser.email}">email@example.com</td>
+                                <td th:text="${projUser.role}">Ruolo</td>
+                                <td th:text="${projUser.user != null ? projUser.user.name : '-'}">Nome</td>
+                                <td th:text="${projUser.user != null ? projUser.user.surname : '-'}">Cognome</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggle = document.getElementById('userDropdown');
+            const menu = document.getElementById('userDropdownMenu');
+            if (!toggle || !menu) {
+                return;
+            }
+            toggle.addEventListener('click', function (event) {
+                event.stopPropagation();
+                const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                toggle.setAttribute('aria-expanded', (!isExpanded).toString());
+                menu.classList.toggle('show');
+            });
+            document.addEventListener('click', function (event) {
+                if (!menu.contains(event.target) && event.target !== toggle) {
+                    menu.classList.remove('show');
+                    toggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
