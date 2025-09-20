@@ -360,6 +360,15 @@ body.theme-superadmin {
     background: var(--panel-background);
 }
 
+.table-title {
+    margin: 0;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: var(--primary-contrast);
+    background: rgba(var(--primary-rgb), 0.25);
+}
+
 .users-table {
     width: 100%;
     border-collapse: collapse;
@@ -367,14 +376,6 @@ body.theme-superadmin {
     overflow: hidden;
     background: transparent;
     color: var(--text-color);
-}
-
-.users-table caption {
-    text-align: left;
-    padding: 0.75rem 1rem;
-    font-weight: 600;
-    color: var(--primary-contrast);
-    background: rgba(var(--primary-rgb), 0.25);
 }
 
 .users-table th,
