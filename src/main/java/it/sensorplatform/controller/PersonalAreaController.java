@@ -220,7 +220,9 @@ public class PersonalAreaController {
         }
         try {
             return projectService.getProjectById(projectId);
-        } catch (NoSuchElementException | RuntimeException ex) {
+        } catch (NoSuchElementException ex) {
+            return null;
+        } catch (RuntimeException ex) {
             return null;
         }
     }
