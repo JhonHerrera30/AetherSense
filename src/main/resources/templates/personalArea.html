@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${activeProject != null ? activeProject.name + ' – Area Personale' : 'Area Personale'}">Area Personale</title>
+    <title th:text="${activeProject != null ? activeProject.name + ' – Personal Area' : 'Personal Area'}">Personal Area</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/personalArea.css}">
 </head>
@@ -16,12 +16,12 @@
       th:classappend="' ' + ${theme}">
     <header id="navbar" class="navbar">
         <div class="nav-left">
-            <h1 th:text="${activeProject != null ? activeProject.name : (isSuperadmin ? 'AetherSense' : 'Area Personale')}">AetherSense</h1>
+            <h1 th:text="${activeProject != null ? activeProject.name : (isSuperadmin ? 'AetherSense' : 'Personal Area')}">AetherSense</h1>
         </div>
         <div class="nav-right">
             <div class="auth-user dropdown" sec:authorize="isAuthenticated()">
                 <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true" aria-expanded="false">
-                    Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+                    Hi, <strong th:text="${user.visibleUsername}">user</strong>
                     <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
                         <path d="M7 10l5 5 5-5z" fill="currentColor" />
                     </svg>
@@ -33,7 +33,7 @@
                     </form>
                 </div>
             </div>
-            <a class="home-button" th:href="@{/}" title="Torna alla home">
+            <a class="home-button" th:href="@{/}" title="Back to home">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor" />
                 </svg>
@@ -45,8 +45,8 @@
         <section class="forms-grid">
             <article class="card">
                 <header class="card-header">
-                    <h2>Informazioni personali</h2>
-                    <p>Aggiorna i tuoi dati anagrafici per tenere l'account sempre allineato.</p>
+                    <h2>Personal information</h2>
+                    <p>Update your personal details to keep your account aligned.</p>
                 </header>
 
                 <div th:if="${personalInfoSuccessMessage}" class="alert success" th:text="${personalInfoSuccessMessage}"></div>
@@ -57,12 +57,12 @@
 
                     <div class="form-row">
                         <div class="form-group" th:classappend="${#fields.hasErrors('name')} ? ' has-error'">
-                            <label for="name">Nome</label>
+                            <label for="name">First name</label>
                             <input type="text" id="name" th:field="*{name}" maxlength="100" autocomplete="given-name" required />
                             <p class="error-message" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
                         </div>
                         <div class="form-group" th:classappend="${#fields.hasErrors('surname')} ? ' has-error'">
-                            <label for="surname">Cognome</label>
+                            <label for="surname">Last name</label>
                             <input type="text" id="surname" th:field="*{surname}" maxlength="100" autocomplete="family-name" required />
                             <p class="error-message" th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></p>
                         </div>
@@ -70,13 +70,13 @@
 
                     <div class="form-row">
                         <div class="form-group" th:classappend="${#fields.hasErrors('dateOfBirth')} ? ' has-error'">
-                            <label for="dateOfBirth">Data di nascita</label>
+                            <label for="dateOfBirth">Date of birth</label>
                             <input type="date" id="dateOfBirth" th:field="*{dateOfBirth}" required
                                    th:attr="max=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" />
                             <p class="error-message" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></p>
                         </div>
                         <div class="form-group" th:classappend="${#fields.hasErrors('phoneNumber')} ? ' has-error'">
-                            <label for="phoneNumber">Telefono</label>
+                            <label for="phoneNumber">Phone number</label>
                             <input type="tel" id="phoneNumber" th:field="*{phoneNumber}" required inputmode="tel"
                                    pattern="^\+?[0-9\s]{6,20}$" placeholder="+39 123 456 789" />
                             <p class="error-message" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></p>
@@ -84,15 +84,15 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="primary-button">Salva modifiche</button>
+                        <button type="submit" class="primary-button">Save changes</button>
                     </div>
                 </form>
             </article>
 
             <article class="card">
                 <header class="card-header">
-                    <h2>Credenziali di accesso</h2>
-                    <p>Gestisci username e password per proteggere il tuo account.</p>
+                    <h2>Login credentials</h2>
+                    <p>Manage your username and password to protect your account.</p>
                 </header>
 
                 <div th:if="${credentialsSuccessMessage}" class="alert success" th:text="${credentialsSuccessMessage}"></div>
@@ -102,27 +102,27 @@
                     <input type="hidden" name="projectId" th:value="${selectedProjectId}" th:if="${isSuperadmin}" />
 
                     <div class="form-group" th:classappend="${#fields.hasErrors('username')} ? ' has-error'">
-                        <label for="username">Username visibile</label>
+                        <label for="username">Display username</label>
                         <input type="text" id="username" th:field="*{username}" minlength="3" maxlength="50" autocomplete="username" required />
                         <p class="error-message" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></p>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group" th:classappend="${#fields.hasErrors('password')} ? ' has-error'">
-                            <label for="password">Nuova password</label>
+                            <label for="password">New password</label>
                             <input type="password" id="password" th:field="*{password}" autocomplete="new-password"
-                                   placeholder="Minimo 8 caratteri" />
+                                   placeholder="Minimum 8 characters" />
                             <p class="error-message" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
                         </div>
                         <div class="form-group" th:classappend="${#fields.hasErrors('confirmPassword')} ? ' has-error'">
-                            <label for="confirmPassword">Conferma password</label>
+                            <label for="confirmPassword">Confirm password</label>
                             <input type="password" id="confirmPassword" th:field="*{confirmPassword}" autocomplete="new-password" />
                             <p class="error-message" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></p>
                         </div>
                     </div>
 
                     <div class="form-actions">
-                        <button type="submit" class="primary-button">Aggiorna credenziali</button>
+                        <button type="submit" class="primary-button">Update credentials</button>
                     </div>
                 </form>
             </article>
@@ -131,24 +131,24 @@
         <section class="superadmin-panel" th:if="${isSuperadmin}">
             <article class="card">
                 <header class="card-header">
-                    <h2>Gestione utenti progetto</h2>
-                    <p>Seleziona un progetto per visualizzare gli utenti associati.</p>
+                    <h2>Project user management</h2>
+                    <p>Select a project to view the associated users.</p>
                 </header>
 
                 <form class="project-selector" th:action="@{/personal-area}" method="get">
-                    <label for="projectId">Progetto</label>
+                    <label for="projectId">Project</label>
                     <div class="project-selector-controls">
                         <select id="projectId" name="projectId">
-                            <option value="" th:selected="${selectedProjectId} == null">Seleziona un progetto</option>
+                            <option value="" th:selected="${selectedProjectId} == null">Select a project</option>
                             <option th:each="project : ${projects}" th:value="${project.id}" th:text="${project.name}"
                                     th:selected="${project.id} == ${selectedProjectId}"></option>
                         </select>
-                        <button type="submit" class="secondary-button">Carica</button>
+                        <button type="submit" class="secondary-button">Load</button>
                     </div>
                 </form>
 
-                <p class="table-placeholder" th:if="${selectedProjectId == null}">Seleziona un progetto per visualizzare gli utenti.</p>
-                    <h3 class="table-title" th:text="${activeProject != null ? 'Utenti del progetto ' + activeProject.name : 'Utenti del progetto'}">Utenti del progetto</h3>
+                <p class="table-placeholder" th:if="${selectedProjectId == null}">Select a project to view the users.</p>
+                    <h3 class="table-title" th:text="${activeProject != null ? 'Users for project ' + activeProject.name : 'Project users'}">Project users</h3>
 
                 <div class="table-wrapper" th:if="${selectedProjectId != null}">
                     <table class="users-table">
@@ -156,21 +156,21 @@
                             <tr>
                                 <th scope="col">Username</th>
                                 <th scope="col">Email</th>
-                                <th scope="col">Ruolo</th>
-                                <th scope="col">Nome</th>
-                                <th scope="col">Cognome</th>
+                                <th scope="col">Role</th>
+                                <th scope="col">First name</th>
+                                <th scope="col">Last name</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:if="${#lists.isEmpty(projectUsers)}">
-                                <td colspan="5">Nessun utente trovato per il progetto selezionato.</td>
+                                <td colspan="5">No users found for the selected project.</td>
                             </tr>
                             <tr th:each="projUser : ${projectUsers}">
                                 <td th:text="${projUser.visibleUsername != null ? projUser.visibleUsername : projUser.username}">username</td>
                                 <td th:text="${projUser.email}">email@example.com</td>
-                                <td th:text="${projUser.role}">Ruolo</td>
-                                <td th:text="${projUser.user != null ? projUser.user.name : '-'}">Nome</td>
-                                <td th:text="${projUser.user != null ? projUser.user.surname : '-'}">Cognome</td>
+                                <td th:text="${projUser.role}">Role</td>
+                                <td th:text="${projUser.user != null ? projUser.user.name : '-'}">First name</td>
+                                <td th:text="${projUser.user != null ? projUser.user.surname : '-'}">Last name</td>
                             </tr>
                         </tbody>
                     </table>
