@@ -352,11 +352,22 @@ td {
 }
 
 /* Colonna Azioni */
-td:last-child {
+.device-table td:last-child {
     display: flex;
     gap: 0.5rem;
     align-items: center;
     justify-content: center;
+}
+
+.modal-table td:last-child {
+    display: table-cell;
+    text-align: center;
+}
+
+.modal-table .checkbox-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 
