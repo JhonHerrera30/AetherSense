@@ -76,28 +76,20 @@ body.theme-superadmin {
     display: flex;
     align-items: center;
     gap: 1.5rem;
-    margin-left: 3rem;
-}
-
-.brand {
-    color: var(--primary-contrast);
-    font-weight: 700;
-    font-size: 1.6rem;
-    text-decoration: none;
-    letter-spacing: 0.02em;
-}
-
-.project-name {
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--primary-contrast);
 }
 
 .nav-right {
     display: flex;
     align-items: center;
     gap: 1rem;
-    margin-right: 3rem;
+}
+
+#navbar h1 {
+    margin: 0;
+    margin-left: 3rem;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--primary-contrast);
 }
 
 .home-button {
@@ -110,6 +102,12 @@ body.theme-superadmin {
 
 .home-button:hover {
     color: rgba(255, 255, 255, 0.85);
+}
+
+.icon-home {
+    fill: currentColor;
+    width: 24px;
+    height: 24px;
 }
 
 .dropdown {
