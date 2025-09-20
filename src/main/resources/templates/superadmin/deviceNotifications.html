@@ -61,16 +61,26 @@
 
     function renderNotification(n) {
         let box = document.getElementById('notif-' + n.key);
+        const address = n.macAddress ? formatMac(n.macAddress) : formatMac(n.devEui);
+        const details = n.devEui && n.macAddress ? `/${n.devEui}` : '';
+        const identifierText = address ? `${address}${details}` : ((n.devEui && n.devEui.trim()) ? n.devEui : 'Identificativo non disponibile');
+        const typeLabel = n.typeOfDevice && n.typeOfDevice.trim() ? n.typeOfDevice : 'Tipologia non specificata';
         if (!box) {
             box = document.createElement('div');
             box.id = 'notif-' + n.key;
             box.className = 'notification-box';
-            const address = n.macAddress ? formatMac(n.macAddress) : formatMac(n.devEui);
-            const details = n.devEui && n.macAddress ? `/${n.devEui}` : '';
-            box.innerHTML = `<p><strong>${address}${details}</strong></p>
+            box.innerHTML = `<p class="device-identifiers"><strong class="device-address">${identifierText}</strong> <span class="device-type">${typeLabel}</span></p>
                              <p class="time"></p>
                              <button class="btn-add" onclick="addDevice('${n.key}')">Add</button>`;
             container.appendChild(box);
+        }
+        const addressElement = box.querySelector('.device-address');
+        if (addressElement) {
+            addressElement.textContent = identifierText;
+        }
+        const typeElement = box.querySelector('.device-type');
+        if (typeElement) {
+            typeElement.textContent = typeLabel;
         }
         box.dataset.timestamp = Date.parse(n.timestamp);
     }
