@@ -148,9 +148,9 @@
                 </form>
 
                 <p class="table-placeholder" th:if="${selectedProjectId == null}">Seleziona un progetto per visualizzare gli utenti.</p>
+                    <h3 class="table-title" th:text="${activeProject != null ? 'Utenti del progetto ' + activeProject.name : 'Utenti del progetto'}">Utenti del progetto</h3>
 
                 <div class="table-wrapper" th:if="${selectedProjectId != null}">
-                    <h3 class="table-title" th:text="${activeProject != null ? 'Utenti del progetto ' + activeProject.name : 'Utenti del progetto'}">Utenti del progetto</h3>
                     <table class="users-table">
                         <thead>
                             <tr>
