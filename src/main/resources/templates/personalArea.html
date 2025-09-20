@@ -14,18 +14,11 @@
                     (selectedProjectId == 51 ? 'theme-fire' :
                     (selectedProjectId == 101 ? 'theme-volcano' : 'theme-superadmin'))}"
       th:classappend="' ' + ${theme}">
-    <header class="navbar">
+    <header id="navbar" class="navbar">
         <div class="nav-left">
-            <a class="brand" th:href="@{/}">AetherSense</a>
-            <span class="project-name" th:if="${activeProject != null}" th:text="${activeProject.name}">Project</span>
-            <span class="project-name" th:if="${activeProject == null}">Nessun progetto selezionato</span>
+            <h1 th:text="${activeProject != null ? activeProject.name : (isSuperadmin ? 'AetherSense' : 'Area Personale')}">AetherSense</h1>
         </div>
         <div class="nav-right">
-            <a class="home-button" th:href="@{/}" title="Torna alla home">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor" />
-                </svg>
-            </a>
             <div class="auth-user dropdown" sec:authorize="isAuthenticated()">
                 <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true" aria-expanded="false">
                     Hi, <strong th:text="${user.visibleUsername}">utente</strong>
@@ -40,6 +33,11 @@
                     </form>
                 </div>
             </div>
+            <a class="home-button" th:href="@{/}" title="Torna alla home">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor" />
+                </svg>
+            </a>
         </div>
     </header>
 
