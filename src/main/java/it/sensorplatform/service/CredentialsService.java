@@ -1,16 +1,17 @@
 package it.sensorplatform.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import it.sensorplatform.repository.CredentialsRepository;
 import jakarta.transaction.Transactional;
 import it.sensorplatform.model.Credentials;
-import it.sensorplatform.model.Project;
 
 @Service
 public class CredentialsService {
@@ -43,10 +44,18 @@ public class CredentialsService {
 
 
 	@Transactional
-	public Credentials saveCredentials(Credentials credentials) {
-		credentials.setPassword(this.passwordEncoder.encode(credentials.getPassword()));
-		return this.credentialsRepository.save(credentials);
-	}
+        public Credentials saveCredentials(Credentials credentials) {
+                credentials.setPassword(this.passwordEncoder.encode(credentials.getPassword()));
+                return this.credentialsRepository.save(credentials);
+        }
+
+        @Transactional
+        public Credentials updateCredentials(Credentials credentials, String rawPassword) {
+                if (StringUtils.hasText(rawPassword)) {
+                        credentials.setPassword(this.passwordEncoder.encode(rawPassword));
+                }
+                return this.credentialsRepository.save(credentials);
+        }
 	
 	public boolean existsByUsernameAndProjectId(String username, Long projectId) {
 	    return credentialsRepository.findByUsernameAndProjectId(username, projectId).isPresent();
@@ -74,13 +83,20 @@ public class CredentialsService {
 	    return credentialsRepository.findByRoleAndUserIsNull(role);
 	}*/
 	
-	public List<Credentials> findByRoleAndProjectId(String role, Long projectId) {
-	    return credentialsRepository.findByRoleAndProjectId(role, projectId);
-	}
-	
-	public Credentials findById(Long id) {
-		return credentialsRepository.findById(id).get();
-	}
+        public List<Credentials> findByRoleAndProjectId(String role, Long projectId) {
+            return credentialsRepository.findByRoleAndProjectId(role, projectId);
+        }
+
+        public List<Credentials> getProjectUsers(Long projectId) {
+                if (projectId == null) {
+                        return Collections.emptyList();
+                }
+                return credentialsRepository.findByProjectId(projectId);
+        }
+
+        public Credentials findById(Long id) {
+                return credentialsRepository.findById(id).get();
+        }
 
 
 }
