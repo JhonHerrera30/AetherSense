@@ -337,20 +337,292 @@ body {
         margin-top: 3px; /* piccolo offset per centrare meglio */
 }
 
+.notifications-panel {
+    max-width: 860px;
+    width: 100%;
+    margin: 3.5rem auto;
+    padding: 2.5rem 2.25rem;
+    background: linear-gradient(155deg, rgba(52, 26, 8, 0.96), rgba(32, 14, 4, 0.94));
+    border-radius: 22px;
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 157, 77, 0.32);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.notifications-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1.2rem;
+}
+
+.notifications-header-text {
+    flex: 1 1 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.notifications-title {
+    margin: 0;
+    font-size: clamp(1.4rem, 2.6vw, 2rem);
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #ffe7d1;
+}
+
+.notifications-description {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: rgba(255, 226, 200, 0.78);
+    max-width: 60ch;
+}
+
+.notifications-header-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+}
+
+.notifications-panel .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 157, 77, 0.45);
+    background: rgba(255, 157, 77, 0.16);
+    color: #ffe3c6;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.notifications-panel .btn-back::before {
+    content: '\2190';
+    font-size: 1rem;
+}
+
+.notifications-panel .btn-back:hover {
+    background: rgba(255, 157, 77, 0.26);
+    border-color: rgba(255, 157, 77, 0.6);
+    transform: translateX(-2px);
+}
+
+.notifications-panel .btn-back:focus-visible {
+    outline: 2px solid rgba(255, 188, 130, 0.85);
+    outline-offset: 2px;
+}
+
+.notifications-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.notifications-empty {
+    margin: 0 auto;
+    padding: 1.2rem 1.5rem;
+    border-radius: 16px;
+    border: 1px dashed rgba(255, 157, 77, 0.45);
+    background: rgba(54, 25, 10, 0.85);
+    color: rgba(255, 224, 196, 0.88);
+    text-align: center;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 30rem;
+}
+
+.notification-box {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 1.25rem 1.6rem;
+    border-radius: 18px;
+    background: linear-gradient(145deg, rgba(62, 26, 8, 0.96), rgba(44, 18, 6, 0.9));
+    border: 1px solid rgba(255, 157, 77, 0.24);
+    border-left: 4px solid rgba(255, 157, 77, 0.55);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    animation: notification-in 0.35s ease;
+}
+
+.notification-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 26px 52px rgba(255, 157, 77, 0.3);
+    border-color: rgba(255, 157, 77, 0.48);
+}
+
+.notification-icon {
+    width: 3.3rem;
+    height: 3.3rem;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 1.45rem;
+    background: rgba(255, 157, 77, 0.18);
+    color: #ffe0c4;
+    box-shadow: 0 0 0 1px rgba(255, 157, 77, 0.35) inset;
+}
+
+.notification-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
 .notification-box .device-identifiers {
+    margin: 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
-    margin: 0 0 0.5rem;
+    gap: 0.55rem;
 }
 
 .notification-box .device-address {
     font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    word-break: break-all;
 }
 
 .notification-box .device-type {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 157, 77, 0.22);
+    color: #ffcba0;
+    font-weight: 600;
+}
+
+.notifications-panel .time {
+    margin: 0;
     font-size: 0.85rem;
-    font-style: italic;
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(255, 226, 200, 0.8);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    letter-spacing: 0.03em;
+}
+
+.notifications-panel .time::before {
+    content: '\23F0';
+    font-size: 1rem;
+}
+
+.notification-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.notifications-panel .btn-add {
+    background: linear-gradient(135deg, #ffb168, #ff7a18);
+    color: #ffffff;
+    padding: 0.65rem 1.4rem;
+    border-radius: 999px;
+    border: none;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    box-shadow: 0 14px 30px rgba(255, 138, 62, 0.35);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+}
+
+.notifications-panel .btn-add::before {
+    content: '\2795';
+    font-size: 0.9rem;
+}
+
+.notifications-panel .btn-add:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(255, 138, 62, 0.45);
+    filter: brightness(1.05);
+}
+
+.notifications-panel .btn-add:focus-visible {
+    outline: 2px solid rgba(255, 188, 130, 0.85);
+    outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+    .notifications-panel {
+        margin: 3rem 1.5rem;
+        padding: 2rem 1.75rem;
+    }
+}
+
+@media (max-width: 720px) {
+    .notification-box {
+        grid-template-columns: auto 1fr;
+    }
+
+    .notification-actions {
+        grid-column: 1 / -1;
+        align-items: stretch;
+    }
+
+    .notifications-panel .btn-add {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 560px) {
+    .notifications-panel {
+        margin: 2.5rem 1rem;
+        padding: 1.75rem 1.25rem;
+    }
+
+    .notification-box {
+        grid-template-columns: 1fr;
+    }
+
+    .notification-icon {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .notifications-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .notifications-header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
+@keyframes notification-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

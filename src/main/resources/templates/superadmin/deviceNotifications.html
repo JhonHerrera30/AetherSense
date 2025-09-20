@@ -37,18 +37,38 @@
         </a>
     </div>
 </header>
-<div class="form-container">
-    <div class="back-btn">
-        <a th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}" class="btn-back" title="Back to Devices">⬅ Back</a>
+<section class="notifications-panel" aria-labelledby="notifications-title">
+    <header class="notifications-header">
+        <div class="notifications-header-text">
+            <h2 id="notifications-title" class="notifications-title"
+                th:text="'New device notifications · ' + ${project.name}">New device notifications</h2>
+            <p class="notifications-description">Live feed of devices waiting to be paired with the project.</p>
+        </div>
+        <div class="notifications-header-actions">
+            <a th:href="@{'/superadmin/manageProjectDevices/' + ${project.id}}" class="btn-back" title="Back to Devices">Back to devices</a>
+        </div>
+    </header>
+    <div class="notifications-content">
+        <div id="notification-list" class="notifications-list" aria-live="polite" role="list"></div>
+        <p id="notifications-empty" class="notifications-empty">No new devices detected at the moment.</p>
     </div>
-    <div id="notification-list"></div>
-</div>
+</section>
 <script th:inline="javascript">
 /*<![CDATA[*/
     const projectId = [[${project.id}]];
 /*]]>*/
     const container = document.getElementById('notification-list');
+    const emptyState = document.getElementById('notifications-empty');
     const notifications = new Map();
+
+    function updateEmptyState() {
+        if (!emptyState || !container) {
+            return;
+        }
+        emptyState.hidden = container.childElementCount > 0 ? true : false;
+    }
+
+    updateEmptyState();
 
     function formatMac(mac) {
         if (!mac) {
@@ -69,9 +89,16 @@
             box = document.createElement('div');
             box.id = 'notif-' + n.key;
             box.className = 'notification-box';
-            box.innerHTML = `<p class="device-identifiers"><strong class="device-address">${identifierText}</strong> <span class="device-type">${typeLabel}</span></p>
-                             <p class="time"></p>
-                             <button class="btn-add" onclick="addDevice('${n.key}')">Add</button>`;
+            box.setAttribute('role', 'listitem');
+            box.innerHTML = `<div class="notification-icon" aria-hidden="true">📡</div>
+                             <div class="notification-main">
+                                 <p class="device-identifiers"><strong class="device-address">${identifierText}</strong>
+                                     <span class="device-type">${typeLabel}</span></p>
+                                 <p class="time"></p>
+                             </div>
+                             <div class="notification-actions">
+                                 <button type="button" class="btn-add" onclick="addDevice('${n.key}')">Add device</button>
+                             </div>`;
             container.appendChild(box);
         }
         const addressElement = box.querySelector('.device-address');
@@ -82,15 +109,38 @@
         if (typeElement) {
             typeElement.textContent = typeLabel;
         }
-        box.dataset.timestamp = Date.parse(n.timestamp);
+        const parsedTimestamp = Date.parse(n.timestamp);
+        box.dataset.timestamp = isNaN(parsedTimestamp) ? Date.now() : parsedTimestamp;
+        updateEmptyState();
+        updateTimes();
     }
 
     function updateTimes() {
         const now = Date.now();
         document.querySelectorAll('.notification-box').forEach(box => {
-            const ts = parseInt(box.dataset.timestamp);
-            const diff = Math.floor((now - ts) / 1000);
-            box.querySelector('.time').textContent = diff + 's ago';
+            const ts = parseInt(box.dataset.timestamp, 10);
+            const timeElement = box.querySelector('.time');
+            if (!timeElement || Number.isNaN(ts)) {
+                return;
+            }
+            const diffSeconds = Math.max(0, Math.floor((now - ts) / 1000));
+            let label;
+            if (diffSeconds < 5) {
+                label = 'Just now';
+            } else if (diffSeconds < 60) {
+                label = diffSeconds + 's ago';
+            } else if (diffSeconds < 3600) {
+                const minutes = Math.floor(diffSeconds / 60);
+                label = minutes === 1 ? '1 minute ago' : minutes + ' minutes ago';
+            } else {
+                const hours = Math.floor(diffSeconds / 3600);
+                label = hours === 1 ? '1 hour ago' : hours + ' hours ago';
+            }
+            timeElement.textContent = label;
+            const preciseDate = new Date(ts);
+            if (!Number.isNaN(preciseDate.getTime())) {
+                timeElement.setAttribute('title', preciseDate.toLocaleString());
+            }
         });
     }
     setInterval(updateTimes, 1000);
