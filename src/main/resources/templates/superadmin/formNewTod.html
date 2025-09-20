@@ -36,11 +36,12 @@
 						<path d="M7 10l5 5 5-5z" />
 					</svg>
 				</button>
-				<div class="dropdown-menu" id="userDropdownMenu">
-					<form th:action="@{/logout}" method="post" th:csrf="true">
-						<button type="submit" class="dropdown-logout">Logout</button>
-					</form>
-				</div>
+                                <div class="dropdown-menu" id="userDropdownMenu">
+                                        <a th:href="@{/personal-area}" class="dropdown-link">Personal Area</a>
+                                        <form th:action="@{/logout}" method="post" th:csrf="true">
+                                                <button type="submit" class="dropdown-logout">Logout</button>
+                                        </form>
+                                </div>
 			</div>
 			<a href="/" class="home-button" title="Homepage">
 				<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">

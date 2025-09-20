@@ -88,6 +88,7 @@ html, body {
 .dropdown:hover .dropdown-menu {
   display: block;
 }
+.dropdown-link,
 .dropdown-logout {
   width: 100%;
   background: none;
@@ -98,6 +99,7 @@ html, body {
   cursor: pointer;
   text-align: left;
 }
+.dropdown-link:hover,
 .dropdown-logout:hover {
   background: rgba(255,255,255,.1);
 }

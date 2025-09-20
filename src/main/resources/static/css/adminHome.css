@@ -47,14 +47,85 @@ body {
 }
 
 .nav-right {
-	margin-right: 3em;
+        margin-right: 3em;
+}
+
+.auth-user {
+        display: flex;
+        align-items: center;
+}
+
+.dropdown {
+        position: relative;
+        display: inline-block;
+}
+
+.dropdown-toggle {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+}
+
+.dropdown-toggle:focus {
+        outline: none;
+}
+
+.dropdown-icon {
+        transition: transform 0.3s;
+}
+
+.dropdown-toggle:hover .dropdown-icon {
+        transform: rotate(180deg);
+}
+
+.dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 2.4rem;
+        background-color: #0D1B2A;
+        border: 1px solid rgba(0, 191, 255, 0.4);
+        border-radius: 8px;
+        padding: 0.5rem;
+        min-width: 150px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+        z-index: 5;
+}
+
+.dropdown-menu.show {
+        display: block;
+}
+
+.dropdown-link,
+.dropdown-logout {
+        width: 100%;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 0.95rem;
+        padding: 0.5rem;
+        text-align: left;
+        text-decoration: none;
+        display: block;
+        border-radius: 4px;
+        cursor: pointer;
+}
+
+.dropdown-link:hover,
+.dropdown-logout:hover {
+        background-color: rgba(0, 191, 255, 0.15);
 }
 
 .nav-button {
-	background: transparent;
-	border: 2px solid #fff;
-	color: #fff;
-	padding: 0.5rem 1rem;
+        background: transparent;
+        border: 2px solid #fff;
+        color: #fff;
+        padding: 0.5rem 1rem;
 	border-radius: 20px;
 	text-decoration: none;
 	font-size: 0.95rem;

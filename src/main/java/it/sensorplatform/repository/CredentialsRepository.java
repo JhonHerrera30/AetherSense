@@ -10,17 +10,21 @@ import it.sensorplatform.model.Credentials;
 
 @Repository
 public interface CredentialsRepository extends CrudRepository<Credentials, Long>{
-	public Optional<Credentials> findByUsername(String username);
+        public Optional<Credentials> findByUsername(String username);
 
-	public Optional<Credentials> findByUsernameAndProjectId(String username, Long projectId);
+        public Optional<Credentials> findByUsernameAndProjectId(String username, Long projectId);
 
-	public boolean existsByUsername(String username);
+        public boolean existsByUsername(String username);
 
-	public boolean existsByEmailAndProjectId(String email, Long projectId);
-	
+        public boolean existsByEmailAndProjectId(String email, Long projectId);
+
     public List<Credentials> findByRoleAndUserIsNull(String role);
-    
+
     public Optional<Credentials>  findById(Long id);
-    
+
     List<Credentials> findByRoleAndProjectId(String role, Long projectId);
+
+    Optional<Credentials> findByUsernameAndIdNot(String username, Long id);
+
+    List<Credentials> findByProjectIdAndUserIsNotNull(Long projectId);
 }

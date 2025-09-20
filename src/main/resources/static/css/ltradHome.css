@@ -120,6 +120,7 @@ nav-left{
 }
 
 /* Pulsante logout nel menu */
+.dropdown-link,
 .dropdown-logout {
 	width: 100%;
 	background: none;
@@ -131,6 +132,9 @@ nav-left{
 	text-align: left;
 	transition: background-color 0.2s;
 }
+
+.dropdown-link:hover,
+
 
 .dropdown-logout:hover {
 	background-color: rgba(255, 255, 255, 0.1);

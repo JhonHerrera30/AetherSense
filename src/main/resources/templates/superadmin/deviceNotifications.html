@@ -25,6 +25,7 @@
                 </svg>
             </button>
             <div class="dropdown-menu" id="userDropdownMenu">
+                <a th:href="@{/personal-area}" class="dropdown-link">Personal Area</a>
                 <form th:action="@{/logout}" method="post" th:csrf="true">
                     <button type="submit" class="dropdown-logout">Logout</button>
                 </form>

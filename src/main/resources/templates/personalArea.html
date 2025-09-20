@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Personal Area</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:if="${currentProjectId == 1}" th:href="@{/css/personalAreaLtrad.css}" />
+    <link rel="stylesheet" th:if="${currentProjectId == 51}" th:href="@{/css/personalAreaFire.css}" />
+    <link rel="stylesheet" th:if="${currentProjectId == 101}" th:href="@{/css/personalAreaVolcano.css}" />
+    <link rel="stylesheet" th:if="${currentProjectId == null}" th:href="@{/css/personalAreaSuperadmin.css}" />
+    <link rel="stylesheet" th:if="${currentProjectId != null and currentProjectId != 1 and currentProjectId != 51 and currentProjectId != 101}" th:href="@{/css/personalAreaSuperadmin.css}" />
+</head>
+
+<body>
+    <header id="navbar" class="navbar">
+        <div class="nav-left">
+            <h1>Personal Area</h1>
+        </div>
+        <div class="nav-right">
+            <div sec:authorize="isAuthenticated()" th:if="${user != null}" class="auth-user dropdown">
+                <button type="button" class="dropdown-toggle" id="userDropdown">
+                    Hi, <strong th:text="${user.visibleUsername}">user</strong>
+                    <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="white">
+                        <path d="M7 10l5 5 5-5z" />
+                    </svg>
+                </button>
+                <div class="dropdown-menu" id="userDropdownMenu">
+                    <a th:href="@{/personal-area}" class="dropdown-link">Personal Area</a>
+                    <form th:action="@{/logout}" method="post" th:csrf="true">
+                        <button type="submit" class="dropdown-logout">Logout</button>
+                    </form>
+                </div>
+            </div>
+            <a href="/" class="home-button" title="Homepage">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <main class="personal-area">
+        <section class="flash-messages">
+            <div class="flash-message success" th:if="${userSuccessMessage != null}" th:text="${userSuccessMessage}"></div>
+            <div class="flash-message success" th:if="${credentialsSuccessMessage != null}" th:text="${credentialsSuccessMessage}"></div>
+        </section>
+
+        <section class="profile-section">
+            <div class="profile-card">
+                <h2>Personal Information</h2>
+                <form th:action="@{/personal-area/update-user}" th:object="${userForm}" method="post" class="profile-form">
+                    <input type="hidden" th:field="*{id}" />
+                    <input type="hidden" th:if="${selectedProjectId != null}" name="projectId" th:value="${selectedProjectId}" />
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" th:field="*{name}" />
+                        <div class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="surname">Surname</label>
+                        <input type="text" id="surname" th:field="*{surname}" />
+                        <div class="error" th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dateOfBirth">Date of Birth</label>
+                        <input type="date" id="dateOfBirth" th:field="*{dateOfBirth}" />
+                        <div class="error" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number</label>
+                        <input type="text" id="phoneNumber" th:field="*{phoneNumber}" />
+                        <div class="error" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+                    </div>
+
+                    <button type="submit" class="primary-button">Update Information</button>
+                </form>
+            </div>
+
+            <div class="profile-card">
+                <h2>Credentials</h2>
+                <form th:action="@{/personal-area/update-credentials}" th:object="${credentialsDto}" method="post" class="profile-form">
+                    <input type="hidden" th:if="${selectedProjectId != null}" name="projectId" th:value="${selectedProjectId}" />
+                    <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                    <div class="form-group">
+                        <label for="visibleUsername">Visible Username</label>
+                        <input type="text" id="visibleUsername" th:field="*{visibleUsername}" />
+                        <div class="error" th:if="${#fields.hasErrors('visibleUsername')}" th:errors="*{visibleUsername}"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" th:field="*{newPassword}" placeholder="Leave blank to keep current password" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" th:field="*{confirmPassword}" placeholder="Repeat new password" />
+                        <div class="error" th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"></div>
+                    </div>
+
+                    <button type="submit" class="primary-button">Update Credentials</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="superadmin-panel" th:if="${isSuperadmin}">
+            <h2>Project Users Overview</h2>
+            <form method="get" th:action="@{/personal-area}" class="filter-form">
+                <label for="projectFilter">Select project</label>
+                <select id="projectFilter" name="projectId">
+                    <option th:value="" th:text="'All projects'" th:selected="${selectedProjectId == null}"></option>
+                    <option th:each="project : ${projects}" th:value="${project.id}" th:text="${project.name}"
+                        th:selected="${project.id == selectedProjectId}"></option>
+                </select>
+                <button type="submit" class="secondary-button">Filter</button>
+            </form>
+
+            <div class="table-wrapper">
+                <table th:if="${projectUsers != null && !projectUsers.isEmpty()}">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Surname</th>
+                            <th>Date of Birth</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="credential : ${projectUsers}">
+                            <td th:text="${credential.user.name}">Name</td>
+                            <td th:text="${credential.user.surname}">Surname</td>
+                            <td th:text="${#temporals.format(credential.user.dateOfBirth, 'dd/MM/yyyy')}">01/01/2024</td>
+                            <td th:text="${credential.user.phoneNumber}">Phone</td>
+                            <td th:text="${credential.email}">email@example.com</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p th:if="${projectUsers == null || projectUsers.isEmpty()}" class="empty-state">No users available for the selected project.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const toggle = document.getElementById("userDropdown");
+            const menu = document.getElementById("userDropdownMenu");
+
+            if (toggle && menu) {
+                toggle.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    menu.classList.toggle("show");
+                });
+
+                document.addEventListener("click", function (event) {
+                    if (!toggle.contains(event.target)) {
+                        menu.classList.remove("show");
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>
