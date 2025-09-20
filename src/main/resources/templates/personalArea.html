@@ -10,9 +10,9 @@
 </head>
 
 <body class="personal-area"
-      th:with="theme=${selectedProjectId} == 1 ? 'theme-ltrad' :
-                    (${selectedProjectId} == 51 ? 'theme-fire' :
-                    (${selectedProjectId} == 101 ? 'theme-volcano' : 'theme-superadmin'))}"
+      th:with="theme=${selectedProjectId == 1 ? 'theme-ltrad' :
+                    (selectedProjectId == 51 ? 'theme-fire' :
+                    (selectedProjectId == 101 ? 'theme-volcano' : 'theme-superadmin'))}"
       th:classappend="' ' + ${theme}">
     <header class="navbar">
         <div class="nav-left">
