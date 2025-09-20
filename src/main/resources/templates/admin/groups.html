@@ -130,7 +130,7 @@
 
                           <div id="user-devices-wrapper">
                                   <div th:if="${devices.isEmpty()}">You don't have any devices</div>
-                                  <table>
+                                  <table id="userDevicesTable">
                                           <thead>
                                                   <tr>
                                                           <th scope="col">Name</th>
@@ -178,6 +178,7 @@
                                                   </tr>
                                           </tbody>
                                   </table>
+                                  <div id="userDevicesPagination" class="table-pagination-controls"></div>
                           </div>
                           <div th:if="${user.admin != null}" id="operator-table-wrapper">
                                   <h2>Operators</h2>
@@ -305,23 +306,96 @@
 		});
 	</script>
 
-	<script>
-		document.addEventListener("DOMContentLoaded", function () {
-			const toggle = document.getElementById("userDropdown");
-			const menu = document.getElementById("userDropdownMenu");
+        <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                        const toggle = document.getElementById("userDropdown");
+                        const menu = document.getElementById("userDropdownMenu");
+                        const tablePaginationContainer = document.getElementById("userDevicesPagination");
 
-			toggle.addEventListener("click", function (e) {
-				e.stopPropagation();
-				menu.classList.toggle("show");
-			});
+                        function initializeDevicesTablePagination() {
+                                const table = document.getElementById("userDevicesTable");
+                                if (!table || !tablePaginationContainer) {
+                                        return;
+                                }
 
-			document.addEventListener("click", function (e) {
-				if (!toggle.contains(e.target)) {
-					menu.classList.remove("show");
-				}
-			});
-		});
-	</script>
+                                const tbody = table.querySelector("tbody");
+                                const rows = tbody ? Array.from(tbody.querySelectorAll("tr")) : [];
+                                const rowsPerPage = 8;
+                                const totalPages = Math.max(1, Math.ceil(rows.length / rowsPerPage));
+                                let currentPage = 1;
+
+                                function updateVisibleRows() {
+                                        const startIndex = (currentPage - 1) * rowsPerPage;
+                                        const endIndex = startIndex + rowsPerPage;
+
+                                        rows.forEach((row, index) => {
+                                                row.style.display = index >= startIndex && index < endIndex ? "" : "none";
+                                        });
+                                }
+
+                                function setActiveButton() {
+                                        tablePaginationContainer.querySelectorAll("button[data-page]").forEach((button) => {
+                                                const buttonPage = Number(button.dataset.page);
+                                                button.classList.toggle("active", buttonPage === currentPage);
+                                        });
+                                }
+
+                                function showPage(pageNumber) {
+                                        currentPage = pageNumber;
+                                        updateVisibleRows();
+                                        setActiveButton();
+                                }
+
+                                function createPaginationButton(pageNumber) {
+                                        const button = document.createElement("button");
+                                        button.type = "button";
+                                        button.dataset.page = String(pageNumber);
+                                        button.textContent = String(pageNumber);
+                                        button.classList.add("pagination-button");
+                                        button.addEventListener("click", () => {
+                                                showPage(pageNumber);
+                                        });
+                                        return button;
+                                }
+
+                                function renderPaginationControls() {
+                                        tablePaginationContainer.innerHTML = "";
+
+                                        if (rows.length <= rowsPerPage) {
+                                                rows.forEach((row) => {
+                                                        row.style.display = "";
+                                                });
+                                                tablePaginationContainer.style.display = "none";
+                                                return;
+                                        }
+
+                                        tablePaginationContainer.style.display = "flex";
+
+                                        for (let page = 1; page <= totalPages; page++) {
+                                                const button = createPaginationButton(page);
+                                                tablePaginationContainer.appendChild(button);
+                                        }
+
+                                        showPage(1);
+                                }
+
+                                renderPaginationControls();
+                        }
+
+                        toggle.addEventListener("click", function (e) {
+                                e.stopPropagation();
+                                menu.classList.toggle("show");
+                        });
+
+                        document.addEventListener("click", function (e) {
+                                if (!toggle.contains(e.target)) {
+                                        menu.classList.remove("show");
+                                }
+                        });
+
+                        initializeDevicesTablePagination();
+                });
+        </script>
 
 	<script th:inline="javascript">
 		/*<![CDATA[*/
