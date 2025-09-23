@@ -301,7 +301,7 @@ private AdminService adminService;
                 });
                 List<DeviceDTO> deviceDTOs = orderedDevices.stream().map(d -> new DeviceDTO(d.getId(), d.getName(),
                                 d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(),
-                                d.getTod() != null ? d.getTod().getName() : null, d.getVisibleUsername(), d.getStatus(),
+                                d.getTod() != null ? d.getTod().getName() : null, d.getVisibleUsername(), d.isActivated(),
                                 d.getGsheet()))
                                 .collect(Collectors.toList());
                 model.addAttribute("devices", deviceDTOs);

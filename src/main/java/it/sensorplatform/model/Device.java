@@ -40,8 +40,8 @@ public class Device {
         @Column(nullable = true)
         private String gsheet;
 
-        @Column(name="status")
-        private String status = "deactivated";
+        @Column(name = "activated", nullable = false)
+        private boolean activated = false;
 	
 	@ManyToOne
 	private Project project;
@@ -155,12 +155,12 @@ public class Device {
                 this.gsheet = normalizeBlank(gsheet);
         }
 
-        public String getStatus() {
-                return status;
+        public boolean isActivated() {
+                return activated;
         }
 
-        public void setStatus(String status) {
-                this.status = status;
+        public void setActivated(boolean activated) {
+                this.activated = activated;
         }
 
 

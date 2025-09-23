@@ -46,7 +46,7 @@ class PacketServiceTests {
 
         assertEquals(PacketService.Result.NEW_DEVICE, res);
         Device saved = deviceRepository.findByMacAddress(MacAddressUtils.normalize("AA:BB:CC")).orElseThrow();
-        assertEquals("deactivated", saved.getStatus());
+        assertFalse(saved.isActivated());
         assertEquals(project.getId(), saved.getProject().getId());
     }
 
@@ -60,7 +60,7 @@ class PacketServiceTests {
         device.setName("d1");
         device.setMacAddress("AA:DD:EE");
         device.setEmailOwner("");
-        device.setStatus("deactivated");
+        device.setActivated(true);
         device.setLatitude(0d);
         device.setLongitude(0d);
         device.setProject(project);
@@ -76,7 +76,7 @@ class PacketServiceTests {
     }
 
     @Test
-    void activatesDeviceWhenFlagPresent() {
+    void activatesDeviceWhenNotYetActivated() {
         Project project = new Project();
         project.setName("demo");
         projectRepository.save(project);
@@ -85,7 +85,7 @@ class PacketServiceTests {
         device.setName("d1");
         device.setMacAddress("AA:FF:00");
         device.setEmailOwner("");
-        device.setStatus("deactivated");
+        device.setActivated(false);
         device.setLatitude(0d);
         device.setLongitude(0d);
         device.setProject(project);
@@ -93,7 +93,6 @@ class PacketServiceTests {
 
         PacketDTO dto = new PacketDTO();
         dto.setMacAddress("AA:FF:00");
-        dto.setActivation(true);
         dto.setLatitude(45.0);
         dto.setLongitude(7.0);
 
@@ -101,7 +100,7 @@ class PacketServiceTests {
         assertEquals(PacketService.Result.ACTIVATION, res);
 
         Device updated = deviceRepository.findByMacAddress(MacAddressUtils.normalize("AA:FF:00")).orElseThrow();
-        assertEquals("activated", updated.getStatus());
+        assertTrue(updated.isActivated());
         assertEquals(45.0, updated.getLatitude());
         assertEquals(7.0, updated.getLongitude());
     }

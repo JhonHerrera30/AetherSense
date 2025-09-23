@@ -259,11 +259,11 @@ public class DeviceController {
                 if (latitude != null && longitude != null) {
                         device.setLatitude(latitude);
                         device.setLongitude(longitude);
-                        device.setStatus("activated");
+                        device.setActivated(true);
                 } else {
                         device.setLatitude(null);
                         device.setLongitude(null);
-                        device.setStatus("deactivated");
+                        device.setActivated(false);
                 }
 
                 // Salvataggio
@@ -341,11 +341,11 @@ public class DeviceController {
                 if (latitude != null && longitude != null) {
                         device.setLatitude(latitude);
                         device.setLongitude(longitude);
-                        device.setStatus("activated");
+                        device.setActivated(true);
                 } else {
                         device.setLatitude(null);
                         device.setLongitude(null);
-                        device.setStatus("deactivated");
+                        device.setActivated(false);
                 }
 
                 // Salvataggio
@@ -468,7 +468,7 @@ public class DeviceController {
                 d.setOperator(null);
                 d.setLatitude(null);
                 d.setLongitude(null);
-                d.setStatus("deactivated");
+                d.setActivated(false);
                 deviceService.save(d);
                 ra.addFlashAttribute("successMessage", "Operator removed.");
                 return "redirect:/admin/group/"+projectId;
@@ -532,7 +532,7 @@ public class DeviceController {
         public void loadDeviceDTO(List<Device> devices, Model model) {
                 List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getId(), d.getName(),
                                 d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(),
-                                d.getTod() != null ? d.getTod().getName() : null, d.getVisibleUsername(), d.getStatus(),
+                                d.getTod() != null ? d.getTod().getName() : null, d.getVisibleUsername(), d.isActivated(),
                                 d.getGsheet()))
                                 .collect(Collectors.toList());
                 Comparator<DeviceDTO> cmp = Comparator.comparing(DeviceDTO::getEmailOwner,

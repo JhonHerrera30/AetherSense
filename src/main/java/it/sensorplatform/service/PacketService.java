@@ -13,9 +13,9 @@ import java.util.Optional;
 /**
  * Service that applies the device/project filter logic described in the
  * specification. It handles three cases:
- *  1. unknown device -> register it with activation=false
- *  2. known device with activation flag -> update device activation and location
- *  3. known device without activation flag -> forward data to IngestService
+ *  1. unknown device -> notify the unknown device service
+ *  2. known device not yet activated -> perform the activation flow
+ *  3. activated device -> forward data to IngestService
  */
 @Service
 public class PacketService {
@@ -61,18 +61,18 @@ public class PacketService {
 
         Device device = existing.get();
 
-        if (packet.isActivation()) {
+        if (!device.isActivated()) {
             System.out.println("PacketService.handlePacket - activation packet for device: " + device.getId());
-            // Case 3: activation packet -> update flags and location
-            device.setStatus("activated");
+            // Case 2: activation packet -> update flags and location
             if (packet.getLatitude() != null) device.setLatitude(packet.getLatitude());
             if (packet.getLongitude() != null) device.setLongitude(packet.getLongitude());
+            device.setActivated(true);
             deviceRepository.save(device);
             return Result.ACTIVATION;
         }
 
         System.out.println("PacketService.handlePacket - forwarding data to IngestService for device: " + device.getMacAddress());
-        // Case 2: normal data packet -> forward metrics to ingest service
+        // Case 3: normal data packet -> forward metrics to ingest service
         Map<String, Object> payload = packet.getPayload();
         ingestService.process(
                 device,

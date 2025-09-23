@@ -14,10 +14,10 @@ public class DeviceDTO {
         private String devEui;
         private String tod;
         private String operator;
-        private String status;
+        private boolean activated;
         private String gsheet;
 
-        public DeviceDTO(Long id, String name, String macAddress, String emailOwner, String devEui, Double longitude, Double latitude, String tod, String operator, String status, String gsheet) {
+        public DeviceDTO(Long id, String name, String macAddress, String emailOwner, String devEui, Double longitude, Double latitude, String tod, String operator, boolean activated, String gsheet) {
                 this.id = id;
                 this.name = name;
                 this.macAddress = macAddress;
@@ -27,7 +27,7 @@ public class DeviceDTO {
                 this.latitude = latitude;
                 this.tod=tod;
                 this.operator=operator;
-                this.status = status;
+                this.activated = activated;
                 this.gsheet = gsheet;
         }
 
@@ -114,12 +114,12 @@ public class DeviceDTO {
                 this.operator = operator;
         }
 
-        public String getStatus() {
-                return status;
+        public boolean isActivated() {
+                return activated;
         }
 
-        public void setStatus(String status) {
-                this.status = status;
+        public void setActivated(boolean activated) {
+                this.activated = activated;
         }
 
         public String getGsheet() {
