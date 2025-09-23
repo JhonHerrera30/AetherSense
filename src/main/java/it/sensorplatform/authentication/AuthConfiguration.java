@@ -17,6 +17,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import jakarta.servlet.DispatcherType;
+
 import it.sensorplatform.failurehandler.CustomAuthenticationFailureHandler;
 import it.sensorplatform.successhandler.CustomLoginSuccessHandler;
 
@@ -79,12 +81,13 @@ public class AuthConfiguration {
     )
 )
 
-		.authorizeHttpRequests(auth -> auth
-				.requestMatchers(HttpMethod.GET, "/", "/home", "/login", "/register", "/access", "/css/**", "/img/**", "/favicon.ico", "/videos/**", "/project/**").permitAll()
-				.requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
-				.requestMatchers(HttpMethod.POST, "/api/packets").permitAll()
-				
-				.requestMatchers(HttpMethod.GET, "/superadmin/**").hasAuthority(SUPERADMIN_ROLE)
+                .authorizeHttpRequests(auth -> auth
+                                .requestMatchers(HttpMethod.GET, "/", "/home", "/login", "/register", "/access", "/css/**", "/img/**", "/favicon.ico", "/videos/**", "/project/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/packets").permitAll()
+                                .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+
+                                .requestMatchers(HttpMethod.GET, "/superadmin/**").hasAuthority(SUPERADMIN_ROLE)
 				.requestMatchers(HttpMethod.POST, "/superadmin/**").hasAuthority(SUPERADMIN_ROLE)
 				
 				.requestMatchers(HttpMethod.GET, "/admin/ltrad/**").hasAuthority(LTRAD_ADMIN_ROLE)
