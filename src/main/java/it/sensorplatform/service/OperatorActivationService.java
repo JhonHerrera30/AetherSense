@@ -1,10 +1,13 @@
 package it.sensorplatform.service;
 
 import it.sensorplatform.dto.OperatorActivationNotification;
+import it.sensorplatform.dto.OperatorActivationResolution;
 import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.model.Admin;
 import it.sensorplatform.model.Credentials;
 import it.sensorplatform.model.Device;
+import it.sensorplatform.repository.DeviceRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -14,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -24,10 +27,17 @@ import java.util.stream.Collectors;
 public class OperatorActivationService {
 
     private static final String EVENT_NAME = "activation-request";
+    private static final String RESPONSE_EVENT_NAME = "activation-response";
 
     private final Map<Long, Map<Long, OperatorActivationNotification>> notificationsByProject =
             new ConcurrentHashMap<>();
     private final Map<Long, List<SseEmitter>> emittersByOperator = new ConcurrentHashMap<>();
+
+    private final DeviceRepository deviceRepository;
+
+    public OperatorActivationService(DeviceRepository deviceRepository) {
+        this.deviceRepository = deviceRepository;
+    }
 
     public void notifyActivation(Device device,
                                  PacketDTO packet,
@@ -70,7 +80,7 @@ public class OperatorActivationService {
         }
 
         for (Long operatorId : operatorIds) {
-            emitToOperator(operatorId, notification);
+            emitToOperator(operatorId, EVENT_NAME, notification);
         }
     }
 
@@ -107,6 +117,69 @@ public class OperatorActivationService {
         return notification;
     }
 
+    public Optional<OperatorActivationResolution> respond(Long projectId,
+                                                          Long deviceId,
+                                                          Credentials operator,
+                                                          boolean accepted,
+                                                          Double latitude,
+                                                          Double longitude) {
+        if (projectId == null || deviceId == null || operator == null) {
+            return Optional.empty();
+        }
+        Map<Long, OperatorActivationNotification> map = notificationsByProject.get(projectId);
+        if (map == null) {
+            return Optional.empty();
+        }
+        OperatorActivationNotification notification = map.get(deviceId);
+        if (notification == null) {
+            return Optional.empty();
+        }
+        Long operatorId = operator.getId();
+        if (!notification.isVisibleTo(operatorId)) {
+            throw new AccessDeniedException("Operator cannot respond to this activation");
+        }
+
+        map.remove(deviceId);
+        if (map.isEmpty()) {
+            notificationsByProject.remove(projectId);
+        }
+
+        Optional<Device> deviceOptional = deviceRepository.findById(deviceId);
+        if (deviceOptional.isEmpty()) {
+            return Optional.empty();
+        }
+        Device device = deviceOptional.get();
+        if (accepted) {
+            if (latitude != null) {
+                device.setLatitude(latitude);
+            }
+            if (longitude != null) {
+                device.setLongitude(longitude);
+            }
+            device.setActivated(true);
+            device.setOperator(operator);
+        }
+        deviceRepository.save(device);
+
+        OperatorActivationResolution resolution = new OperatorActivationResolution(
+                notification.getDeviceId(),
+                notification.getDeviceName(),
+                notification.getMacAddress(),
+                notification.getProjectId(),
+                notification.getProjectName(),
+                accepted,
+                latitude,
+                longitude,
+                operatorId,
+                resolveOperatorName(operator),
+                device.getTod() != null ? device.getTod().getName() : null,
+                Instant.now()
+        );
+
+        broadcastResolution(notification, resolution);
+        return Optional.of(resolution);
+    }
+
     public SseEmitter subscribe(Long operatorId, Long projectId) {
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
         emittersByOperator
@@ -120,11 +193,11 @@ public class OperatorActivationService {
         return emitter;
     }
 
-    private void emitToOperator(Long operatorId, OperatorActivationNotification notification) {
+    private void emitToOperator(Long operatorId, String eventName, Object payload) {
         List<SseEmitter> emitters = emittersByOperator.getOrDefault(operatorId, Collections.emptyList());
         for (SseEmitter emitter : new ArrayList<>(emitters)) {
             try {
-                emitter.send(SseEmitter.event().name(EVENT_NAME).data(notification));
+                emitter.send(SseEmitter.event().name(eventName).data(payload));
             } catch (Exception e) {
                 emitter.complete();
                 removeEmitter(operatorId, emitter);
@@ -206,5 +279,26 @@ public class OperatorActivationService {
                 .map(Credentials::getId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    private void broadcastResolution(OperatorActivationNotification notification,
+                                     OperatorActivationResolution resolution) {
+        if (notification == null || resolution == null) {
+            return;
+        }
+        for (Long operatorId : notification.getAuthorizedOperatorIds()) {
+            emitToOperator(operatorId, RESPONSE_EVENT_NAME, resolution);
+        }
+    }
+
+    private String resolveOperatorName(Credentials operator) {
+        if (operator == null) {
+            return null;
+        }
+        String visible = operator.getVisibleUsername();
+        if (StringUtils.hasText(visible)) {
+            return visible;
+        }
+        return operator.getUsername();
     }
 }

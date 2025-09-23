@@ -76,7 +76,7 @@ class PacketServiceTests {
     }
 
     @Test
-    void activatesDeviceWhenNotYetActivated() {
+    void notifiesActivationWithoutAutomaticallyActivatingDevice() {
         Project project = new Project();
         project.setName("demo");
         projectRepository.save(project);
@@ -100,9 +100,9 @@ class PacketServiceTests {
         assertEquals(PacketService.Result.ACTIVATION, res);
 
         Device updated = deviceRepository.findByMacAddress(MacAddressUtils.normalize("AA:FF:00")).orElseThrow();
-        assertTrue(updated.isActivated());
-        assertEquals(45.0, updated.getLatitude());
-        assertEquals(7.0, updated.getLongitude());
+        assertFalse(updated.isActivated());
+        assertEquals(0d, updated.getLatitude());
+        assertEquals(0d, updated.getLongitude());
     }
 }
 
