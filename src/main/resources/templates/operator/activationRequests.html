@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Activation Requests - ' + ${project.name}">Activation Requests</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/formNewDeviceLtrad.css}" />
+    <link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/formNewDeviceFire.css}" />
+    <link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/formNewDeviceVolcano.css}" />
+
+    <meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}" />
+    <meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}" />
+</head>
+<body>
+<header id="navbar" class="navbar">
+    <div class="nav-left">
+        <h1>
+            <a th:href="@{'/operator/' + ${project.id}}" class="nav-title-link" th:text="${project.name}">Project</a>
+        </h1>
+    </div>
+    <div class="nav-right">
+        <div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+            <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true" aria-expanded="false">
+                Hi, <strong th:text="${user.visibleUsername}">operator</strong>
+                <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="white">
+                    <path d="M7 10l5 5 5-5z" />
+                </svg>
+            </button>
+            <div class="dropdown-menu" id="userDropdownMenu" role="menu" aria-labelledby="userDropdown">
+                <a th:href="@{/personal-area}" class="dropdown-link" role="menuitem">Personal Area</a>
+                <form th:action="@{/logout}" method="post" th:csrf="true">
+                    <button type="submit" class="dropdown-logout" role="menuitem">Logout</button>
+                </form>
+            </div>
+        </div>
+        <a href="/" class="home-button" title="Homepage">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+        </a>
+    </div>
+</header>
+
+<section class="notifications-panel" aria-labelledby="activation-title">
+    <header class="notifications-header">
+        <div class="notifications-header-text">
+            <h2 id="activation-title" class="notifications-title" th:text="'Activation requests · ' + ${project.name}">Activation requests</h2>
+            <p class="notifications-description">Pending devices that need an operator decision.</p>
+        </div>
+        <div class="notifications-header-actions">
+            <button type="button" class="btn-add" id="activation-refresh">Refresh</button>
+            <a th:href="@{'/operator/' + ${project.id}}" class="btn-back" title="Back to map">Back to map</a>
+        </div>
+    </header>
+    <div class="notifications-content">
+        <div id="activation-feedback" role="status" aria-live="polite" hidden></div>
+        <div id="activation-list" class="notifications-list" aria-live="polite" role="list"></div>
+        <p id="activation-empty" class="notifications-empty">No activation requests at the moment.</p>
+    </div>
+</section>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+    const projectId = [[${project.id}]];
+    const operatorId = [[${user.id}]];
+/*]]>*/
+    const requestContainer = document.getElementById('activation-list');
+    const emptyState = document.getElementById('activation-empty');
+    const feedbackElement = document.getElementById('activation-feedback');
+    const refreshButton = document.getElementById('activation-refresh');
+
+    const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+    const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+    const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
+    const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : null;
+
+    const requests = new Map();
+    let feedbackTimeoutId = null;
+
+    function buildHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        if (csrfToken && csrfHeader) {
+            headers[csrfHeader] = csrfToken;
+        }
+        return headers;
+    }
+
+    function showFeedback(message, isError = false) {
+        if (!feedbackElement) {
+            return;
+        }
+        if (feedbackTimeoutId) {
+            window.clearTimeout(feedbackTimeoutId);
+            feedbackTimeoutId = null;
+        }
+        if (!message) {
+            feedbackElement.textContent = '';
+            feedbackElement.classList.remove('alert-success', 'alert-error');
+            feedbackElement.hidden = true;
+            return;
+        }
+        feedbackElement.textContent = message;
+        feedbackElement.classList.remove('alert-success', 'alert-error');
+        feedbackElement.classList.add(isError ? 'alert-error' : 'alert-success');
+        feedbackElement.hidden = false;
+        feedbackTimeoutId = window.setTimeout(() => {
+            feedbackElement.textContent = '';
+            feedbackElement.classList.remove('alert-success', 'alert-error');
+            feedbackElement.hidden = true;
+        }, 6000);
+    }
+
+    function updateEmptyState() {
+        if (!emptyState) {
+            return;
+        }
+        emptyState.hidden = requests.size > 0;
+    }
+
+    function formatMac(mac) {
+        if (!mac) {
+            return '';
+        }
+        const cleaned = mac.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+        const pairs = cleaned.match(/.{1,2}/g);
+        return pairs ? pairs.join(':') : '';
+    }
+
+    function formatLocation(latitude, longitude) {
+        if (latitude == null || longitude == null) {
+            return 'Unknown';
+        }
+        const latFixed = Number(latitude).toFixed(5);
+        const lonFixed = Number(longitude).toFixed(5);
+        return `${latFixed}, ${lonFixed}`;
+    }
+
+    function resolveTimestamp(notification) {
+        if (!notification || !notification.timestamp) {
+            return Date.now();
+        }
+        const parsed = Date.parse(notification.timestamp);
+        return Number.isNaN(parsed) ? Date.now() : parsed;
+    }
+
+    function setButtonsDisabled(entry, disabled) {
+        if (!entry) {
+            return;
+        }
+        if (entry.acceptButton) {
+            entry.acceptButton.disabled = disabled;
+        }
+        if (entry.refuseButton) {
+            entry.refuseButton.disabled = disabled;
+        }
+    }
+
+    function updateEntry(entry, notification) {
+        if (!entry || !notification) {
+            return;
+        }
+        entry.notification = notification;
+        setButtonsDisabled(entry, false);
+        const element = entry.element;
+        if (!element) {
+            return;
+        }
+        const title = element.querySelector('.activation-device-name');
+        if (title) {
+            title.textContent = notification.deviceName || 'Unnamed device';
+        }
+        const macValue = element.querySelector('.activation-device-mac');
+        if (macValue) {
+            const formatted = formatMac(notification.macAddress);
+            macValue.textContent = formatted || (notification.devEui || 'n/a');
+        }
+        const adminValue = element.querySelector('.activation-device-admin');
+        if (adminValue) {
+            adminValue.textContent = notification.adminEmail || 'n/a';
+        }
+        const locationValue = element.querySelector('.activation-device-location');
+        if (locationValue) {
+            locationValue.textContent = formatLocation(notification.latitude, notification.longitude);
+        }
+        const timestamp = resolveTimestamp(notification);
+        element.dataset.timestamp = String(timestamp);
+        const timeElement = element.querySelector('.time');
+        if (timeElement) {
+            timeElement.dataset.timestamp = String(timestamp);
+        }
+    }
+
+    function createEntry(notification) {
+        const box = document.createElement('div');
+        box.className = 'notification-box';
+        box.dataset.deviceId = notification.deviceId;
+        box.setAttribute('role', 'listitem');
+
+        const icon = document.createElement('div');
+        icon.className = 'notification-icon';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.textContent = '⚡';
+        box.appendChild(icon);
+
+        const main = document.createElement('div');
+        main.className = 'notification-main';
+        box.appendChild(main);
+
+        const title = document.createElement('p');
+        title.className = 'activation-device-name';
+        main.appendChild(title);
+
+        const macLine = document.createElement('p');
+        macLine.innerHTML = '<strong>MAC:</strong> <span class="activation-device-mac"></span>';
+        main.appendChild(macLine);
+
+        const adminLine = document.createElement('p');
+        adminLine.innerHTML = '<strong>Admin:</strong> <span class="activation-device-admin"></span>';
+        main.appendChild(adminLine);
+
+        const locationLine = document.createElement('p');
+        locationLine.innerHTML = '<strong>Location:</strong> <span class="activation-device-location"></span>';
+        main.appendChild(locationLine);
+
+        const timeElement = document.createElement('p');
+        timeElement.className = 'time';
+        main.appendChild(timeElement);
+
+        const actions = document.createElement('div');
+        actions.className = 'notification-actions';
+        box.appendChild(actions);
+
+        const entry = { element: box, notification: notification, acceptButton: null, refuseButton: null };
+
+        const acceptButton = document.createElement('button');
+        acceptButton.type = 'button';
+        acceptButton.className = 'btn-add';
+        acceptButton.textContent = 'Accept';
+        acceptButton.addEventListener('click', () => respondToRequest(entry, true));
+        actions.appendChild(acceptButton);
+        entry.acceptButton = acceptButton;
+
+        const refuseButton = document.createElement('button');
+        refuseButton.type = 'button';
+        refuseButton.className = 'btn-spec';
+        refuseButton.textContent = 'Refuse';
+        refuseButton.addEventListener('click', () => respondToRequest(entry, false));
+        actions.appendChild(refuseButton);
+        entry.refuseButton = refuseButton;
+
+        return entry;
+    }
+
+    function syncRequests(list) {
+        if (!Array.isArray(list) || !requestContainer) {
+            return;
+        }
+        const seen = new Set();
+        requestContainer.innerHTML = '';
+        list.forEach(notification => {
+            if (!notification || notification.deviceId == null) {
+                return;
+            }
+            const deviceId = notification.deviceId;
+            let entry = requests.get(deviceId);
+            if (!entry) {
+                entry = createEntry(notification);
+                requests.set(deviceId, entry);
+            }
+            updateEntry(entry, notification);
+            requestContainer.appendChild(entry.element);
+            seen.add(deviceId);
+        });
+        Array.from(requests.keys()).forEach(deviceId => {
+            if (!seen.has(deviceId)) {
+                const entry = requests.get(deviceId);
+                if (entry && entry.element && entry.element.parentElement) {
+                    entry.element.parentElement.removeChild(entry.element);
+                }
+                requests.delete(deviceId);
+            }
+        });
+        updateEmptyState();
+        updateTimes();
+    }
+
+    function removeRequest(deviceId) {
+        const entry = requests.get(deviceId);
+        if (!entry) {
+            return;
+        }
+        if (entry.element && entry.element.parentElement) {
+            entry.element.parentElement.removeChild(entry.element);
+        }
+        requests.delete(deviceId);
+        updateEmptyState();
+    }
+
+    function updateTimes() {
+        const now = Date.now();
+        requests.forEach(entry => {
+            if (!entry || !entry.element) {
+                return;
+            }
+            const timeElement = entry.element.querySelector('.time');
+            if (!timeElement) {
+                return;
+            }
+            const ts = timeElement.dataset.timestamp ? Number(timeElement.dataset.timestamp) : Number(entry.element.dataset.timestamp);
+            if (Number.isNaN(ts)) {
+                timeElement.textContent = '';
+                timeElement.removeAttribute('title');
+                return;
+            }
+            const diffSeconds = Math.max(0, Math.floor((now - ts) / 1000));
+            let label;
+            if (diffSeconds < 5) {
+                label = 'Just now';
+            } else if (diffSeconds < 60) {
+                label = `${diffSeconds}s ago`;
+            } else if (diffSeconds < 3600) {
+                const minutes = Math.floor(diffSeconds / 60);
+                label = minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+            } else {
+                const hours = Math.floor(diffSeconds / 3600);
+                label = hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+            }
+            timeElement.textContent = label;
+            const preciseDate = new Date(ts);
+            if (!Number.isNaN(preciseDate.getTime())) {
+                timeElement.setAttribute('title', preciseDate.toLocaleString());
+            }
+        });
+    }
+
+    setInterval(updateTimes, 1000);
+
+    function getGeolocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocation not supported'));
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                position => resolve({
+                    latitude: Number(position.coords.latitude),
+                    longitude: Number(position.coords.longitude)
+                }),
+                error => reject(error),
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+    }
+
+    async function respondToRequest(entry, accepted) {
+        if (!entry || !entry.notification) {
+            return;
+        }
+        const notification = entry.notification;
+        setButtonsDisabled(entry, true);
+        try {
+            let coordinates = { latitude: null, longitude: null };
+            if (accepted) {
+                try {
+                    coordinates = await getGeolocation();
+                } catch (geoError) {
+                    const proceed = window.confirm('Unable to retrieve your location. Continue without coordinates?');
+                    if (!proceed) {
+                        throw geoError;
+                    }
+                }
+            }
+            const response = await fetch(`/api/operators/activations/${projectId}/${notification.deviceId}/response`, {
+                method: 'POST',
+                headers: buildHeaders(),
+                credentials: 'same-origin',
+                body: JSON.stringify({
+                    accepted: accepted,
+                    latitude: coordinates.latitude,
+                    longitude: coordinates.longitude
+                })
+            });
+            if (response.status === 404) {
+                showFeedback('Activation request is no longer available.', true);
+                removeRequest(notification.deviceId);
+                await loadRequests(false);
+                return;
+            }
+            if (!response.ok) {
+                throw new Error(`Server responded with status ${response.status}`);
+            }
+            const resolution = await response.json();
+            handleResolution(resolution);
+            await loadRequests(false);
+        } catch (error) {
+            console.error('Activation response failed', error);
+            showFeedback('Unable to send your response. Please try again.', true);
+            setButtonsDisabled(entry, false);
+        }
+    }
+
+    function handleResolution(resolution) {
+        if (!resolution || resolution.deviceId == null) {
+            return;
+        }
+        removeRequest(resolution.deviceId);
+        const isCurrentOperator = resolution.operatorId === operatorId;
+        const actor = isCurrentOperator ? 'You' : (resolution.operatorName || 'An operator');
+        const deviceName = resolution.deviceName || 'the device';
+        if (resolution.accepted) {
+            showFeedback(`${actor} activated ${deviceName}.`, false);
+        } else if (isCurrentOperator) {
+            showFeedback(`You refused ${deviceName}.`, true);
+        } else {
+            showFeedback(`${actor} refused ${deviceName}.`, true);
+        }
+    }
+
+    async function loadRequests(showErrors = true) {
+        try {
+            const response = await fetch(`/api/operators/activations/${projectId}`, {
+                credentials: 'same-origin'
+            });
+            if (!response.ok) {
+                throw new Error(`Status ${response.status}`);
+            }
+            const data = await response.json();
+            syncRequests(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error('Unable to load activation requests', error);
+            if (showErrors) {
+                showFeedback('Unable to load activation requests. Please try again later.', true);
+            }
+        }
+    }
+
+    if (refreshButton) {
+        refreshButton.addEventListener('click', () => loadRequests(true));
+    }
+
+    loadRequests(false);
+    setInterval(() => loadRequests(false), 15000);
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggle = document.getElementById('userDropdown');
+        const menu = document.getElementById('userDropdownMenu');
+
+        if (!toggle || !menu) {
+            return;
+        }
+
+        toggle.addEventListener('click', function (event) {
+            event.stopPropagation();
+            const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', (!isExpanded).toString());
+            menu.classList.toggle('show');
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!menu.contains(event.target) && event.target !== toggle) {
+                menu.classList.remove('show');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    });
+</script>
+</body>
+</html>

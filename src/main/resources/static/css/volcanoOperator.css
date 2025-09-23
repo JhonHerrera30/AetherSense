@@ -296,7 +296,31 @@ details[open] summary {
 }
 
 .search-form button svg {
-	display: block;
+        display: block;
+}
+
+.activation-requests-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 6px;
+        background-color: #e67e00;
+        color: #ffffff;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background-color 0.2s, transform 0.1s;
+}
+
+.activation-requests-link:hover {
+        background-color: #bf6500;
+        transform: scale(1.03);
+}
+
+.activation-requests-icon {
+        font-size: 1.1rem;
 }
 
 /* Sezione titolo */
