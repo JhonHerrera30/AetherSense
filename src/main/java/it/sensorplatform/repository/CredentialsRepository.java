@@ -24,5 +24,7 @@ public interface CredentialsRepository extends CrudRepository<Credentials, Long>
     
     List<Credentials> findByRoleAndProjectId(String role, Long projectId);
 
+    Optional<Credentials> findByEmailAndProjectId(String email, Long projectId);
+
     List<Credentials> findByProjectId(Long projectId);
 }

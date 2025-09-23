@@ -1,14 +1,18 @@
 package it.sensorplatform.service;
 
 import it.sensorplatform.dto.PacketDTO;
+import it.sensorplatform.model.Admin;
+import it.sensorplatform.model.Credentials;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.repository.DeviceRepository;
 import it.sensorplatform.util.MacAddressUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Service that applies the device/project filter logic described in the
@@ -23,13 +27,22 @@ public class PacketService {
     private final DeviceRepository deviceRepository;
     private final IngestService ingestService;
     private final UnknownDeviceService unknownDeviceService;
+    private final OperatorActivationService operatorActivationService;
+    private final AdminService adminService;
+    private final CredentialsService credentialsService;
 
     public PacketService(DeviceRepository deviceRepository,
                          IngestService ingestService,
-                         UnknownDeviceService unknownDeviceService) {
+                         UnknownDeviceService unknownDeviceService,
+                         OperatorActivationService operatorActivationService,
+                         AdminService adminService,
+                         CredentialsService credentialsService) {
         this.deviceRepository = deviceRepository;
         this.ingestService = ingestService;
         this.unknownDeviceService = unknownDeviceService;
+        this.operatorActivationService = operatorActivationService;
+        this.adminService = adminService;
+        this.credentialsService = credentialsService;
     }
 
     public enum Result { NEW_DEVICE, ACTIVATION, DATA }
@@ -63,6 +76,7 @@ public class PacketService {
 
         if (!device.isActivated()) {
             System.out.println("PacketService.handlePacket - activation packet for device: " + device.getId());
+            notifyOperators(device, packet);
             // Case 2: activation packet -> update flags and location
             if (packet.getLatitude() != null) device.setLatitude(packet.getLatitude());
             if (packet.getLongitude() != null) device.setLongitude(packet.getLongitude());
@@ -82,6 +96,32 @@ public class PacketService {
                 packet.getIndicator()
         );
         return Result.DATA;
+    }
+
+    private void notifyOperators(Device device, PacketDTO packet) {
+        String emailOwner = device.getEmailOwner();
+        Long projectId = device.getProject() != null ? device.getProject().getId() : packet.getProjectId();
+        if (!StringUtils.hasText(emailOwner) || projectId == null) {
+            return;
+        }
+        Optional<Credentials> credentialsOptional = credentialsService.findByEmailAndProjectId(emailOwner, projectId);
+        if (credentialsOptional.isEmpty()) {
+            return;
+        }
+        Credentials adminCredentials = credentialsOptional.get();
+        Admin admin = adminCredentials.getAdmin();
+        if (admin == null) {
+            return;
+        }
+        Admin managedAdmin = adminService.getAdmin(admin.getId());
+        if (managedAdmin == null) {
+            return;
+        }
+        List<Credentials> authorizedOperators = managedAdmin.getAuthorizedOperators();
+        if (authorizedOperators == null || authorizedOperators.isEmpty()) {
+            return;
+        }
+        operatorActivationService.notifyActivation(device, packet, managedAdmin, authorizedOperators);
     }
 }
 

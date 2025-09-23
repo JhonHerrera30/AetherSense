@@ -68,6 +68,13 @@ public class CredentialsService {
 	public boolean existsByEmailAndProjectId(String email, Long projectId) {
 		return this.credentialsRepository.existsByEmailAndProjectId(email, projectId);
 	}
+
+	public Optional<Credentials> findByEmailAndProjectId(String email, Long projectId) {
+		if (!StringUtils.hasText(email) || projectId == null) {
+		return Optional.empty();
+		}
+		return credentialsRepository.findByEmailAndProjectId(email.trim(), projectId);
+	}
 	
 	/*public List<Credentials> findOperatorsByProject(Project project) {
 	    String role = "OPERATOR";
