@@ -1,6 +1,7 @@
 package it.sensorplatform.test;
 
 import it.sensorplatform.dto.OperatorActivationNotification;
+import it.sensorplatform.dto.OperatorActivationResolution;
 import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.model.Admin;
 import it.sensorplatform.model.Credentials;
@@ -16,6 +17,7 @@ import it.sensorplatform.service.PacketService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -101,6 +103,11 @@ class OperatorActivationFlowTests {
         PacketService.Result result = packetService.handlePacket(packet);
         assertEquals(PacketService.Result.ACTIVATION, result);
 
+        Device pending = deviceRepository.findById(device.getId()).orElseThrow();
+        assertFalse(pending.isActivated());
+        assertNull(pending.getLatitude());
+        assertNull(pending.getLongitude());
+
         List<OperatorActivationNotification> authorizedNotifications =
                 operatorActivationService.listForOperator(project.getId(), authorizedOperator.getId());
         assertEquals(1, authorizedNotifications.size());
@@ -113,9 +120,33 @@ class OperatorActivationFlowTests {
                 operatorActivationService.listForOperator(project.getId(), unauthorizedOperator.getId());
         assertTrue(unauthorizedNotifications.isEmpty());
 
-        OperatorActivationNotification consumed = operatorActivationService.consume(
-                project.getId(), device.getId(), authorizedOperator.getId());
-        assertNotNull(consumed);
+        OperatorActivationResolution resolution = operatorActivationService.respond(
+                project.getId(),
+                device.getId(),
+                authorizedOperator,
+                true,
+                46.3,
+                8.5
+        ).orElseThrow();
+        assertTrue(resolution.isAccepted());
+        assertEquals(authorizedOperator.getId(), resolution.getOperatorId());
+        assertEquals(device.getId(), resolution.getDeviceId());
+
+        Device activated = deviceRepository.findById(device.getId()).orElseThrow();
+        assertTrue(activated.isActivated());
+        assertEquals(46.3, activated.getLatitude());
+        assertEquals(8.5, activated.getLongitude());
+        assertEquals(authorizedOperator.getId(), activated.getOperator().getId());
+
         assertTrue(operatorActivationService.listForOperator(project.getId(), authorizedOperator.getId()).isEmpty());
+
+        assertThrows(AccessDeniedException.class, () -> operatorActivationService.respond(
+                project.getId(),
+                device.getId(),
+                unauthorizedOperator,
+                true,
+                40.0,
+                10.0
+        ));
     }
 }

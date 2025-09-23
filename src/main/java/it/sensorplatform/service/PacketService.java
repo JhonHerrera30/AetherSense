@@ -77,11 +77,6 @@ public class PacketService {
         if (!device.isActivated()) {
             System.out.println("PacketService.handlePacket - activation packet for device: " + device.getId());
             notifyOperators(device, packet);
-            // Case 2: activation packet -> update flags and location
-            if (packet.getLatitude() != null) device.setLatitude(packet.getLatitude());
-            if (packet.getLongitude() != null) device.setLongitude(packet.getLongitude());
-            device.setActivated(true);
-            deviceRepository.save(device);
             return Result.ACTIVATION;
         }
 
