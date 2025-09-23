@@ -196,6 +196,30 @@ html, body {
   background: rgb(153,0,0);
 }
 
+.activation-requests-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: .75rem;
+  padding: .5rem .9rem;
+  border-radius: 6px;
+  background: #cc0000;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background-color .2s, transform .1s;
+}
+
+.activation-requests-link:hover {
+  background: rgb(153,0,0);
+  transform: scale(1.03);
+}
+
+.activation-requests-icon {
+  font-size: 1.1rem;
+}
+
 /* Groups list */
 details summary {
   cursor: pointer;

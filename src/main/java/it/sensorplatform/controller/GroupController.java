@@ -235,12 +235,12 @@ private AdminService adminService;
         }
 	
 	
-	/*OPERATOR*/
-	@GetMapping("/operator/{projectId}")
-	public String operatorMap(@PathVariable("projectId") Long projectId,
-	                          @RequestParam(value = "groupName", required = false) String groupName,
-	                          @RequestParam(value = "deviceInfo", required = false) String deviceInfo,
-	                          Model model) {
+        /*OPERATOR*/
+        @GetMapping("/operator/{projectId}")
+        public String operatorMap(@PathVariable("projectId") Long projectId,
+                                  @RequestParam(value = "groupName", required = false) String groupName,
+                                  @RequestParam(value = "deviceInfo", required = false) String deviceInfo,
+                                  Model model) {
 
 	    UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 	    Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
@@ -284,10 +284,36 @@ private AdminService adminService;
 	    model.addAttribute("project", project);
 	    model.addAttribute("groups", groups);
 
-	    // template dedicato agli operatori
-	    return "operator";          // oppure "operator.html" se il file si chiama così
-	}
-	
+            // template dedicato agli operatori
+            return "operator";          // oppure "operator.html" se il file si chiama così
+        }
+
+        @GetMapping("/operator/{projectId}/activations")
+        public String operatorActivations(@PathVariable("projectId") Long projectId, Model model) {
+
+            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+            model.addAttribute("user", credentials);
+
+            if (!(credentials.getRole().equals(LTRAD_OPERATOR_ROLE) ||
+                  credentials.getRole().equals(FIRE_OPERATOR_ROLE)  ||
+                  credentials.getRole().equals(VOLCANO_OPERATOR_ROLE))) {
+                return "error";
+            }
+
+            Project project = this.projectService.getProjectById(projectId);
+            if (project == null) {
+                return "error";
+            }
+
+            if (credentials.getProjectId() != null && !credentials.getProjectId().equals(projectId)) {
+                return "error";
+            }
+
+            model.addAttribute("project", project);
+            return "operator/activationRequests";
+        }
+
 
         public void loadDeviceDTO(Set<Device> devices, Model model) {
                 List<Device> orderedDevices = new ArrayList<>(devices);
