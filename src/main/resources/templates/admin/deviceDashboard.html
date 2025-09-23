@@ -52,7 +52,7 @@
                                         <span th:if="${device.macAddress != null}">MAC: <strong th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">--</strong></span>
                                         <span th:if="${device.macAddress == null}">DevEUI: <strong th:text="${device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui) : '--'}">--</strong></span>
                                         <span th:if="${device.tod != null}">Type: <strong th:text="${device.tod.name}">Type</strong></span>
-                                        <span>Status: <strong th:text="${device.status}">--</strong></span>
+                                        <span>Status: <strong th:text="${device.activated} ? 'activated' : 'deactivated'">--</strong></span>
                                 </p>
                         </div>
                         <div class="device-actions">

@@ -43,7 +43,7 @@ public class GroupControllerRest {
                         d.getLatitude(),
                         d.getTod() != null ? d.getTod().getName() : null,
                         d.getVisibleUsername(),
-                        d.getStatus(),
+                        d.isActivated(),
                         d.getGsheet()))
                 .collect(Collectors.toList());
     }
@@ -64,7 +64,7 @@ public class GroupControllerRest {
                         d.getLatitude(),
                         d.getTod() != null ? d.getTod().getName() : null,
                         d.getVisibleUsername(),
-                        d.getStatus(),
+                        d.isActivated(),
                         d.getGsheet()))
                 .collect(Collectors.toList());
     }
@@ -86,7 +86,7 @@ public class GroupControllerRest {
                 device.getLatitude(),
                 device.getTod() != null ? device.getTod().getName() : null,
                 device.getVisibleUsername(),
-                device.getStatus(),
+                device.isActivated(),
                 device.getGsheet()
             ))
             .toList();

@@ -17,7 +17,6 @@ public class PacketDTO {
     private String devEui;
     private String typeOfDevice;
     private Long projectId;
-    private boolean activation;
     private Double latitude;
     private Double longitude;
     private Map<String, Object> payload;
@@ -54,14 +53,6 @@ public class PacketDTO {
 
     public void setProjectId(Long projectId) {
         this.projectId = projectId;
-    }
-
-    public boolean isActivation() {
-        return activation;
-    }
-
-    public void setActivation(boolean activation) {
-        this.activation = activation;
     }
 
     public Double getLatitude() {

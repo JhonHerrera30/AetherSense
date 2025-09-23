@@ -99,10 +99,10 @@ public class NotificationControllerRest {
         device.setDevEui(normalizedDevEui);
         device.setProject(project);
         device.setTod(tod);
-        device.setStatus("deactivated");
+        device.setActivated(false);
         try {
             Device savedDevice = deviceRepository.save(device);
-            logger.info("Persisted device with id {} and status {}", savedDevice.getId(), savedDevice.getStatus());
+            logger.info("Persisted device with id {} and activated {}", savedDevice.getId(), savedDevice.isActivated());
             return ResponseEntity.ok().build();
         } catch (DataIntegrityViolationException e) {
             logger.warn("Conflict saving device with MAC {} and DevEUI {}", macAddress, notif.getDevEui(), e);
