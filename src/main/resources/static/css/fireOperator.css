@@ -35,6 +35,13 @@ html, body {
   align-items: center;
   gap: 1rem;
 }
+
+.page-title {
+  margin: 1.5rem auto 1rem;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+}
 .home-button {
   color: #fff;
   text-decoration: none;
