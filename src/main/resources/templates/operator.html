@@ -61,10 +61,7 @@
                         <div class="title-with-search">
                                 <h2 class="section-title">Activation Requests</h2>
                         </div>
-                        <div id="activation-feedback" class="activation-feedback" role="status" aria-live="polite"></div>
-                        <div id="activation-requests-wrapper">
-                                <p id="activation-requests-empty">No activation requests</p>
-                                <ul id="activation-requests-list" class="activation-request-list"></ul>
+                        <div id="activation-requests-wrapper" class="activation-requests-wrapper">
                                 <a th:href="@{'/operator/' + ${project.id} + '/activations'}" class="activation-requests-link">
                                         <span class="activation-requests-icon" aria-hidden="true">⚡</span>
                                         <span>Open activation requests</span>
@@ -73,9 +70,10 @@
 
                         <div class="title-with-search">
                                 <h2>Your Devices on Map</h2>
-				<form th:action="@{'/operator/' + ${project.id}}" method="get" class="search-form">
-					<input type="text" name="deviceInfo" placeholder="Search by name or MAC..."
-						th:value="${param.deviceInfo}" />
+                                <form th:action="@{'/operator/' + ${project.id}}" method="get" class="search-form">
+                                        <input type="text" name="deviceInfo"
+                                                th:attr="placeholder=${project.id == 101} ? 'Search by name or MAC...' : 'Search by name or DevEUI...'"
+                                                th:value="${param.deviceInfo}" />
 					<button type="submit" title="Search">
 						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 24 24">
 							<circle cx="11" cy="11" r="8" stroke="white" stroke-width="2" fill="none" />
@@ -87,22 +85,38 @@
 
                         <div id="user-devices-wrapper">
                                 <div th:if="${devices.isEmpty()}" id="user-devices-empty">No positioned devices</div>
-				<table>
-					<thead>
-						<tr>
-							<th scope="col">Name</th>
-							<th scope="col">Mac Address</th>
-							<th scope="col">Type</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr th:each="device : ${devices}">
-							<td th:text="${device.name}">Name</td>
-                                                        <td th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">Mac</td>
-							<td th:text="${device.tod}">Type</td>
-						</tr>
-					</tbody>
-				</table>
+                                <table>
+                                        <thead>
+                                                <tr>
+                                                        <th scope="col">Name</th>
+                                                        <th scope="col"
+                                                                th:text="${project.id == 101} ? 'MAC Address' : 'DevEUI'">
+                                                                Identifier
+                                                        </th>
+                                                        <th scope="col">Type</th>
+                                                </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr th:each="device : ${devices}">
+                                                        <td th:text="${device.name}">Name</td>
+                                                        <td
+                                                                th:text="${project.id == 101}
+                                                                        ? (device.macAddress != null
+                                                                                ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)
+                                                                                : (device.devEui != null
+                                                                                        ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui)
+                                                                                        : '--'))
+                                                                        : (device.devEui != null
+                                                                                ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui)
+                                                                                : (device.macAddress != null
+                                                                                        ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)
+                                                                                        : '--'))">
+                                                                Identifier
+                                                        </td>
+                                                        <td th:text="${device.tod}">Type</td>
+                                                </tr>
+                                        </tbody>
+                                </table>
 			</div>
 		</div>
 
@@ -114,8 +128,6 @@
 <script th:inline="javascript">
         /*<![CDATA[*/
         const initialDevices = [[${devices}]];
-        const projectId = [[${project.id}]];
-        const currentOperatorId = [[${user.id}]];
         /*]]>*/
 
         const map = L.map('map').setView([41.89, 12.48], 12);
@@ -192,406 +204,6 @@
 
         initialDevices.forEach(addOrUpdateDeviceMarker);
         recalculateBounds();
-
-        const userDevicesWrapper = document.getElementById('user-devices-wrapper');
-
-        function ensureUserDevicesTable() {
-                if (!userDevicesWrapper) {
-                        return null;
-                }
-                const empty = document.getElementById('user-devices-empty');
-                if (empty) {
-                        empty.remove();
-                }
-                let table = userDevicesWrapper.querySelector('table');
-                if (!table) {
-                        table = document.createElement('table');
-                        table.innerHTML = `
-                                <thead>
-                                        <tr>
-                                                <th scope="col">Name</th>
-                                                <th scope="col">Mac Address</th>
-                                                <th scope="col">Type</th>
-                                        </tr>
-                                </thead>
-                                <tbody></tbody>
-                        `;
-                        userDevicesWrapper.appendChild(table);
-                }
-                return table.querySelector('tbody');
-        }
-
-        function upsertDeviceRow(device) {
-                if (!device) {
-                        return;
-                }
-                const tbody = ensureUserDevicesTable();
-                if (!tbody) {
-                        return;
-                }
-                const rowSelector = `tr[data-device-id="${device.deviceId}"]`;
-                let row = tbody.querySelector(rowSelector);
-                if (!row) {
-                        row = document.createElement('tr');
-                        row.dataset.deviceId = device.deviceId;
-                        tbody.appendChild(row);
-                }
-                const name = device.name || 'Device';
-                const mac = formatMac(device.macAddress);
-                const type = device.deviceType || '';
-                row.innerHTML = `
-                        <td>${name}</td>
-                        <td>${mac}</td>
-                        <td>${type}</td>
-                `;
-        }
-
-        const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
-        const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
-        const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
-        const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : null;
-
-        function buildHeaders() {
-                const headers = {'Content-Type': 'application/json'};
-                if (csrfToken && csrfHeader) {
-                        headers[csrfHeader] = csrfToken;
-                }
-                return headers;
-        }
-
-        const activationRequests = new Map();
-        const activationList = document.getElementById('activation-requests-list');
-        const activationEmpty = document.getElementById('activation-requests-empty');
-        const activationFeedback = document.getElementById('activation-feedback');
-        let activationFeedbackTimeout = null;
-
-        function refreshActivationEmptyState() {
-                if (!activationEmpty) {
-                        return;
-                }
-                activationEmpty.style.display = activationRequests.size === 0 ? 'block' : 'none';
-        }
-
-        function showActivationFeedback(message, isError = false) {
-                if (!activationFeedback) {
-                        return;
-                }
-                if (activationFeedbackTimeout) {
-                        window.clearTimeout(activationFeedbackTimeout);
-                        activationFeedbackTimeout = null;
-                }
-                if (!message) {
-                        activationFeedback.textContent = '';
-                        activationFeedback.style.padding = '0';
-                        activationFeedback.style.marginBottom = '0';
-                        activationFeedback.style.backgroundColor = 'transparent';
-                        return;
-                }
-                activationFeedback.textContent = message;
-                activationFeedback.style.padding = '8px 12px';
-                activationFeedback.style.marginBottom = '8px';
-                activationFeedback.style.backgroundColor = isError ? 'rgba(176,0,32,0.15)' : 'rgba(10,135,84,0.15)';
-                activationFeedback.style.color = isError ? '#b00020' : '#0a8754';
-                activationFeedbackTimeout = window.setTimeout(() => {
-                        activationFeedback.textContent = '';
-                        activationFeedback.style.padding = '0';
-                        activationFeedback.style.marginBottom = '0';
-                        activationFeedback.style.backgroundColor = 'transparent';
-                }, 6000);
-        }
-
-        function updateLocationContent(element, latitude, longitude) {
-                if (!element) {
-                        return;
-                }
-                if (latitude == null || longitude == null) {
-                        element.textContent = 'unknown';
-                        return;
-                }
-                const latFixed = Number(latitude).toFixed(5);
-                const lonFixed = Number(longitude).toFixed(5);
-                element.textContent = `${latFixed}, ${lonFixed}`;
-        }
-
-        function formatActivationIdentifier(notification) {
-                if (!notification) {
-                        return {label: 'MAC', value: 'n/a'};
-                }
-                const formattedMac = formatMac(notification.macAddress);
-                if (formattedMac) {
-                        return {label: 'MAC', value: formattedMac};
-                }
-                if (notification.devEui) {
-                        const normalized = String(notification.devEui).trim();
-                        if (normalized) {
-                                return {label: 'DevEUI', value: normalized.toUpperCase()};
-                        }
-                }
-                return {label: 'MAC', value: 'n/a'};
-        }
-
-        function updateActivationElement(element, notification) {
-                if (!element || !notification) {
-                        return;
-                }
-                const title = element.querySelector('.activation-request-title');
-                if (title) {
-                        title.textContent = notification.deviceName || 'Unnamed device';
-                }
-                const identifier = formatActivationIdentifier(notification);
-                const macLabel = element.querySelector('.activation-request-mac-label');
-                if (macLabel) {
-                        macLabel.textContent = `${identifier.label}:`;
-                }
-                const macValue = element.querySelector('.activation-request-mac-value');
-                if (macValue) {
-                        macValue.textContent = identifier.value || 'n/a';
-                }
-                const adminValue = element.querySelector('.activation-request-admin-value');
-                if (adminValue) {
-                        adminValue.textContent = notification.adminEmail || 'n/a';
-                }
-                const locationValue = element.querySelector('.activation-request-location-value');
-                updateLocationContent(locationValue, notification.latitude, notification.longitude);
-        }
-
-        function createActivationElement(notification) {
-                const li = document.createElement('li');
-                li.className = 'activation-request-item';
-                li.dataset.deviceId = notification.deviceId;
-
-                const title = document.createElement('div');
-                title.className = 'activation-request-title';
-                li.appendChild(title);
-
-                const macLine = document.createElement('div');
-                macLine.className = 'activation-request-field';
-                const macLabel = document.createElement('strong');
-                macLabel.className = 'activation-request-mac-label';
-                macLine.appendChild(macLabel);
-                macLine.appendChild(document.createTextNode(' '));
-                const macValue = document.createElement('span');
-                macValue.className = 'activation-request-mac-value';
-                macLine.appendChild(macValue);
-                li.appendChild(macLine);
-
-                const adminLine = document.createElement('div');
-                adminLine.className = 'activation-request-field';
-                adminLine.innerHTML = '<strong>Admin:</strong> <span class="activation-request-admin-value"></span>';
-                li.appendChild(adminLine);
-
-                const locationLine = document.createElement('div');
-                locationLine.className = 'activation-request-field';
-                locationLine.innerHTML = '<strong>Location:</strong> <span class="activation-request-location-value"></span>';
-                li.appendChild(locationLine);
-
-                const actions = document.createElement('div');
-                actions.className = 'activation-request-actions';
-
-                const acceptButton = document.createElement('button');
-                acceptButton.type = 'button';
-                acceptButton.className = 'activation-request-accept';
-                acceptButton.textContent = 'Accept';
-
-                const refuseButton = document.createElement('button');
-                refuseButton.type = 'button';
-                refuseButton.className = 'activation-request-refuse';
-                refuseButton.textContent = 'Refuse';
-
-                actions.appendChild(acceptButton);
-                actions.appendChild(refuseButton);
-                li.appendChild(actions);
-
-                acceptButton.addEventListener('click', () => respondToActivation(notification, true, acceptButton, refuseButton));
-                refuseButton.addEventListener('click', () => respondToActivation(notification, false, acceptButton, refuseButton));
-
-                updateActivationElement(li, notification);
-                return {element: li, acceptButton, refuseButton};
-        }
-
-        function addActivationNotification(notification) {
-                if (!notification || notification.deviceId == null) {
-                        return;
-                }
-                const existing = activationRequests.get(notification.deviceId);
-                if (existing) {
-                        existing.notification = notification;
-                        updateActivationElement(existing.element, notification);
-                        refreshActivationEmptyState();
-                        return;
-                }
-                if (!activationList) {
-                        return;
-                }
-                const {element, acceptButton, refuseButton} = createActivationElement(notification);
-                activationRequests.set(notification.deviceId, {
-                        notification,
-                        element,
-                        acceptButton,
-                        refuseButton
-                });
-                activationList.appendChild(element);
-                refreshActivationEmptyState();
-        }
-
-        function removeActivationNotification(deviceId) {
-                const existing = activationRequests.get(deviceId);
-                if (!existing) {
-                        refreshActivationEmptyState();
-                        return;
-                }
-                if (existing.element && existing.element.parentElement) {
-                        existing.element.parentElement.removeChild(existing.element);
-                }
-                activationRequests.delete(deviceId);
-                refreshActivationEmptyState();
-        }
-
-        function getGeolocation() {
-                return new Promise((resolve, reject) => {
-                        if (!navigator.geolocation) {
-                                reject(new Error('Geolocation not supported'));
-                                return;
-                        }
-                        navigator.geolocation.getCurrentPosition(
-                                position => resolve({
-                                        latitude: Number(position.coords.latitude),
-                                        longitude: Number(position.coords.longitude)
-                                }),
-                                error => reject(error),
-                                {enableHighAccuracy: true, timeout: 10000}
-                        );
-                });
-        }
-
-        async function respondToActivation(notification, accepted, acceptButton, refuseButton) {
-                if (!notification) {
-                        return;
-                }
-                const entry = activationRequests.get(notification.deviceId);
-                const payloadNotification = entry ? entry.notification : notification;
-                if (acceptButton) {
-                        acceptButton.disabled = true;
-                }
-                if (refuseButton) {
-                        refuseButton.disabled = true;
-                }
-                try {
-                        let coordinates = {latitude: null, longitude: null};
-                        if (accepted) {
-                                try {
-                                        coordinates = await getGeolocation();
-                                } catch (geoError) {
-                                        const proceed = window.confirm('Unable to retrieve your location. Do you want to continue without coordinates?');
-                                        if (!proceed) {
-                                                throw geoError;
-                                        }
-                                }
-                        }
-                        const response = await fetch(`/api/operators/activations/${projectId}/${payloadNotification.deviceId}/response`, {
-                                method: 'POST',
-                                headers: buildHeaders(),
-                                credentials: 'same-origin',
-                                body: JSON.stringify({
-                                        accepted: accepted,
-                                        latitude: coordinates.latitude,
-                                        longitude: coordinates.longitude
-                                })
-                        });
-                        if (!response.ok) {
-                                throw new Error(`Server responded with status ${response.status}`);
-                        }
-                        const result = await response.json();
-                        handleActivationResolution(result);
-                } catch (error) {
-                        console.error('Activation response failed', error);
-                        showActivationFeedback('Unable to send response. Please try again.', true);
-                        if (acceptButton) {
-                                acceptButton.disabled = false;
-                        }
-                        if (refuseButton) {
-                                refuseButton.disabled = false;
-                        }
-                }
-        }
-
-        function handleActivationResolution(resolution) {
-                if (!resolution || resolution.deviceId == null) {
-                        return;
-                }
-                removeActivationNotification(resolution.deviceId);
-                const actor = resolution.operatorName || 'An operator';
-                const deviceName = resolution.deviceName || 'the device';
-                if (resolution.accepted) {
-                        showActivationFeedback(`${actor} activated ${deviceName}.`, false);
-                } else {
-                        showActivationFeedback(`${actor} refused ${deviceName}.`, true);
-                }
-                if (resolution.accepted) {
-                        const deviceData = {
-                                deviceId: resolution.deviceId,
-                                id: resolution.deviceId,
-                                name: resolution.deviceName,
-                                macAddress: resolution.macAddress,
-                                latitude: resolution.latitude,
-                                longitude: resolution.longitude,
-                                deviceType: resolution.deviceType
-                        };
-                        addOrUpdateDeviceMarker(deviceData);
-                        recalculateBounds();
-                        if (resolution.operatorId === currentOperatorId) {
-                                upsertDeviceRow(deviceData);
-                        }
-                }
-        }
-
-        async function loadPendingActivations() {
-                try {
-                        const response = await fetch(`/api/operators/activations/${projectId}`, {
-                                credentials: 'same-origin'
-                        });
-                        if (!response.ok) {
-                                throw new Error(`Status ${response.status}`);
-                        }
-                        const data = await response.json();
-                        if (Array.isArray(data)) {
-                                data.forEach(addActivationNotification);
-                        }
-                } catch (error) {
-                        console.error('Unable to load activation requests', error);
-                }
-        }
-
-        function subscribeToActivationStream() {
-                try {
-                        const eventSource = new EventSource(`/api/operators/activations/stream/${projectId}`);
-                        eventSource.addEventListener('activation-request', event => {
-                                try {
-                                        const notification = JSON.parse(event.data);
-                                        addActivationNotification(notification);
-                                } catch (parseError) {
-                                        console.error('Unable to parse activation request', parseError);
-                                }
-                        });
-                        eventSource.addEventListener('activation-response', event => {
-                                try {
-                                        const resolution = JSON.parse(event.data);
-                                        handleActivationResolution(resolution);
-                                } catch (parseError) {
-                                        console.error('Unable to parse activation response', parseError);
-                                }
-                        });
-                        eventSource.onerror = () => {
-                                console.warn('Activation event stream disconnected');
-                        };
-                } catch (error) {
-                        console.error('Unable to subscribe to activation stream', error);
-                }
-        }
-
-        refreshActivationEmptyState();
-        loadPendingActivations();
-        subscribeToActivationStream();
 
 </script>
 
