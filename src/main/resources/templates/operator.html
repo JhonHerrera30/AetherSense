@@ -100,17 +100,7 @@
                                                 <tr th:each="device : ${devices}">
                                                         <td th:text="${device.name}">Name</td>
                                                         <td
-                                                                th:text="${project.id == 101}
-                                                                        ? (device.macAddress != null
-                                                                                ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)
-                                                                                : (device.devEui != null
-                                                                                        ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui)
-                                                                                        : '--'))
-                                                                        : (device.devEui != null
-                                                                                ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui)
-                                                                                : (device.macAddress != null
-                                                                                        ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)
-                                                                                        : '--'))">
+                                                                th:text="${T(it.sensorplatform.util.MacAddressUtils).formatIdentifierForProject(project.id, device.macAddress, device.devEui)}">
                                                                 Identifier
                                                         </td>
                                                         <td th:text="${device.tod}">Type</td>
