@@ -117,9 +117,10 @@
 
 			<div class="title-with-search">
 				<h2>Your Devices</h2>
-				<form th:action="@{'/group/' + ${project.id}}" method="get" class="search-form">
-					<input type="text" name="deviceInfo" placeholder="Search by name or MAC..."
-						th:value="${param.deviceInfo}" />
+                                <form th:action="@{'/group/' + ${project.id}}" method="get" class="search-form">
+                                        <input type="text" name="deviceInfo"
+                                                th:attr="placeholder=${project.id == 101} ? 'Search by name or MAC...' : 'Search by name or DevEUI...'"
+                                                th:value="${param.deviceInfo}" />
 					<button type="submit" title="Search">
 						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 24 24">
 							<circle cx="11" cy="11" r="8" stroke="white" stroke-width="2" fill="none" />
@@ -135,7 +136,10 @@
                                           <thead>
                                                   <tr>
                                                           <th scope="col">Name</th>
-                                                          <th scope="col">Device Key</th>
+                                                          <th scope="col"
+                                                              th:text="${project.id == 101} ? 'MAC Address' : 'DevEUI'">
+                                                                  Identifier
+                                                          </th>
                                                           <th scope="col">Type of device</th>
                                                           <th scope="col">Operator</th>
                                                           <th scope="col">Activated</th>
@@ -146,7 +150,20 @@
                                           <tbody>
                                                   <tr th:each="device : ${devices}">
                                                           <td th:text="${device.name}">Name</td>
-                                                          <td th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.deviceKey)}">Device Key</td>
+                                                          <td
+                                                              th:text="${project.id == 101}
+                                                                      ? (device.macAddress != null
+                                                                              ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)
+                                                                              : (device.devEui != null
+                                                                                      ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui)
+                                                                                      : '--'))
+                                                                      : (device.devEui != null
+                                                                              ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui)
+                                                                              : (device.macAddress != null
+                                                                                      ? T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)
+                                                                                      : '--'))">
+                                                                  Identifier
+                                                          </td>
                                                           <td th:text="${device.tod}">Mac Address</td>
                                                           <td>
                                                                   <span th:if="${device.operator != null}" th:text="${device.operator}">Operator</span>
