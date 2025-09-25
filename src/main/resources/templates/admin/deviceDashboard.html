@@ -310,6 +310,10 @@
                         if (descriptor.component) {
                                 return descriptor.component;
                         }
+                        const parsed = parseSpecLabel(descriptor.label || descriptor.displayName || descriptor.key);
+                        if (parsed.component) {
+                                return parsed.component;
+                        }
                         const label = typeof descriptor.label === 'string' ? descriptor.label.trim() : '';
                         const displayName = typeof descriptor.displayName === 'string' ? descriptor.displayName.trim() : '';
                         if (label) {
@@ -323,6 +327,44 @@
                                 return label;
                         }
                         return '';
+                }
+
+                function parseSpecLabel(rawLabel) {
+                        const result = { component: '', measurement: '', unit: '' };
+                        if (typeof rawLabel !== 'string') {
+                                return result;
+                        }
+                        const label = rawLabel.trim();
+                        if (!label) {
+                                return result;
+                        }
+                        const unitMatch = label.match(/\[([^\]]+)\]\s*$/);
+                        const withoutUnit = unitMatch ? label.slice(0, unitMatch.index).trim() : label;
+                        if (unitMatch && unitMatch[1]) {
+                                result.unit = unitMatch[1].trim();
+                        }
+
+                        const separatorRegex = /\s*[-–:|]\s*/;
+                        const separatorMatch = withoutUnit.match(separatorRegex);
+                        if (separatorMatch && separatorMatch.index !== undefined) {
+                                const component = withoutUnit.slice(0, separatorMatch.index).trim();
+                                const measurement = withoutUnit.slice(separatorMatch.index + separatorMatch[0].length).trim();
+                                if (component && measurement) {
+                                        result.component = component;
+                                        result.measurement = measurement;
+                                        return result;
+                                }
+                        }
+
+                        const tokens = withoutUnit.split(/\s+/).filter(Boolean);
+                        if (tokens.length >= 2) {
+                                result.component = tokens[0];
+                                result.measurement = tokens.slice(1).join(' ');
+                                return result;
+                        }
+
+                        result.measurement = withoutUnit;
+                        return result;
                 }
 
                 const KNOWN_UNIT_TOKENS = new Set([
@@ -390,9 +432,15 @@
                         if (!descriptor) {
                                 return '';
                         }
-                        const baseTitle = typeof descriptor.displayName === 'string' && descriptor.displayName.trim()
+                        const parsed = parseSpecLabel(descriptor.label || descriptor.displayName || descriptor.key);
+                        let baseTitle = typeof descriptor.displayName === 'string' && descriptor.displayName.trim()
                                 ? descriptor.displayName.trim()
-                                : (typeof descriptor.label === 'string' ? descriptor.label.trim() : '');
+                                : '';
+                        if (!baseTitle) {
+                                baseTitle = parsed.measurement
+                                        ? parsed.measurement
+                                        : (typeof descriptor.label === 'string' ? descriptor.label.trim() : '');
+                        }
                         if (!baseTitle) {
                                 return '';
                         }
@@ -406,15 +454,15 @@
                         cleaned = cleaned.replace(/\([^)]*\)/g, ' ');
                         cleaned = cleaned.replace(/\s+/g, ' ').trim();
                         if (!cleaned) {
-                                return originalTitle;
+                                cleaned = parsed.measurement || originalTitle;
                         }
                         const parts = cleaned.split(' ');
-                        while (parts.length > 1 && isUnitToken(parts[parts.length - 1], descriptor.unit)) {
+                        while (parts.length > 1 && isUnitToken(parts[parts.length - 1], descriptor.unit || parsed.unit)) {
                                 parts.pop();
                         }
                         cleaned = parts.join(' ').trim();
                         if (!cleaned) {
-                                return originalTitle;
+                                return parsed.measurement || originalTitle;
                         }
                         return cleaned;
                 }
@@ -664,13 +712,20 @@
                 }
 
                 function buildDescriptorFromSpec(spec) {
-                        const displayName = spec.displayName || prettifyKey(spec.label || spec.key);
+                        const parsed = parseSpecLabel(spec.label || spec.displayName || spec.key);
+                        const displayName = (spec.displayName && spec.displayName.trim())
+                                ? spec.displayName.trim()
+                                : (parsed.measurement || prettifyKey(spec.label || spec.key));
+                        const component = (spec.component && spec.component.trim())
+                                ? spec.component.trim()
+                                : parsed.component;
+                        const unit = spec.unit || parsed.unit || null;
                         return {
                                 key: spec.key,
                                 label: spec.label,
                                 displayName,
-                                component: spec.component,
-                                unit: spec.unit,
+                                component,
+                                unit,
                                 min: spec.min,
                                 max: spec.max
                         };
@@ -680,15 +735,25 @@
                         if (!sample || !Array.isArray(sample.measurements)) {
                                 return [];
                         }
-                        return sample.measurements.map(measurement => ({
-                                key: measurement.key,
-                                label: measurement.label,
-                                displayName: measurement.displayName || prettifyKey(measurement.label || measurement.key),
-                                component: measurement.component,
-                                unit: measurement.unit,
-                                min: measurement.min,
-                                max: measurement.max
-                        }));
+                        return sample.measurements.map(measurement => {
+                                const parsed = parseSpecLabel(measurement.label || measurement.displayName || measurement.key);
+                                const displayName = (measurement.displayName && measurement.displayName.trim())
+                                        ? measurement.displayName.trim()
+                                        : (parsed.measurement || prettifyKey(measurement.label || measurement.key));
+                                const component = (measurement.component && measurement.component.trim())
+                                        ? measurement.component.trim()
+                                        : parsed.component;
+                                const unit = measurement.unit || parsed.unit || null;
+                                return {
+                                        key: measurement.key,
+                                        label: measurement.label,
+                                        displayName,
+                                        component,
+                                        unit,
+                                        min: measurement.min,
+                                        max: measurement.max
+                                };
+                        });
                 }
 
                 function descriptorsDiffer(previous, next) {
