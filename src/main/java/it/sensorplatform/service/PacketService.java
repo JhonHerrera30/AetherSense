@@ -74,6 +74,29 @@ public class PacketService {
 
         Device device = existing.get();
 
+        Double latitude = packet.getLatitude();
+        Double longitude = packet.getLongitude();
+        boolean hasValidCoordinates = hasValidCoordinate(latitude) && hasValidCoordinate(longitude);
+        boolean hasEmailOwner = StringUtils.hasText(device.getEmailOwner());
+        boolean deviceUpdated = false;
+
+        if (hasValidCoordinates && hasEmailOwner) {
+            if (!device.isActivated()) {
+                device.setLatitude(latitude);
+                device.setLongitude(longitude);
+                device.setActivated(true);
+                deviceUpdated = true;
+            } else if (coordinatesDiffer(device.getLatitude(), latitude) || coordinatesDiffer(device.getLongitude(), longitude)) {
+                device.setLatitude(latitude);
+                device.setLongitude(longitude);
+                deviceUpdated = true;
+            }
+
+            if (deviceUpdated) {
+                deviceRepository.save(device);
+            }
+        }
+
         if (!device.isActivated()) {
             System.out.println("PacketService.handlePacket - activation packet for device: " + device.getId());
             notifyOperators(device, packet);
@@ -117,6 +140,17 @@ public class PacketService {
             return;
         }
         operatorActivationService.notifyActivation(device, packet, managedAdmin, authorizedOperators);
+    }
+
+    private boolean hasValidCoordinate(Double value) {
+        return value != null && !Double.isNaN(value) && Double.compare(value, 0d) != 0;
+    }
+
+    private boolean coordinatesDiffer(Double stored, Double incoming) {
+        if (incoming == null) {
+            return false;
+        }
+        return stored == null || Double.compare(stored, incoming) != 0;
     }
 }
 
