@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -73,6 +74,42 @@ class PacketServiceTests {
         PacketService.Result res = packetService.handlePacket(dto);
         assertEquals(PacketService.Result.DATA, res);
         assertEquals(1, ingestService.last(MacAddressUtils.normalize("AA:DD:EE"), 1).size());
+    }
+
+    @Test
+    void mergesIndicatorPayloadIntoMetrics() {
+        Project project = new Project();
+        project.setName("demo-indicator");
+        projectRepository.save(project);
+
+        Device device = new Device();
+        device.setName("indicatorDevice");
+        device.setMacAddress("AA:11:22");
+        device.setEmailOwner("");
+        device.setActivated(true);
+        device.setLatitude(0d);
+        device.setLongitude(0d);
+        device.setProject(project);
+        deviceRepository.save(device);
+
+        PacketDTO dto = new PacketDTO();
+        dto.setMacAddress("AA:11:22");
+        dto.setIndicator(List.of("fan_err:Fan Error"));
+        dto.setIndicatorPayload(Map.of("fan_err", 1));
+
+        PacketService.Result res = packetService.handlePacket(dto);
+
+        assertEquals(PacketService.Result.DATA, res);
+        List<IngestService.IndicatorSample> indicators = ingestService
+                .last(MacAddressUtils.normalize("AA:11:22"), 1)
+                .stream()
+                .findFirst()
+                .map(IngestService.Sample::indicators)
+                .orElse(List.of());
+
+        assertEquals(1, indicators.size());
+        assertEquals("fan_err", indicators.get(0).key());
+        assertEquals(1, indicators.get(0).value());
     }
 
     @Test
