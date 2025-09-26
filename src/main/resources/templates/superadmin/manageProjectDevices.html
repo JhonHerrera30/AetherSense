@@ -244,10 +244,30 @@
         let initialDevices = [[${devices}]];
 	/*]]>*/
 
-	let map = L.map('map').setView([41.89, 12.48], 12);
-	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-		attribution: '&copy; OpenStreetMap contributors'
-	}).addTo(map);
+        let map = L.map('map').setView([41.89, 12.48], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        function invalidateMapSize() {
+                map.invalidateSize();
+        }
+
+        window.addEventListener('resize', invalidateMapSize);
+
+        if (window.ResizeObserver) {
+                const resizeObserver = new ResizeObserver(invalidateMapSize);
+                const devicesPanelElement = document.querySelector('.devices-panel');
+                const mapElement = document.getElementById('map');
+                if (devicesPanelElement) {
+                        resizeObserver.observe(devicesPanelElement);
+                }
+                if (mapElement) {
+                        resizeObserver.observe(mapElement);
+                }
+        }
+
+        requestAnimationFrame(invalidateMapSize);
 
         let markerByDeviceKey = new Map();
 

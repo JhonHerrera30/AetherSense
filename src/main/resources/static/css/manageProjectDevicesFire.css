@@ -185,19 +185,21 @@ navbar h1 {
 }
 
 .devices-panel {
-    width: 80%;
+    flex: 0 0 50%;
     background-color: #1B263B;
     padding: 1.5rem 2rem;
     box-shadow: inset -1px 0 5px rgba(0, 0, 0, 0.3);
     display: block;
-	overflow-y: auto; /* attiva lo scroll verticale */
-	overflow-x: hidden; /* opzionale per evitare scroll orizzontale */
-
+    overflow: auto;
+    min-width: 320px;
+    max-width: 75vw;
+    resize: horizontal;
 }
 
 /* Mappa */
 #map {
-    width: 20%;
+    flex: 1 1 50%;
+    min-width: 320px;
     height: 100%;
     overflow: hidden;
 }
