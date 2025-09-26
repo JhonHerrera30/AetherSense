@@ -105,14 +105,24 @@
 
 			<div id="groups-wrapper">
 				<div th:if="${groups.isEmpty()}">No groups available</div>
-				<ul>
-					<li th:each="group : ${groups}">
-						<details class="groups">
-							<summary th:text="${group.name}" th:attr="data-group-name=${group.name}">Group</summary>
-							<ul class="device-list"></ul>
-						</details>
-					</li>
-				</ul>
+                                <ul>
+                                        <li th:each="group : ${groups}">
+                                                <div class="group-card">
+                                                        <details class="groups">
+                                                                <summary th:attr="data-group-name=${group.name}">
+                                                                        <div class="group-summary">
+                                                                                <span class="group-name" th:text="${group.name}">Group</span>
+                                                                                <span class="group-count" th:text="${group.devices.size()} + ' devices'">0 devices</span>
+                                                                                <svg class="group-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                                                                                        <path d="M7 10l5 5 5-5z" />
+                                                                                </svg>
+                                                                        </div>
+                                                                </summary>
+                                                                <ul class="device-list"></ul>
+                                                        </details>
+                                                </div>
+                                        </li>
+                                </ul>
 			</div>
 
 			<div class="title-with-search">
