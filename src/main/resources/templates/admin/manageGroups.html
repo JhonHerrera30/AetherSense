@@ -95,32 +95,32 @@
         </div>
 
         <!-- Dispositivi nel gruppo -->
-		<table style="margin-top: 1rem;">
-		    <thead>
-		        <tr>
-		            <th>Device Name</th>
-		            <th>MAC Address</th>
-					<th>Type of Device</th>
-		            <th>Actions</th>
-		        </tr>
-		    </thead>
-		    <tbody>
-				<tr th:each="device : ${group.devices}">
-				    <td th:text="${device.name}">Device Name</td>
+                <div th:if="${#lists.isEmpty(group.devices)}" class="no-devices-message">
+                    <p>No devices assigned to this group.</p>
+                </div>
+                <table th:if="${!#lists.isEmpty(group.devices)}" style="margin-top: 1rem;">
+                    <thead>
+                        <tr>
+                            <th>Device Name</th>
+                            <th>MAC Address</th>
+                                        <th>Type of Device</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                                <tr th:each="device : ${group.devices}">
+                                    <td th:text="${device.name}">Device Name</td>
                                     <td th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">MAC</td>
-				    <td th:text="${device.tod != null ? device.tod.name : 'N/A'}">Type</td> <!-- Spostata sopra -->
-				    <td>
-				        <form th:action="@{'/group/' + ${project.id} + '/' + ${group.id} + '/removeDevice/' + ${device.macAddress}}" 
-				              method="post" th:csrf="true">
-				            <button type="submit" class="btn-icon btn-delete" title="Remove from Group">🗑️</button>
-				        </form>
-				    </td>
-				</tr>
-		        <tr th:if="${#lists.isEmpty(group.devices)}">
-		            <td colspan="4">No devices assigned to this group.</td>
-		        </tr>
-		    </tbody>
-		</table>
+                                    <td th:text="${device.tod != null ? device.tod.name : 'N/A'}">Type</td> <!-- Spostata sopra -->
+                                    <td>
+                                        <form th:action="@{'/group/' + ${project.id} + '/' + ${group.id} + '/removeDevice/' + ${device.macAddress}}"
+                                              method="post" th:csrf="true">
+                                            <button type="submit" class="btn-icon btn-delete" title="Remove from Group">🗑️</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                    </tbody>
+                </table>
 		<button type="button" class="btn-save toggle-add-list" 
 		        th:attr="data-group-id=${group.id}">
 		    Add Devices
