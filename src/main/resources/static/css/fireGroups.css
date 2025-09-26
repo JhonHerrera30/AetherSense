@@ -148,12 +148,41 @@ navbar h1 {
 
 
 .dropdown-link:hover {
-	background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.1);
 }
 
 
 .dropdown-logout:hover {
-	background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.1);
+}
+
+.device-marker {
+        background: transparent;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+}
+
+.device-marker-dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid #ffffff;
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+        background-color: var(--device-marker-color, #9aa0a6);
+}
+
+.device-marker-ok .device-marker-dot {
+        --device-marker-color: #22c55e;
+}
+
+.device-marker-alert .device-marker-dot {
+        --device-marker-color: #f87171;
+}
+
+.device-marker-unknown .device-marker-dot {
+        --device-marker-color: #9aa0a6;
 }
 
 

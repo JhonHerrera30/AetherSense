@@ -219,6 +219,22 @@
 
                 let allLatLngs = [];
 
+                const markerIcons = {
+                        ok: createStatusIcon('ok'),
+                        alert: createStatusIcon('alert'),
+                        unknown: createStatusIcon('unknown')
+                };
+
+                function createStatusIcon(status) {
+                        return L.divIcon({
+                                className: `device-marker device-marker-${status}`,
+                                iconSize: [24, 24],
+                                iconAnchor: [12, 12],
+                                popupAnchor: [0, -12],
+                                html: '<span class="device-marker-dot"></span>'
+                        });
+                }
+
                 function formatIdentifier(value) {
                         if (!value) {
                                 return '';
@@ -239,7 +255,7 @@
                         const latlng = [d.latitude, d.longitude];
                         allLatLngs.push(latlng);
 
-                        const marker = L.marker(latlng).addTo(map);
+                        const marker = L.marker(latlng, { icon: markerIcons.unknown }).addTo(map);
                         const key = resolveDeviceKey(d);
                         const formattedKey = formatIdentifier(key);
                         const fallbackDevEui = d.devEui ? formatIdentifier(d.devEui) : '';
@@ -262,6 +278,11 @@
                         }
                 });
 
+                if (markerByDeviceKey.size > 0) {
+                        refreshAllMarkerStatuses();
+                        setInterval(refreshAllMarkerStatuses, 60000);
+                }
+
 		// Disegna il poligono solo se ci sono almeno 3 punti
 		if (allLatLngs.length > 0) {
 			const bounds = L.latLngBounds(allLatLngs);
@@ -270,9 +291,9 @@
 
 
 
-		function fetchAndDisplayDevices(groupName) {
-			fetch('/api/groups/name/' + encodeURIComponent(groupName) + '/devices')
-				.then(response => response.json())
+                function fetchAndDisplayDevices(groupName) {
+                        fetch('/api/groups/name/' + encodeURIComponent(groupName) + '/devices')
+                                .then(response => response.json())
 				.then(devices => {
                                         const validDevices = devices.filter(d => d.latitude != null && d.longitude != null);
                                         if (validDevices.length === 1) {
@@ -304,11 +325,81 @@
 			});
 		});
 
-		document.getElementById("groupInput").addEventListener("change", function () {
-			const groupName = this.value;
-			fetchAndDisplayDevices(groupName);
-		});
-	</script>
+                const groupInputElement = document.getElementById("groupInput");
+                if (groupInputElement) {
+                        groupInputElement.addEventListener("change", function () {
+                                const groupName = this.value;
+                                fetchAndDisplayDevices(groupName);
+                        });
+                }
+
+                function refreshAllMarkerStatuses() {
+                        const tasks = [];
+                        markerByDeviceKey.forEach((marker, key) => {
+                                tasks.push(updateMarkerStatusForDevice(key, marker));
+                        });
+                        if (tasks.length) {
+                                Promise.all(tasks).catch(error => console.error('Failed to refresh marker statuses', error));
+                        }
+                }
+
+                async function updateMarkerStatusForDevice(deviceKey, marker) {
+                        try {
+                                const status = await fetchDeviceStatus(deviceKey);
+                                applyStatusIcon(marker, status);
+                        } catch (error) {
+                                console.error('Failed to update marker status for', deviceKey, error);
+                                applyStatusIcon(marker, 'unknown');
+                        }
+                }
+
+                async function fetchDeviceStatus(deviceKey) {
+                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(deviceKey)}/telemetry/latest`);
+                        if (!response.ok) {
+                                return 'unknown';
+                        }
+                        if (response.status === 204) {
+                                return 'unknown';
+                        }
+                        const payload = await response.json();
+                        const indicators = Array.isArray(payload?.indicators) ? payload.indicators : [];
+                        if (indicators.length === 0) {
+                                return 'ok';
+                        }
+                        const hasAlert = indicators.some(indicatorHasAlertValue);
+                        return hasAlert ? 'alert' : 'ok';
+                }
+
+                function indicatorHasAlertValue(indicator) {
+                        if (!indicator) {
+                                return false;
+                        }
+                        const value = indicator.value;
+                        if (value === null || value === undefined) {
+                                return false;
+                        }
+                        if (typeof value === 'boolean') {
+                                return value;
+                        }
+                        const numeric = Number(value);
+                        if (!Number.isNaN(numeric)) {
+                                return numeric !== 0;
+                        }
+                        const normalized = String(value).trim().toLowerCase();
+                        if (!normalized) {
+                                return false;
+                        }
+                        if (normalized === '0' || normalized === 'false' || normalized === 'ok' || normalized === 'clear') {
+                                return false;
+                        }
+                        return true;
+                }
+
+                function applyStatusIcon(marker, status) {
+                        const icon = markerIcons[status] || markerIcons.unknown;
+                        marker.setIcon(icon);
+                }
+        </script>
 
         <script>
                 document.addEventListener("DOMContentLoaded", function () {
