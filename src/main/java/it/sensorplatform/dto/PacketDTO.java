@@ -20,6 +20,7 @@ public class PacketDTO {
     private Double latitude;
     private Double longitude;
     private Map<String, Object> payload;
+    private Map<String, Object> indicatorPayload;
     private List<SpecEntry> spec;
     private List<String> indicator;
 
@@ -77,6 +78,14 @@ public class PacketDTO {
 
     public void setPayload(Map<String, Object> payload) {
         this.payload = payload;
+    }
+
+    public Map<String, Object> getIndicatorPayload() {
+        return indicatorPayload;
+    }
+
+    public void setIndicatorPayload(Map<String, Object> indicatorPayload) {
+        this.indicatorPayload = indicatorPayload;
     }
 
     public List<SpecEntry> getSpec() {
