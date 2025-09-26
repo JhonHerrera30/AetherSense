@@ -215,9 +215,25 @@
 			attribution: '&copy; OpenStreetMap contributors'
 		}).addTo(map);
 
-                let markerByDeviceKey = new Map();
+                const markerByDeviceKey = new Map();
+                const markerStatusIcons = {
+                        unknown: createDeviceIcon('unknown'),
+                        ok: createDeviceIcon('ok'),
+                        alert: createDeviceIcon('alert')
+                };
 
                 let allLatLngs = [];
+
+                function createDeviceIcon(status) {
+                        const safeStatus = typeof status === 'string' ? status : 'unknown';
+                        return L.divIcon({
+                                className: `device-marker-icon device-marker-icon--${safeStatus}`,
+                                html: '<span class="device-marker-pin"></span>',
+                                iconSize: [26, 26],
+                                iconAnchor: [13, 13],
+                                popupAnchor: [0, -13]
+                        });
+                }
 
                 function formatIdentifier(value) {
                         if (!value) {
@@ -239,7 +255,7 @@
                         const latlng = [d.latitude, d.longitude];
                         allLatLngs.push(latlng);
 
-                        const marker = L.marker(latlng).addTo(map);
+                        const marker = L.marker(latlng, { icon: markerStatusIcons.unknown }).addTo(map);
                         const key = resolveDeviceKey(d);
                         const formattedKey = formatIdentifier(key);
                         const fallbackDevEui = d.devEui ? formatIdentifier(d.devEui) : '';
@@ -259,14 +275,75 @@
                                         window.location.href = destination;
                                 });
                                 markerByDeviceKey.set(key, marker);
+                                refreshDeviceMarkerStatus(key);
                         }
                 });
 
+                function parseIndicatorValue(value) {
+                        if (value === null || value === undefined) {
+                                return null;
+                        }
+                        if (typeof value === 'number' && Number.isFinite(value)) {
+                                return value;
+                        }
+                        const asNumber = Number(String(value).trim());
+                        return Number.isNaN(asNumber) ? null : asNumber;
+                }
+
+                function determineMarkerStatus(indicators) {
+                        if (!Array.isArray(indicators) || !indicators.length) {
+                                return 'unknown';
+                        }
+                        const hasAlert = indicators.some(indicator => {
+                                const numeric = parseIndicatorValue(indicator && indicator.value);
+                                return numeric !== null && numeric >= 1;
+                        });
+                        return hasAlert ? 'alert' : 'ok';
+                }
+
+                async function refreshDeviceMarkerStatus(deviceKey) {
+                        if (!deviceKey) {
+                                return;
+                        }
+                        const marker = markerByDeviceKey.get(deviceKey);
+                        if (!marker) {
+                                return;
+                        }
+                        try {
+                                const response = await fetch(`/api/admin/devices/${encodeURIComponent(deviceKey)}/telemetry/latest`);
+                                if (response.status === 204) {
+                                        marker.setIcon(markerStatusIcons.unknown);
+                                        return;
+                                }
+                                if (!response.ok) {
+                                        return;
+                                }
+                                const sample = await response.json();
+                                const status = determineMarkerStatus(sample ? sample.indicators : null);
+                                marker.setIcon(markerStatusIcons[status] || markerStatusIcons.unknown);
+                        } catch (error) {
+                                console.error('Unable to refresh device status', error);
+                        }
+                }
+
+                function refreshAllDeviceStatuses() {
+                        markerByDeviceKey.forEach((_, deviceKey) => {
+                                refreshDeviceMarkerStatus(deviceKey);
+                        });
+                }
+
 		// Disegna il poligono solo se ci sono almeno 3 punti
-		if (allLatLngs.length > 0) {
-			const bounds = L.latLngBounds(allLatLngs);
-			map.fitBounds(bounds, {padding: [30, 30]});
-		}
+                if (allLatLngs.length > 0) {
+                        const bounds = L.latLngBounds(allLatLngs);
+                        map.fitBounds(bounds, {padding: [30, 30]});
+                }
+
+                setInterval(refreshAllDeviceStatuses, 20000);
+                document.addEventListener('visibilitychange', () => {
+                        if (document.visibilityState === 'visible') {
+                                refreshAllDeviceStatuses();
+                        }
+                });
 
 
 
@@ -292,6 +369,10 @@
                                                         const deviceName = device.name || '';
                                                         li.textContent = identifier ? `${deviceName} (${identifier})` : deviceName;
                                                         ul.appendChild(li);
+                                                        const deviceKey = resolveDeviceKey(device);
+                                                        if (deviceKey) {
+                                                                refreshDeviceMarkerStatus(deviceKey);
+                                                        }
                                                 });
                                         });
                                 });
