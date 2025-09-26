@@ -106,7 +106,7 @@
 			        
 					<label for="name">Name:</label>
 					<span class="errorform" th:if="${error}" th:text="${error}"></span>
-			        <input type="text" id="name" name="name" th:value="${device.name}" required />
+			        <input type="text" id="name" name="name" th:value="${device.name}" />
 
 			        <label for="latitude">Latitude:</label>
                                 <input type="number" step="any" id="latitude" name="latitude" th:value="${device.latitude}" />
@@ -241,3 +241,4 @@
                 </script>
 </body>
 </html>
+
