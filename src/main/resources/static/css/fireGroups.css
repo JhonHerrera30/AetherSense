@@ -251,10 +251,21 @@ navbar h1 {
 
 /* Lista gruppi */
 
+#groups-wrapper > ul {
+    list-style: none;
+    margin: 0;
+    padding-left: 0;
+}
+
+#groups-wrapper > ul > li {
+    list-style: none;
+    margin: 0 0 0.35rem;
+}
+
 details summary {
-	cursor: pointer;
-	font-weight: bold;
-	padding: 5px 0;
+        cursor: pointer;
+        font-weight: bold;
+        padding: 5px 0;
 }
 
 details[open] summary {
@@ -324,9 +335,47 @@ details .device-list li::before {
 }
 
 .title-with-search h2 {
-	margin-top:2rem;
+        margin-top:2rem;
     margin: 0;
     font-size: 1.4rem;
+}
+
+.operators-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.operators-header h2 {
+    margin: 0;
+}
+
+.register-operator-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 1.1rem;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff6b6b, #c1121f);
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    box-shadow: 0 8px 18px rgba(193, 18, 31, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.register-operator-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(193, 18, 31, 0.45);
+    filter: brightness(1.05);
+}
+
+.register-operator-btn svg {
+    stroke: currentColor;
 }
 
 /* Stile compatto */
