@@ -644,3 +644,37 @@ details .device-list li::before {
 .btn-assign svg { stroke:rgb(0, 0, 0); fill:none; stroke-width: 2; }
 .btn-assign svg .plus { stroke-width:2; } /* 2.6–3 rende il + bello visibile */
 
+.device-marker-icon {
+        background: transparent;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+}
+
+.device-marker-pin {
+        display: block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid rgba(0, 0, 0, 0.35);
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.45);
+        background: #607d8b;
+        transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+}
+
+.device-marker-icon--ok .device-marker-pin {
+        background: #2e7d32;
+        border-color: #1b5e20;
+}
+
+.device-marker-icon--alert .device-marker-pin {
+        background: #c62828;
+        border-color: #8e0000;
+}
+
+.device-marker-icon--unknown .device-marker-pin {
+        background: #546e7a;
+        border-color: #29434e;
+}
+
