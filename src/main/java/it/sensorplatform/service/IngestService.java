@@ -122,17 +122,24 @@ public class IngestService {
         List<IndicatorDescriptor> indicatorDescriptors = parseIndicatorDescriptors(indicatorLabels);
         Set<String> indicatorKeyHints = new LinkedHashSet<>();
         for (IndicatorDescriptor descriptor : indicatorDescriptors) {
-            if (descriptor != null && descriptor.key() != null) {
-                indicatorKeyHints.add(descriptor.key());
+            if (descriptor == null) {
+                continue;
+            }
+            String canonical = normalizeKey(descriptor.key());
+            if (canonical == null) {
+                canonical = normalizeKey(descriptor.label());
+            }
+            if (canonical != null) {
+                indicatorKeyHints.add(canonical);
             }
         }
         for (Indicator indicator : safeSavedIndicators) {
             if (indicator == null) {
                 continue;
             }
-            String key = sanitize(indicator.getKey());
-            if (key != null) {
-                indicatorKeyHints.add(key);
+            String canonical = normalizeKey(indicator.getKey());
+            if (canonical != null) {
+                indicatorKeyHints.add(canonical);
             }
         }
 
@@ -204,12 +211,14 @@ public class IngestService {
         List<IndicatorSample> result = new ArrayList<>();
         List<IndicatorDescriptor> safeDescriptors = indicatorDescriptors != null ? indicatorDescriptors : List.of();
         Map<String, Indicator> savedIndicatorsByKey = indexSavedIndicators(savedIndicators);
+        Map<String, IndicatorDescriptor> descriptorsByCanonical = indexIndicatorDescriptors(safeDescriptors);
         List<String> indicatorKeys = resolveIndicatorKeys(metrics, safeDescriptors, measurementKeys, savedIndicatorsByKey);
         for (int i = 0; i < indicatorKeys.size(); i++) {
             String key = indicatorKeys.get(i);
             Object rawValue = metrics.get(key);
             Integer value = toInteger(rawValue);
-            String label = resolveIndicatorLabel(key, safeDescriptors, i, savedIndicatorsByKey);
+            String canonicalKey = normalizeKey(key);
+            String label = resolveIndicatorLabel(key, canonicalKey, descriptorsByCanonical, savedIndicatorsByKey);
             result.add(new IndicatorSample(key, label, value));
         }
         return result;
@@ -258,9 +267,30 @@ public class IngestService {
             if (indicator == null) {
                 continue;
             }
-            String key = sanitize(indicator.getKey());
-            if (key != null && !map.containsKey(key)) {
-                map.put(key, indicator);
+            String canonical = normalizeKey(indicator.getKey());
+            if (canonical != null && !map.containsKey(canonical)) {
+                map.put(canonical, indicator);
+            }
+        }
+        return map;
+    }
+
+    private Map<String, IndicatorDescriptor> indexIndicatorDescriptors(List<IndicatorDescriptor> descriptors) {
+        Map<String, IndicatorDescriptor> map = new LinkedHashMap<>();
+        if (descriptors == null) {
+            return map;
+        }
+        for (IndicatorDescriptor descriptor : descriptors) {
+            if (descriptor == null) {
+                continue;
+            }
+            String candidate = descriptor.key();
+            if (candidate == null) {
+                candidate = descriptor.label();
+            }
+            String canonical = normalizeKey(candidate);
+            if (canonical != null && !map.containsKey(canonical)) {
+                map.put(canonical, descriptor);
             }
         }
         return map;
@@ -271,6 +301,15 @@ public class IngestService {
                                                 List<Spec> savedSpecs,
                                                 Set<String> indicatorKeyHints) {
         LinkedHashSet<String> keys = new LinkedHashSet<>();
+        Set<String> canonicalIndicatorHints = new LinkedHashSet<>();
+        if (indicatorKeyHints != null) {
+            for (String hint : indicatorKeyHints) {
+                String canonical = normalizeKey(hint);
+                if (canonical != null) {
+                    canonicalIndicatorHints.add(canonical);
+                }
+            }
+        }
         boolean hasSpecEntries = false;
         if (specEntries != null) {
             for (PacketDTO.SpecEntry entry : specEntries) {
@@ -301,10 +340,14 @@ public class IngestService {
                 if (key == null) {
                     continue;
                 }
+                String canonical = normalizeKey(key);
+                if (canonical == null) {
+                    continue;
+                }
                 if (INFO_KEYS.contains(key)) {
                     continue;
                 }
-                if (indicatorKeyHints != null && indicatorKeyHints.contains(key)) {
+                if (canonicalIndicatorHints.contains(canonical)) {
                     continue;
                 }
                 keys.add(key);
@@ -509,7 +552,7 @@ public class IngestService {
                                               List<IndicatorDescriptor> indicatorDescriptors,
                                               Set<String> measurementKeys,
                                               Map<String, Indicator> savedIndicatorsByKey) {
-        LinkedHashSet<String> ordered = new LinkedHashSet<>();
+        LinkedHashMap<String, String> canonicalToActual = new LinkedHashMap<>();
         if (indicatorDescriptors != null) {
             for (IndicatorDescriptor descriptor : indicatorDescriptors) {
                 if (descriptor == null) {
@@ -517,65 +560,78 @@ public class IngestService {
                 }
                 String key = sanitize(descriptor.key());
                 if (key == null) {
-                    String fromLabel = sanitize(descriptor.label());
-                    key = fromLabel;
+                    key = sanitize(descriptor.label());
                 }
-                if (key != null) {
-                    ordered.add(key);
+                String canonical = normalizeKey(key);
+                if (canonical != null && !canonicalToActual.containsKey(canonical)) {
+                    canonicalToActual.put(canonical, key);
                 }
             }
         }
         if (savedIndicatorsByKey != null) {
-            ordered.addAll(savedIndicatorsByKey.keySet());
+            for (Map.Entry<String, Indicator> entry : savedIndicatorsByKey.entrySet()) {
+                String canonical = entry.getKey();
+                if (canonical == null || canonicalToActual.containsKey(canonical)) {
+                    continue;
+                }
+                Indicator indicator = entry.getValue();
+                String actual = indicator != null ? sanitize(indicator.getKey()) : null;
+                canonicalToActual.put(canonical, actual != null ? actual : canonical);
+            }
         }
-        if (ordered.isEmpty() && metrics != null) {
+        Set<String> measurementCanonicalKeys = new LinkedHashSet<>();
+        if (measurementKeys != null) {
+            for (String measurementKey : measurementKeys) {
+                String canonical = normalizeKey(measurementKey);
+                if (canonical != null) {
+                    measurementCanonicalKeys.add(canonical);
+                }
+            }
+        }
+        if (metrics != null) {
             for (String rawKey : metrics.keySet()) {
                 String key = sanitize(rawKey);
                 if (key == null) {
                     continue;
                 }
+                String canonical = normalizeKey(key);
+                if (canonical == null) {
+                    continue;
+                }
                 if (INFO_KEYS.contains(key)) {
                     continue;
                 }
-                if (measurementKeys != null && measurementKeys.contains(key)) {
+                if (measurementCanonicalKeys.contains(canonical)) {
                     continue;
                 }
-                ordered.add(key);
+                if (!canonicalToActual.containsKey(canonical)) {
+                    canonicalToActual.put(canonical, key);
+                } else {
+                    String existing = canonicalToActual.get(canonical);
+                    if (existing == null || !existing.equals(key)) {
+                        canonicalToActual.put(canonical, key);
+                    }
+                }
             }
         }
-        return new ArrayList<>(ordered);
+        return new ArrayList<>(canonicalToActual.values());
     }
 
     private String resolveIndicatorLabel(String key,
-                                         List<IndicatorDescriptor> descriptors,
-                                         int index,
+                                         String canonicalKey,
+                                         Map<String, IndicatorDescriptor> descriptorsByCanonical,
                                          Map<String, Indicator> savedIndicatorsByKey) {
-        if (descriptors != null && !descriptors.isEmpty()) {
-            if (index < descriptors.size()) {
-                IndicatorDescriptor descriptor = descriptors.get(index);
-                if (descriptor != null) {
-                    String descriptorKey = sanitize(descriptor.key());
-                    String descriptorLabel = descriptor.label();
-                    if ((descriptorKey == null || descriptorKey.equals(key)) && descriptorLabel != null && !descriptorLabel.isBlank()) {
-                        return descriptorLabel;
-                    }
-                }
-            }
-            for (IndicatorDescriptor descriptor : descriptors) {
-                if (descriptor == null) {
-                    continue;
-                }
-                String descriptorKey = sanitize(descriptor.key());
-                if (descriptorKey != null && descriptorKey.equals(key)) {
-                    String descriptorLabel = descriptor.label();
-                    if (descriptorLabel != null && !descriptorLabel.isBlank()) {
-                        return descriptorLabel;
-                    }
+        if (canonicalKey != null && descriptorsByCanonical != null) {
+            IndicatorDescriptor descriptor = descriptorsByCanonical.get(canonicalKey);
+            if (descriptor != null) {
+                String descriptorLabel = sanitize(descriptor.label());
+                if (descriptorLabel != null) {
+                    return descriptorLabel;
                 }
             }
         }
-        if (savedIndicatorsByKey != null) {
-            Indicator indicator = savedIndicatorsByKey.get(key);
+        if (canonicalKey != null && savedIndicatorsByKey != null) {
+            Indicator indicator = savedIndicatorsByKey.get(canonicalKey);
             if (indicator != null) {
                 String name = sanitize(indicator.getName());
                 if (name != null) {
@@ -626,6 +682,11 @@ public class IngestService {
             }
         }
         return builder.length() > 0 ? builder.toString() : sanitized;
+    }
+
+    private String normalizeKey(String value) {
+        String sanitized = sanitize(value);
+        return sanitized != null ? sanitized.toLowerCase(Locale.ROOT) : null;
     }
 
     private String sanitize(String value) {

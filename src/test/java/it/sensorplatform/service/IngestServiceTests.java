@@ -168,5 +168,42 @@ class IngestServiceTests {
         assertEquals("SEN55-FanError-none", indicatorSample.label());
         assertEquals(1, indicatorSample.value());
     }
+
+    @Test
+    void mergesIndicatorKeysWithDifferentCasing() {
+        IngestService ingestService = new IngestService();
+
+        Indicator indicator = new Indicator();
+        indicator.setKey("sen55-fanerror-none");
+        indicator.setName("SEN55 Fan Error");
+
+        TypeOfDevice typeOfDevice = new TypeOfDevice();
+        typeOfDevice.setName("Indicator Case Test");
+        typeOfDevice.setIndicators(List.of(indicator));
+
+        Device device = new Device();
+        device.setMacAddress("33:44:55:66:77:88");
+        device.setTod(typeOfDevice);
+
+        ingestService.process(
+                device,
+                Instant.parse("2024-05-01T00:00:00Z"),
+                Map.of("SEN55-FanError-none", 1),
+                List.of(),
+                List.of()
+        );
+
+        List<IngestService.Sample> samples = ingestService.last(device.getMacAddress(), 1);
+        assertEquals(1, samples.size());
+
+        IngestService.Sample sample = samples.get(0);
+        assertEquals(0, sample.measurements().size());
+        assertEquals(1, sample.indicators().size());
+
+        IngestService.IndicatorSample indicatorSample = sample.indicators().get(0);
+        assertEquals("SEN55-FanError-none", indicatorSample.key());
+        assertEquals("SEN55 Fan Error", indicatorSample.label());
+        assertEquals(1, indicatorSample.value());
+    }
 }
 
