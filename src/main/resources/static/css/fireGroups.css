@@ -178,20 +178,20 @@ navbar h1 {
 }
 
 .main-layout {
-	display: flex;
-	height: calc(100vh - 3em); /* altezza totale meno la navbar */
-	overflow: hidden;
+        display: flex;
+        flex-wrap: wrap;
+        min-height: calc(100vh - 3em); /* altezza totale meno la navbar */
 }
 
 .group-panel {
-	font-size: 90%;
-	width: 40%;
-	background-color: #0b1a2f;
-	padding: 1.5rem 2rem;
-	box-shadow: inset -1px 0 5px rgba(0, 0, 0, 0.3);
-	height: 100%;
-	overflow-y: auto; /* attiva lo scroll verticale */
-	overflow-x: hidden; /* opzionale per evitare scroll orizzontale */
+        font-size: 90%;
+        background-color: #0b1a2f;
+        padding: 1.5rem 2rem;
+        box-shadow: inset -1px 0 5px rgba(0, 0, 0, 0.3);
+        overflow-y: auto; /* attiva lo scroll verticale */
+        overflow-x: hidden; /* opzionale per evitare scroll orizzontale */
+        flex: 1 1 320px;
+        min-height: 320px;
 }
 
 
@@ -201,10 +201,25 @@ navbar h1 {
 
 /* Colonna destra - mappa fissa */
 #map {
-	width: 60%;
-	height: 100%;
-	overflow: hidden;
-	z-index: 1;
+        flex: 1 1 320px;
+        min-height: 320px;
+        z-index: 1;
+}
+
+@media (max-width: 992px) {
+        .main-layout {
+                flex-direction: column;
+        }
+
+        .group-panel,
+        #map {
+                flex: 1 1 auto;
+                width: 100%;
+        }
+
+        #map {
+                min-height: 400px;
+        }
 }
 
 /* Form di selezione */
