@@ -95,7 +95,10 @@
         </div>
 
         <!-- Dispositivi nel gruppo -->
-		<table style="margin-top: 1rem;">
+                <div th:if="${#lists.isEmpty(group.devices)}" class="empty-group-message" style="margin-top: 1rem;">
+                    <p>No devices assigned to this group.</p>
+                </div>
+                <table th:if="${!#lists.isEmpty(group.devices)}" style="margin-top: 1rem;">
 		    <thead>
 		        <tr>
 		            <th>Device Name</th>
@@ -105,7 +108,7 @@
 		        </tr>
 		    </thead>
 		    <tbody>
-				<tr th:each="device : ${group.devices}">
+                                <tr th:each="device : ${group.devices}">
 				    <td th:text="${device.name}">Device Name</td>
                                     <td th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">MAC</td>
 				    <td th:text="${device.tod != null ? device.tod.name : 'N/A'}">Type</td> <!-- Spostata sopra -->
@@ -121,11 +124,8 @@
                                         </form>
                                     </td>
 				</tr>
-		        <tr th:if="${#lists.isEmpty(group.devices)}">
-		            <td colspan="4">No devices assigned to this group.</td>
-		        </tr>
-		    </tbody>
-		</table>
+                    </tbody>
+                </table>
 		<button type="button" class="btn-save toggle-add-list" 
 		        th:attr="data-group-id=${group.id}">
 		    Add Devices
