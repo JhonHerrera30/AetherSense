@@ -607,17 +607,22 @@ body.modal-open {
 
 .gsheet-table th:nth-child(1),
 .gsheet-table td:nth-child(1) {
-    width: 25%;
+    width: 20%;
 }
 
 .gsheet-table th:nth-child(2),
 .gsheet-table td:nth-child(2) {
-    width: 25%;
+    width: 35%;
+}
+
+.gsheet-table td:nth-child(2) {
+    overflow-wrap: anywhere;
+    word-break: break-all;
 }
 
 .gsheet-table th:nth-child(3),
 .gsheet-table td:nth-child(3) {
-    width: 40%;
+    width: 35%;
 }
 
 .gsheet-table th:nth-child(4),
