@@ -479,18 +479,21 @@
                                         e.preventDefault();
                                         const deviceKey = removeBtn.getAttribute('data-mac');
                                         if (!deviceKey) return;
-                                        if (!confirm('Remove operator from this device?')) return;
+
+                                        removeBtn.disabled = true;
+                                        removeBtn.setAttribute('aria-disabled', 'true');
+                                        removeBtn.classList.add('is-removing');
 
                                         // POST via form per includere CSRF
                                         const f = document.createElement('form');
                                         f.method = 'post';
                                         f.action = REMOVE_OP_URL({deviceKey});
-					const csrf = document.querySelector('input[name="_csrf"]');
-					if (csrf) {
-						const t = document.createElement('input');
-						t.type = 'hidden'; t.name = '_csrf'; t.value = csrf.value;
-						f.appendChild(t);
-					}
+                                        const csrf = document.querySelector('input[name="_csrf"]');
+                                        if (csrf) {
+                                                const t = document.createElement('input');
+                                                t.type = 'hidden'; t.name = '_csrf'; t.value = csrf.value;
+                                                f.appendChild(t);
+                                        }
                                         document.body.appendChild(f);
                                         f.submit();
                                 }
