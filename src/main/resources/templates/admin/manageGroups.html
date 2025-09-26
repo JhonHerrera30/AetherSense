@@ -112,9 +112,14 @@
 				    <td>
 				        <form th:action="@{'/group/' + ${project.id} + '/' + ${group.id} + '/removeDevice/' + ${device.macAddress}}" 
 				              method="post" th:csrf="true">
-				            <button type="submit" class="btn-icon btn-delete" title="Remove from Group">🗑️</button>
-				        </form>
-				    </td>
+                                            <button type="submit" class="btn-icon btn-delete" title="Remove from Group">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                                                    <path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1z" />
+                                                    <path d="M9 9h6v10H9z" opacity=".35" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    </td>
 				</tr>
 		        <tr th:if="${#lists.isEmpty(group.devices)}">
 		            <td colspan="4">No devices assigned to this group.</td>
