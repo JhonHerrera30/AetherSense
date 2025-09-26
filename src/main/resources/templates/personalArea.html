@@ -58,12 +58,12 @@
                     <div class="form-row">
                         <div class="form-group" th:classappend="${#fields.hasErrors('name')} ? ' has-error'">
                             <label for="name">First name</label>
-                            <input type="text" id="name" th:field="*{name}" maxlength="100" autocomplete="given-name" required />
+                            <input type="text" id="name" th:field="*{name}" maxlength="100" autocomplete="given-name" />
                             <p class="error-message" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></p>
                         </div>
                         <div class="form-group" th:classappend="${#fields.hasErrors('surname')} ? ' has-error'">
                             <label for="surname">Last name</label>
-                            <input type="text" id="surname" th:field="*{surname}" maxlength="100" autocomplete="family-name" required />
+                            <input type="text" id="surname" th:field="*{surname}" maxlength="100" autocomplete="family-name"  />
                             <p class="error-message" th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></p>
                         </div>
                     </div>
@@ -71,13 +71,13 @@
                     <div class="form-row">
                         <div class="form-group" th:classappend="${#fields.hasErrors('dateOfBirth')} ? ' has-error'">
                             <label for="dateOfBirth">Date of birth</label>
-                            <input type="date" id="dateOfBirth" th:field="*{dateOfBirth}" required
+                            <input type="date" id="dateOfBirth" th:field="*{dateOfBirth}" 
                                    th:attr="max=${#temporals.format(#temporals.createNow(), 'yyyy-MM-dd')}" />
                             <p class="error-message" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></p>
                         </div>
                         <div class="form-group" th:classappend="${#fields.hasErrors('phoneNumber')} ? ' has-error'">
                             <label for="phoneNumber">Phone number</label>
-                            <input type="tel" id="phoneNumber" th:field="*{phoneNumber}" required inputmode="tel"
+                            <input type="tel" id="phoneNumber" th:field="*{phoneNumber}"  inputmode="tel"
                                    pattern="^\+?[0-9\s]{6,20}$" placeholder="+39 123 456 789" />
                             <p class="error-message" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></p>
                         </div>
@@ -103,7 +103,7 @@
 
                     <div class="form-group" th:classappend="${#fields.hasErrors('username')} ? ' has-error'">
                         <label for="username">Display username</label>
-                        <input type="text" id="username" th:field="*{username}" minlength="3" maxlength="50" autocomplete="username" required />
+                        <input type="text" id="username" th:field="*{username}" minlength="3" maxlength="50" autocomplete="username"  />
                         <p class="error-message" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></p>
                     </div>
 
