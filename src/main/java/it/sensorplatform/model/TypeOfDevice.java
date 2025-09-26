@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
@@ -26,11 +26,12 @@ public class TypeOfDevice {
         @ManyToMany
         private List<Spec> specs;
 
-        @OneToMany
+        @ManyToMany
         @JoinTable(
                         name = "type_of_device_indicator",
                         joinColumns = @JoinColumn(name = "type_of_device_id"),
-                        inverseJoinColumns = @JoinColumn(name = "indicator_id"))
+                        inverseJoinColumns = @JoinColumn(name = "indicator_id"),
+                        uniqueConstraints = @UniqueConstraint(columnNames = { "type_of_device_id", "indicator_id" }))
         private List<Indicator> indicators;
 
 	public Long getId() {
