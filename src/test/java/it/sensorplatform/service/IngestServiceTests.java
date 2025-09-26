@@ -127,5 +127,46 @@ class IngestServiceTests {
         assertEquals("SEN55 Fan Error", indicatorSample.label());
         assertEquals(1, indicatorSample.value());
     }
+
+    @Test
+    void buildsMeasurementsAndIndicatorsFromPacketSpec() {
+        IngestService ingestService = new IngestService();
+
+        PacketDTO.SpecEntry specEntry = new PacketDTO.SpecEntry();
+        specEntry.setKey("SEN55-PM2.5-ug/m3");
+        specEntry.setLabel("SEN55-PM2.5-ug/m3");
+        specEntry.setMin(0.0);
+        specEntry.setMax(1000.0);
+
+        ingestService.process(
+                "AA:BB:CC:DD:EE:FF",
+                null,
+                Instant.parse("2024-04-01T00:00:00Z"),
+                Map.of(
+                        "SEN55-PM2.5-ug/m3", 12.3,
+                        "SEN55-FanError-none", 1
+                ),
+                List.of(specEntry),
+                List.of("SEN55-FanError-none")
+        );
+
+        List<IngestService.Sample> samples = ingestService.last("AA:BB:CC:DD:EE:FF", 1);
+        assertEquals(1, samples.size());
+
+        IngestService.Sample sample = samples.get(0);
+        assertEquals(1, sample.measurements().size());
+        assertEquals(1, sample.indicators().size());
+
+        IngestService.MeasurementSample measurement = sample.measurements().get(0);
+        assertEquals("SEN55-PM2.5-ug/m3", measurement.key());
+        assertEquals(12.3, measurement.value());
+        assertEquals(0.0, measurement.min());
+        assertEquals(1000.0, measurement.max());
+
+        IngestService.IndicatorSample indicatorSample = sample.indicators().get(0);
+        assertEquals("SEN55-FanError-none", indicatorSample.key());
+        assertEquals("SEN55-FanError-none", indicatorSample.label());
+        assertEquals(1, indicatorSample.value());
+    }
 }
 

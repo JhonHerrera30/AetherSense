@@ -271,7 +271,20 @@ public class IngestService {
                                                 List<Spec> savedSpecs,
                                                 Set<String> indicatorKeyHints) {
         LinkedHashSet<String> keys = new LinkedHashSet<>();
-        if (savedSpecs != null) {
+        boolean hasSpecEntries = false;
+        if (specEntries != null) {
+            for (PacketDTO.SpecEntry entry : specEntries) {
+                if (entry == null) {
+                    continue;
+                }
+                String key = sanitize(entry.getKey());
+                if (key != null) {
+                    keys.add(key);
+                    hasSpecEntries = true;
+                }
+            }
+        }
+        if (!hasSpecEntries && savedSpecs != null) {
             for (Spec spec : savedSpecs) {
                 if (spec == null) {
                     continue;
@@ -282,18 +295,7 @@ public class IngestService {
                 }
             }
         }
-        if (specEntries != null) {
-            for (PacketDTO.SpecEntry entry : specEntries) {
-                if (entry == null) {
-                    continue;
-                }
-                String key = sanitize(entry.getKey());
-                if (key != null) {
-                    keys.add(key);
-                }
-            }
-        }
-        if (metrics != null) {
+        if (keys.isEmpty() && metrics != null) {
             for (String rawKey : metrics.keySet()) {
                 String key = sanitize(rawKey);
                 if (key == null) {
@@ -496,7 +498,8 @@ public class IngestService {
                 String labelPart = trimmed.substring(separator + 1).trim();
                 descriptors.add(new IndicatorDescriptor(sanitize(keyPart), labelPart.isEmpty() ? null : labelPart));
             } else {
-                descriptors.add(new IndicatorDescriptor(null, trimmed));
+                String key = sanitize(trimmed);
+                descriptors.add(new IndicatorDescriptor(key, trimmed));
             }
         }
         return descriptors;
@@ -506,22 +509,26 @@ public class IngestService {
                                               List<IndicatorDescriptor> indicatorDescriptors,
                                               Set<String> measurementKeys,
                                               Map<String, Indicator> savedIndicatorsByKey) {
-        LinkedHashSet<String> keys = new LinkedHashSet<>();
-        if (savedIndicatorsByKey != null) {
-            keys.addAll(savedIndicatorsByKey.keySet());
-        }
+        LinkedHashSet<String> ordered = new LinkedHashSet<>();
         if (indicatorDescriptors != null) {
             for (IndicatorDescriptor descriptor : indicatorDescriptors) {
                 if (descriptor == null) {
                     continue;
                 }
                 String key = sanitize(descriptor.key());
+                if (key == null) {
+                    String fromLabel = sanitize(descriptor.label());
+                    key = fromLabel;
+                }
                 if (key != null) {
-                    keys.add(key);
+                    ordered.add(key);
                 }
             }
         }
-        if (metrics != null) {
+        if (savedIndicatorsByKey != null) {
+            ordered.addAll(savedIndicatorsByKey.keySet());
+        }
+        if (ordered.isEmpty() && metrics != null) {
             for (String rawKey : metrics.keySet()) {
                 String key = sanitize(rawKey);
                 if (key == null) {
@@ -533,28 +540,10 @@ public class IngestService {
                 if (measurementKeys != null && measurementKeys.contains(key)) {
                     continue;
                 }
-                keys.add(key);
+                ordered.add(key);
             }
         }
-        LinkedHashSet<String> remaining = new LinkedHashSet<>(keys);
-        List<String> ordered = new ArrayList<>();
-        if (indicatorDescriptors != null) {
-            for (IndicatorDescriptor descriptor : indicatorDescriptors) {
-                if (descriptor == null) {
-                    continue;
-                }
-                String key = sanitize(descriptor.key());
-                if (key != null && remaining.remove(key)) {
-                    ordered.add(key);
-                } else if (key == null && !remaining.isEmpty()) {
-                    String next = remaining.iterator().next();
-                    remaining.remove(next);
-                    ordered.add(next);
-                }
-            }
-        }
-        ordered.addAll(remaining);
-        return ordered;
+        return new ArrayList<>(ordered);
     }
 
     private String resolveIndicatorLabel(String key,
