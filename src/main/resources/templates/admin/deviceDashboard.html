@@ -594,6 +594,11 @@
                                                 options: {
                                                         responsive: true,
                                                         maintainAspectRatio: false,
+                                                        layout: {
+                                                                padding: {
+                                                                        bottom: 16
+                                                                }
+                                                        },
                                                         interaction: { mode: 'index', intersect: false },
                                                         plugins: {
                                                                 legend: { labels: { color: '#ffffff' } },
@@ -604,7 +609,13 @@
                                                                 }
                                                         },
                                                         scales: {
-                                                                x: { ticks: { color: '#dde1f2' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                                                                x: {
+                                                                        ticks: {
+                                                                                color: '#dde1f2',
+                                                                                padding: 8
+                                                                        },
+                                                                        grid: { color: 'rgba(255,255,255,0.1)' }
+                                                                },
                                                                 y: { ticks: { color: '#dde1f2' }, grid: { color: 'rgba(255,255,255,0.1)' } }
                                                         }
                                                 }
@@ -889,7 +900,7 @@
                         if (Number.isNaN(date.getTime())) {
                                 return '--';
                         }
-                        const options = short ? { hour: '2-digit', minute: '2-digit', second: '2-digit' } : { dateStyle: 'short', timeStyle: 'medium' };
+                        const options = short ? { hour: '2-digit', minute: '2-digit' } : { dateStyle: 'short', timeStyle: 'medium' };
                         return new Intl.DateTimeFormat(undefined, options).format(date);
                 }
 
