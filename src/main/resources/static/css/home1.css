@@ -309,24 +309,28 @@ body {
 
 /* INFO SECTION*/ 
 .features-section {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	gap: 2rem;
-	padding: 3rem 2rem;
-	background-color: #0b1a2f;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: stretch;
+        gap: 2rem;
+        padding: 3rem 2rem;
+        background-color: #0b1a2f;
 }
 
 .feature-box {
-	flex: 1 1 300px;
-	background-color: #1B263B;
-	border: 1px solid #2f3e55;
-	border-radius: 12px;
-	padding: 1.5rem;
-	color: white;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-	transition: transform 0.3s ease;
-	max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        flex: 1 1 300px;
+        max-width: 400px;
+        background-color: #1B263B;
+        border: 1px solid #2f3e55;
+        border-radius: 12px;
+        padding: 1.5rem;
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease;
 }
 
 .feature-box:hover {
@@ -351,9 +355,10 @@ body {
 }
 
 .feature-box p {
-	text-align: justify;
-	line-height: 1.5;
-	font-size: 1rem;
+        flex-grow: 1;
+        text-align: justify;
+        line-height: 1.5;
+        font-size: 1rem;
 }
 
 /* NAV AUTH SECTION */
@@ -461,26 +466,6 @@ footer {
     align-items: center; 
     text-align: center;
 }*/
-
-.features-section {
-    display: flex;
-    gap: 1.5rem;
-    align-items: stretch; /* tutte le box stessa altezza */
-}
-
-.feature-box {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* spinge il bottone in fondo */
-    flex: 1;
-    padding: 1.5rem;
-    border-radius: 12px;
-    background-color: #1e293b; /* il colore che hai già */
-}
-
-.feature-box p {
-    flex-grow: 1; /* il testo occupa lo spazio rimanente */
-}
 
 /* Pulsante */
 .btn-discover {
