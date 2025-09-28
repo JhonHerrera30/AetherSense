@@ -134,7 +134,7 @@ html, body {
 .main-layout {
   display: flex;
   height: calc(100vh - 3em);
-  overflow: hidden;
+  flex-wrap: wrap;
 }
 .group-panel {
   width: 40%;
@@ -150,6 +150,19 @@ html, body {
   height: 100%;
   overflow: hidden;
   z-index: 1;
+}
+
+@media (max-width: 992px) {
+  .main-layout {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .group-panel,
+  #map {
+    width: 100%;
+    min-height: 360px;
+  }
 }
 .groups {
   font-size: 1.2rem;

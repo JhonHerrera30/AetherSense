@@ -182,9 +182,9 @@ navbar h1 {
 
 /* Layout principale */
 .main-layout {
-	display: flex;
-	height: calc(100vh - 3em);
-	overflow: hidden;
+        display: flex;
+        height: calc(100vh - 3em);
+        flex-wrap: wrap;
 }
 
 .group-panel {
@@ -203,10 +203,23 @@ navbar h1 {
 
 /* Colonna mappa */
 #map {
-	width: 60%;
-	height: 100%;
-	overflow: hidden;
-	z-index: 1;
+        width: 60%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 1;
+}
+
+@media (max-width: 992px) {
+        .main-layout {
+                flex-direction: column;
+                height: auto;
+        }
+
+        .group-panel,
+        #map {
+                width: 100%;
+                min-height: 360px;
+        }
 }
 
 /* Lista gruppi */
