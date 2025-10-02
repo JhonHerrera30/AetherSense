@@ -49,7 +49,7 @@ insert into app_group(credentials_id, id, project_id, name)values (2, 2, 1, 'Mil
 
 insert into type_of_device(id, name)values(1, 'LoRaWan')
 insert into type_of_device(id, name)values(2, '4Spark 2')
-insert into type_of_device(id, name)values(3, 'Device4G ')
+insert into type_of_device(id, name)values(3, 'MultiSensorRev2 ')
 
 
 insert into project_tods(project_id, tods_id)values(1, 1)
@@ -147,6 +147,7 @@ SELECT setval('app_group_seq', (SELECT MAX(id) FROM app_group));
 SELECT setval('device_seq', (SELECT MAX(id) FROM device));
 SELECT setval('type_of_device_seq', (SELECT MAX(id) FROM type_of_device));
 SELECT setval('spec_seq', (SELECT MAX(id) FROM spec));
+
 
 
 
