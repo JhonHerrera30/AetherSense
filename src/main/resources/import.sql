@@ -92,19 +92,19 @@ insert into device(latitude, longitude, id, project_id, email_owner, mac_address
 
 
 /* JEM - sud e isole */
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(40.851775, 14.268124, 13, 101, 'jhon30.herrera@gmail.com', '26:06:1C:EC:E7:32', 'Amber1', 3, 7, true); -- Napoli
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(38.115688, 13.361267, 14, 101, 'jhon30.herrera@gmail.com', '37:06:1C:EC:E7:33', 'Amber2', 3, 7, true); -- Palermo
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(37.507877, 15.083030, 15, 101, 'jhon30.herrera@gmail.com', '58:06:1C:EC:E7:34', 'Amber3', 3, 7, true); -- Catania
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(39.223841, 9.121661, 16, 101, 'jhon30.herrera@gmail.com', '6B:06:1C:EC:E7:35', 'Amber4', 3, 7, true);  -- Cagliari
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(40.639470, 17.694360, 17, 101, 'jhon30.herrera@gmail.com', '7C:06:1C:EC:E7:36', 'Amber5', 3, 7, true); -- Lecce
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(38.193791, 15.554045, 18, 101, 'jhon30.herrera@gmail.com', '8D:06:1C:EC:E7:37', 'Amber6', 3, 7, false); -- Messina
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(40.821371, 14.426468, 13, 101, 'jhon30.herrera@gmail.com', '26:06:1C:EC:E7:32', 'Amber1', 3, 7, true); -- Vesuvio
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(37.751005, 14.993356, 14, 101, 'jhon30.herrera@gmail.com', '37:06:1C:EC:E7:33', 'Amber2', 3, 7, true); -- Etna
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(38.792520, 15.213890, 15, 101, 'jhon30.herrera@gmail.com', '58:06:1C:EC:E7:34', 'Amber3', 3, 7, true); -- Stromboli
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(38.403837, 14.962126, 16, 101, 'jhon30.herrera@gmail.com', '6B:06:1C:EC:E7:35', 'Amber4', 3, 7, true);  -- Isola di Vulcano
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(40.827907, 14.139006, 17, 101, 'jhon30.herrera@gmail.com', '7C:06:1C:EC:E7:36', 'Amber5', 3, 7, true); -- Campi Flegrei
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(42.895464, 11.615520, 18, 101, 'jhon30.herrera@gmail.com', '8D:06:1C:EC:E7:37', 'Amber6', 3, 7, false); -- Monte Amiata
 
 /* Dispositivi aggiuntivi VOLCANO */
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(37.502328, 14.165223, 19, 101, 'jhon30.herrera@gmail.com', '9E:06:1C:EC:E7:38', 'Amber7', 3, 7, true); -- Enna
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.125667, 16.869817, 20, 101, 'jhon30.herrera@gmail.com', 'AF:06:1C:EC:E7:39', 'Amber8', 3, 7, true); -- Bari
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(40.728333, 8.560833, 21, 101, 'jhon30.herrera@gmail.com', 'B0:06:1C:EC:E7:3A', 'Amber9', 3, 7, true); -- Sassari
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(38.910986, 16.587678, 22, 101, 'jhon30.herrera@gmail.com', 'C1:06:1C:EC:E7:3B', 'Amber10', 3, 7, false); -- Catanzaro
-insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(36.921984, 14.730344, 23, 101, 'jhon30.herrera@gmail.com', 'D2:06:1C:EC:E7:3C', 'Amber11', 3, 7, true); -- Ragusa
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(40.748470, 14.485210, 19, 101, 'jhon30.herrera@gmail.com', '9E:06:1C:EC:E7:38', 'Amber7', 3, 7, true); -- Pompei
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(40.805705, 14.348053, 20, 101, 'jhon30.herrera@gmail.com', 'AF:06:1C:EC:E7:39', 'Amber8', 3, 7, true); -- Ercolano
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(37.290037, 13.586708, 21, 101, 'jhon30.herrera@gmail.com', 'B0:06:1C:EC:E7:3A', 'Amber9', 3, 7, true); -- Valle dei Templi (Agrigento)
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(40.423006, 15.005619, 22, 101, 'jhon30.herrera@gmail.com', 'C1:06:1C:EC:E7:3B', 'Amber10', 3, 7, false); -- Paestum
+insert into device(latitude, longitude, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(38.357722, 38.316898, 23, 101, 'jhon30.herrera@gmail.com', 'D2:06:1C:EC:E7:3C', 'Amber11', 3, 7, true); -- Arslantepe
 
 insert into spec(id, measurement, unit_of_measurement, component)values(1, 'Temperature', '°C' ,'Sen5x')
 insert into spec(id, measurement, unit_of_measurement, component)values(2, 'Relative Humidity', '%RH' ,'Sen5x')
