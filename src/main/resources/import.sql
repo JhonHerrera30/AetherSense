@@ -59,20 +59,20 @@ insert into project_tods(project_id, tods_id)values(101, 3)
 
 -- 5. Dispositivi (devono esistere i gruppi e i progetti)
 
-/* MIMI - Dispositivi distribuiti lungo il Grande Raccordo Anulare (A90) */
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(42.010000, 12.500000, 1, 1, 1, 'flamy003@gmail.com', '21:06:1C:EC:E7:20', 'Device1', 1, 5, true);
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.992538, 12.581096, 1, 2, 1, 'flamy003@gmail.com', '34:09:1C:EC:E7:21', 'Device2', 1, 5, true);
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.945696, 12.636445, 1, 3, 1, 'flamy003@gmail.com', '56:08:1C:EC:E7:22', 'Device3', 1, 5, true);
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.884345, 12.648473, 1, 4, 1, 'flamy003@gmail.com', '15:05:1B:EC:E7:23', 'Device4', 1, 5, true);
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.827965, 12.613362, 1, 5, 1, 'flamy003@gmail.com', '17:04:1C:EC:E7:24', 'Device5', 1, 5, true);
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, activated)values(41.794456, 12.542260, 1, 6, 1, 'flamy003@gmail.com', '18:03:1C:EC:E7:25', 'Blue6', 1, false);
+/* MIMI - Dispositivi posizionati sulle principali uscite del Grande Raccordo Anulare (A90) */
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.884600, 12.352800, 1, 1, 1, 'flamy003@gmail.com', '21:06:1C:EC:E7:20', 'Device1', 1, 5, true);
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.905400, 12.383900, 1, 2, 1, 'flamy003@gmail.com', '34:09:1C:EC:E7:21', 'Device2', 1, 5, true);
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.947700, 12.412800, 1, 3, 1, 'flamy003@gmail.com', '56:08:1C:EC:E7:22', 'Device3', 1, 5, true);
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.966300, 12.467100, 1, 4, 1, 'flamy003@gmail.com', '15:05:1B:EC:E7:23', 'Device4', 1, 5, true);
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.977900, 12.515600, 1, 5, 1, 'flamy003@gmail.com', '17:04:1C:EC:E7:24', 'Device5', 1, 5, true);
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, activated)values(41.966700, 12.559400, 1, 6, 1, 'flamy003@gmail.com', '18:03:1C:EC:E7:25', 'Device6', 1, false);
 
 /* Dispositivi aggiuntivi MIMI */
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.794456, 12.457740, 1, 24, 1, 'flamy003@gmail.com', 'E3:06:1C:EC:E7:3D', 'Device6', 1, 5, true);
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.827965, 12.386638, 1, 25, 1, 'flamy003@gmail.com', 'F4:06:1C:EC:E7:3E', 'Device7', 1, 5, true);
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.884345, 12.351527, 1, 26, 1, 'flamy003@gmail.com', '10:07:1C:EC:E7:3F', 'Device8', 1, 5, true);
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.945696, 12.363555, 1, 27, 1, 'flamy003@gmail.com', '21:07:1C:EC:E7:40', 'Device9', 1, 5, false);
-insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.992538, 12.418904, 1, 28, 1, 'flamy003@gmail.com', '32:07:1C:EC:E7:41', 'Device10', 1, 5, true);
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.931100, 12.597900, 1, 24, 1, 'flamy003@gmail.com', 'E3:06:1C:EC:E7:3D', 'Device7', 1, 5, true);
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.905700, 12.628600, 1, 25, 1, 'flamy003@gmail.com', 'F4:06:1C:EC:E7:3E', 'Device8', 1, 5, true);
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.876100, 12.629900, 1, 26, 1, 'flamy003@gmail.com', '10:07:1C:EC:E7:3F', 'Device9', 1, 5, true);
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.846500, 12.589200, 1, 27, 1, 'flamy003@gmail.com', '21:07:1C:EC:E7:40', 'Device10', 1, 5, false);
+insert into device(latitude, longitude, group_id, id, project_id, email_owner, mac_address, name, tod_id, operator_id, activated)values(41.814300, 12.578000, 1, 28, 1, 'flamy003@gmail.com', '32:07:1C:EC:E7:41', 'Device10', 1, 5, true);
 
 
 /* KUCA - sparsi nel nord Italia */
