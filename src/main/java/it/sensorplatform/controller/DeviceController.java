@@ -466,8 +466,6 @@ public class DeviceController {
                 Device d = deviceOpt.get();
 
                 d.setOperator(null);
-                d.setLatitude(null);
-                d.setLongitude(null);
                 d.setActivated(false);
                 deviceService.save(d);
                 ra.addFlashAttribute("successMessage", "Operator removed.");
