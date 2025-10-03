@@ -25,10 +25,8 @@ public final class MacAddressUtils {
     }
 
     public static String formatIdentifierForProject(Number projectId, String macAddress, String devEui) {
-        boolean preferMac = projectId != null && projectId.longValue() == 101L;
-
-        String primary = preferMac ? macAddress : devEui;
-        String secondary = preferMac ? devEui : macAddress;
+        String primary = devEui;
+        String secondary = macAddress;
 
         String formattedPrimary = format(primary);
         if (!formattedPrimary.isEmpty()) {

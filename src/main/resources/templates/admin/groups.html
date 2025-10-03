@@ -101,7 +101,7 @@
 				<h2>Your Devices</h2>
                                 <form th:action="@{'/group/' + ${project.id}}" method="get" class="search-form">
                                         <input type="text" name="deviceInfo"
-                                                th:attr="placeholder=${project.id == 101} ? 'Search by name or MAC...' : 'Search by name or DevEUI...'"
+                                                placeholder="Search by name or DevEUI..."
                                                 th:value="${param.deviceInfo}" />
 					<button type="submit" title="Search">
 						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 24 24">
@@ -118,10 +118,7 @@
                                           <thead>
                                                   <tr>
                                                           <th scope="col">Name</th>
-                                                          <th scope="col"
-                                                              th:text="${project.id == 101} ? 'MAC Address' : 'DevEUI'">
-                                                                  Identifier
-                                                          </th>
+                                                          <th scope="col">DevEUI</th>
                                                           <th scope="col">Type of device</th>
                                                           <th scope="col">Operator</th>
                                                           <th scope="col">Activated</th>
@@ -136,7 +133,7 @@
                                                               th:text="${T(it.sensorplatform.util.MacAddressUtils).formatIdentifierForProject(project.id, device.macAddress, device.devEui)}">
                                                                   Identifier
                                                           </td>
-                                                          <td th:text="${device.tod}">Mac Address</td>
+                                                          <td th:text="${device.tod}">Type of device</td>
                                                           <td>
                                                                   <span th:if="${device.operator != null}" th:text="${device.operator}">Operator</span>
                                                           </td>
