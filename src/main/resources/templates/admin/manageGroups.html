@@ -101,8 +101,8 @@
                 <table th:if="${!#lists.isEmpty(group.devices)}" style="margin-top: 1rem;">
 		    <thead>
 		        <tr>
-		            <th>Device Name</th>
-		            <th>MAC Address</th>
+                            <th>Device Name</th>
+                            <th>Identifier</th>
 					<th>Type of Device</th>
 		            <th>Actions</th>
 		        </tr>
@@ -110,11 +110,11 @@
 		    <tbody>
                                 <tr th:each="device : ${group.devices}">
 				    <td th:text="${device.name}">Device Name</td>
-                                    <td th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">MAC</td>
+                                    <td th:text="${T(it.sensorplatform.util.MacAddressUtils).formatIdentifierForProject(project.id, device.macAddress, device.devEui)}">Identifier</td>
 				    <td th:text="${device.tod != null ? device.tod.name : 'N/A'}">Type</td> <!-- Spostata sopra -->
 				    <td>
-				        <form th:action="@{'/group/' + ${project.id} + '/' + ${group.id} + '/removeDevice/' + ${device.macAddress}}" 
-				              method="post" th:csrf="true">
+                                        <form th:action="@{'/group/' + ${project.id} + '/' + ${group.id} + '/removeDevice/' + ${device.deviceKey}}"
+                                              method="post" th:csrf="true">
                                             <button type="submit" class="btn-icon btn-delete" title="Remove from Group">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                                                     <path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1z" />
@@ -135,14 +135,26 @@
 		<div th:attr="id='add-list-' + ${group.id}" class="add-device-list hidden"></div>
     </div>
 </div>
-<script>
-function formatMac(mac) {
-    if (!mac) {
+<script th:inline="javascript">
+const PROJECT_ID = /*[[${project.id}]]*/ 0;
+
+function formatIdentifierValue(identifier) {
+    if (!identifier) {
         return '';
     }
-    const cleaned = mac.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+    const cleaned = identifier.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
     const pairs = cleaned.match(/.{1,2}/g);
     return pairs ? pairs.join(':') : '';
+}
+
+function resolveIdentifier(device) {
+    const preferMac = PROJECT_ID === 101;
+    const primary = preferMac ? device.macAddress : device.devEui;
+    const secondary = preferMac ? device.devEui : device.macAddress;
+
+    const identifier = primary || secondary || device.deviceKey;
+    const formatted = formatIdentifierValue(identifier);
+    return formatted || '--';
 }
 document.querySelectorAll('.toggle-add-list').forEach(button => {
     button.addEventListener('click', async () => {
@@ -167,21 +179,21 @@ document.querySelectorAll('.toggle-add-list').forEach(button => {
 			} else {
 			    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute("content");
 
-			    let html = '<table><thead><tr><th>Name</th><th>MAC</th><th>Type</th><th>Actions</th></tr></thead><tbody>';
+                            let html = '<table><thead><tr><th>Name</th><th>Identifier</th><th>Type</th><th>Actions</th></tr></thead><tbody>';
 
-			    devices.forEach(device => {
-			        html += `
-			            <tr>
+                            devices.forEach(device => {
+                                html += `
+                                    <tr>
                                         <td>${device.name}</td>
-                                        <td>${formatMac(device.macAddress)}</td>
-			                <td>${device.tod || 'N/A'}</td>
-			                <td>
-			                    <form method="post" action="/group/${groupId}/add-device/${device.macAddress}">
-			                        <input type="hidden" name="_csrf" value="${csrfToken}" />
-			                        <button type="submit" class="btn-save">➕ Add</button>
-			                    </form>
-			                </td>
-			            </tr>
+                                        <td>${resolveIdentifier(device)}</td>
+                                        <td>${device.tod || 'N/A'}</td>
+                                        <td>
+                                            <form method="post" action="/group/${groupId}/add-device/${device.deviceKey}">
+                                                <input type="hidden" name="_csrf" value="${csrfToken}" />
+                                                <button type="submit" class="btn-save">➕ Add</button>
+                                            </form>
+                                        </td>
+                                    </tr>
 			        `;
 			    });
 
