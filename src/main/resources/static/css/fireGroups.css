@@ -673,6 +673,11 @@ details .device-list li::before {
         border-color: #8e0000;
 }
 
+.device-marker-icon--inactive .device-marker-pin {
+        background: #9e9e9e;
+        border-color: #616161;
+}
+
 .device-marker-icon--unknown .device-marker-pin {
         background: #5c6bc0;
         border-color: #2c387e;

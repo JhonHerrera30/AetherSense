@@ -216,10 +216,12 @@
 		}).addTo(map);
 
                 const markerByDeviceKey = new Map();
+                const deviceMetadataByDeviceKey = new Map();
                 const markerStatusIcons = {
                         unknown: createDeviceIcon('unknown'),
                         ok: createDeviceIcon('ok'),
-                        alert: createDeviceIcon('alert')
+                        alert: createDeviceIcon('alert'),
+                        inactive: createDeviceIcon('inactive')
                 };
 
                 let allLatLngs = [];
@@ -251,12 +253,52 @@
                         return device.deviceKey || device.devEui || '';
                 }
 
+                function normalizeActivated(value) {
+                        if (value === null || value === undefined) {
+                                return undefined;
+                        }
+                        if (typeof value === 'string') {
+                                const trimmed = value.trim().toLowerCase();
+                                if (trimmed === 'true') {
+                                        return true;
+                                }
+                                if (trimmed === 'false') {
+                                        return false;
+                                }
+                                return undefined;
+                        }
+                        return Boolean(value);
+                }
+
+                function updateDeviceMetadata(device) {
+                        const key = resolveDeviceKey(device);
+                        if (!key) {
+                                return;
+                        }
+                        const normalizedActivated = normalizeActivated(device ? device.activated : undefined);
+                        if (normalizedActivated === undefined) {
+                                if (!deviceMetadataByDeviceKey.has(key)) {
+                                        deviceMetadataByDeviceKey.set(key, {});
+                                }
+                                return;
+                        }
+                        const metadata = deviceMetadataByDeviceKey.get(key) || {};
+                        metadata.activated = normalizedActivated;
+                        deviceMetadataByDeviceKey.set(key, metadata);
+                }
+
+                function getDeviceActivationStatus(deviceKey) {
+                        const metadata = deviceMetadataByDeviceKey.get(deviceKey);
+                        return metadata ? metadata.activated : undefined;
+                }
+
                 initialDevices.forEach(function (d) {
                         const latlng = [d.latitude, d.longitude];
                         allLatLngs.push(latlng);
 
                         const marker = L.marker(latlng, { icon: markerStatusIcons.unknown }).addTo(map);
                         const key = resolveDeviceKey(d);
+                        updateDeviceMetadata(d);
                         const formattedKey = formatIdentifier(key);
                         const fallbackDevEui = d.devEui ? formatIdentifier(d.devEui) : '';
                         const identifierLabel = formattedKey || fallbackDevEui || 'N/A';
@@ -275,6 +317,9 @@
                                         window.location.href = destination;
                                 });
                                 markerByDeviceKey.set(key, marker);
+                                if (getDeviceActivationStatus(key) === false) {
+                                        marker.setIcon(markerStatusIcons.inactive);
+                                }
                                 refreshDeviceMarkerStatus(key);
                         }
                 });
@@ -290,7 +335,10 @@
                         return Number.isNaN(asNumber) ? null : asNumber;
                 }
 
-                function determineMarkerStatus(indicators) {
+                function determineMarkerStatus(indicators, activated) {
+                        if (activated === false) {
+                                return 'inactive';
+                        }
                         if (!Array.isArray(indicators) || !indicators.length) {
                                 return 'unknown';
                         }
@@ -309,6 +357,11 @@
                         if (!marker) {
                                 return;
                         }
+                        const activated = getDeviceActivationStatus(deviceKey);
+                        if (activated === false) {
+                                marker.setIcon(markerStatusIcons.inactive);
+                                return;
+                        }
                         try {
                                 const response = await fetch(`/api/admin/devices/${encodeURIComponent(deviceKey)}/telemetry/latest`);
                                 if (response.status === 204) {
@@ -319,7 +372,7 @@
                                         return;
                                 }
                                 const sample = await response.json();
-                                const status = determineMarkerStatus(sample ? sample.indicators : null);
+                                const status = determineMarkerStatus(sample ? sample.indicators : null, activated);
                                 marker.setIcon(markerStatusIcons[status] || markerStatusIcons.unknown);
                         } catch (error) {
                                 console.error('Unable to refresh device status', error);
@@ -350,7 +403,10 @@
 		function fetchAndDisplayDevices(groupName) {
 			fetch('/api/groups/name/' + encodeURIComponent(groupName) + '/devices')
 				.then(response => response.json())
-				.then(devices => {
+                                .then(devices => {
+                                        devices.forEach(device => {
+                                                updateDeviceMetadata(device);
+                                        });
                                         const validDevices = devices.filter(d => d.latitude != null && d.longitude != null);
                                         if (validDevices.length === 1) {
                                                 map.setView([validDevices[0].latitude, validDevices[0].longitude], 15);
@@ -371,6 +427,12 @@
                                                         ul.appendChild(li);
                                                         const deviceKey = resolveDeviceKey(device);
                                                         if (deviceKey) {
+                                                                if (getDeviceActivationStatus(deviceKey) === false) {
+                                                                        const marker = markerByDeviceKey.get(deviceKey);
+                                                                        if (marker) {
+                                                                                marker.setIcon(markerStatusIcons.inactive);
+                                                                        }
+                                                                }
                                                                 refreshDeviceMarkerStatus(deviceKey);
                                                         }
                                                 });
