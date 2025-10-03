@@ -171,15 +171,16 @@
         const identifierLabel = element.querySelector('.activation-identifier-label');
         const identifierValue = element.querySelector('.activation-identifier-value');
         if (identifierLabel && identifierValue) {
-            const hasMac = Boolean(notification.macAddress);
             const hasDevEui = Boolean(notification.devEui);
-            if (hasMac) {
+            const hasMac = Boolean(notification.macAddress);
+            if (hasDevEui) {
+                identifierLabel.textContent = 'DevEUI:';
+                const formatted = formatMac(notification.devEui);
+                identifierValue.textContent = formatted || notification.devEui;
+            } else if (hasMac) {
                 identifierLabel.textContent = 'MAC:';
                 const formatted = formatMac(notification.macAddress);
                 identifierValue.textContent = formatted || notification.macAddress;
-            } else if (hasDevEui) {
-                identifierLabel.textContent = 'DevEUI:';
-                identifierValue.textContent = notification.devEui;
             } else {
                 identifierLabel.textContent = 'Identifier:';
                 identifierValue.textContent = 'n/a';
