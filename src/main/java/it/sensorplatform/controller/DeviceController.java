@@ -313,16 +313,12 @@ public class DeviceController {
 	}
 
         @PostMapping("/updateDevice/{projectId}/{macAddress}")
-        public String updateDevice(@PathVariable Long projectId, @PathVariable String macAddress, @RequestParam String name,
+        public String updateDevice(@PathVariable Long projectId, @PathVariable String macAddress,
+                        @RequestParam(required = false) String name,
                         @RequestParam(required = false) Double latitude, @RequestParam(required = false) Double longitude,
                         RedirectAttributes redirectAttributes) {
 
                 String normalizedKey = MacAddressUtils.normalize(macAddress);
-
-                if (name == null || name.trim().isEmpty()) {
-                        redirectAttributes.addFlashAttribute("error", "Device name is required.");
-                        return "redirect:/device/" + projectId + "/" + normalizedKey;
-                }
 
                 if (normalizedKey == null || normalizedKey.isBlank()) {
                         redirectAttributes.addFlashAttribute("error", "Device not found.");
@@ -337,7 +333,10 @@ public class DeviceController {
 
                 Device device = deviceOpt.get();
                 // Aggiorna solo i campi modificabili
-                device.setName(name);
+                String trimmedName = name != null ? name.trim() : null;
+                if (StringUtils.hasText(trimmedName)) {
+                        device.setName(trimmedName);
+                }
                 if (latitude != null && longitude != null) {
                         device.setLatitude(latitude);
                         device.setLongitude(longitude);

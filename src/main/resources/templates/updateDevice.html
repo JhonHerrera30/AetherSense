@@ -104,9 +104,10 @@
 				<span class="success" th:if="${success}" th:text="${success}"></span>
                             <form th:action="@{'/updateDevice/' + ${project.id} + '/' + ${device.deviceKey}}" method="post" class="device-form">
 			        
-					<label for="name">Name:</label>
-					<span class="errorform" th:if="${error}" th:text="${error}"></span>
-			        <input type="text" id="name" name="name" th:value="${device.name}" />
+                                <label for="name">Name (optional):</label>
+                                        <span class="errorform" th:if="${error}" th:text="${error}"></span>
+                                <input type="text" id="name" name="name" th:value="${device.name}" />
+                                <p class="form-hint">Leave blank to keep the current device name.</p>
 
 			        <label for="latitude">Latitude:</label>
                                 <input type="number" step="any" id="latitude" name="latitude" th:value="${device.latitude}" />
