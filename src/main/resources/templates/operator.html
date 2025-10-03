@@ -6,12 +6,15 @@
 	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 
-	<!-- CSS per LTRAD -->
-	<link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/ltradOperator.css}" />
-	<!-- CSS per FIRE -->
-	<link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/fireOperator.css}" />
-	<!-- CSS per VOLCANO -->
+        <!-- CSS per LTRAD -->
+        <link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/ltradOperator.css}" />
+        <link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/ltradGroups.css}" />
+        <!-- CSS per FIRE -->
+        <link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/fireOperator.css}" />
+        <link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/fireGroups.css}" />
+        <!-- CSS per VOLCANO -->
         <link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/volcanoOperator.css}" />
+        <link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/volcanoGroups.css}" />
 
         <meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}" />
         <meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}" />
@@ -126,6 +129,11 @@
         }).addTo(map);
 
         const markerByKey = new Map();
+        const markerStatusIcons = {
+                unknown: createDeviceIcon('unknown'),
+                ok: createDeviceIcon('ok'),
+                alert: createDeviceIcon('alert')
+        };
 
         function formatMac(mac) {
                 if (!mac) {
@@ -163,6 +171,28 @@
                 return `Device: ${name}<br>MacAddress: ${mac}<br>Latitude: ${lat}<br>Longitude: ${lon}`;
         }
 
+        function createDeviceIcon(status) {
+                const safeStatus = typeof status === 'string' ? status : 'unknown';
+                return L.divIcon({
+                        className: `device-marker-icon device-marker-icon--${safeStatus}`,
+                        html: '<span class="device-marker-pin"></span>',
+                        iconSize: [26, 26],
+                        iconAnchor: [13, 13],
+                        popupAnchor: [0, -13]
+                });
+        }
+
+        function determineDeviceStatus(device) {
+                if (!device || typeof device.status !== 'string') {
+                        return 'unknown';
+                }
+                const normalized = device.status.toLowerCase();
+                if (normalized === 'ok' || normalized === 'alert') {
+                        return normalized;
+                }
+                return 'unknown';
+        }
+
         function addOrUpdateDeviceMarker(device) {
                 if (!device || device.latitude == null || device.longitude == null) {
                         return;
@@ -174,13 +204,15 @@
                 const latlng = [device.latitude, device.longitude];
                 let marker = markerByKey.get(key);
                 if (!marker) {
-                        marker = L.marker(latlng).addTo(map);
+                        marker = L.marker(latlng, { icon: markerStatusIcons.unknown }).addTo(map);
                         marker.on('mouseover', function () { this.openPopup(); });
                         marker.on('mouseout', function () { this.closePopup(); });
                         markerByKey.set(key, marker);
                 } else {
                         marker.setLatLng(latlng);
                 }
+                const status = determineDeviceStatus(device);
+                marker.setIcon(markerStatusIcons[status] || markerStatusIcons.unknown);
                 marker.bindPopup(buildPopupContent(device));
         }
 

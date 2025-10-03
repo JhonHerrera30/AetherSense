@@ -15,8 +15,9 @@
 	<link rel="stylesheet" th:if="${project.id == 51}" th:href="@{/css/fireGroups.css}"/>
 
 	
-	<!-- CSS per progetto VOLCANO -->
-	<link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/manageProjectDevicesVolcano.css}" />
+        <!-- CSS per progetto VOLCANO -->
+        <link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/manageProjectDevicesVolcano.css}" />
+        <link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/volcanoGroups.css}"/>
 
 		<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 </head>
@@ -270,8 +271,35 @@
         requestAnimationFrame(invalidateMapSize);
 
         let markerByDeviceKey = new Map();
+        const markerStatusIcons = {
+                unknown: createDeviceIcon('unknown'),
+                ok: createDeviceIcon('ok'),
+                alert: createDeviceIcon('alert')
+        };
 
         let allLatLngs = [];
+
+        function createDeviceIcon(status) {
+                const safeStatus = typeof status === 'string' ? status : 'unknown';
+                return L.divIcon({
+                        className: `device-marker-icon device-marker-icon--${safeStatus}`,
+                        html: '<span class="device-marker-pin"></span>',
+                        iconSize: [26, 26],
+                        iconAnchor: [13, 13],
+                        popupAnchor: [0, -13]
+                });
+        }
+
+        function resolveDeviceStatus(device) {
+                if (!device || typeof device.status !== 'string') {
+                        return 'unknown';
+                }
+                const normalized = device.status.toLowerCase();
+                if (normalized === 'ok' || normalized === 'alert') {
+                        return normalized;
+                }
+                return 'unknown';
+        }
 
         function formatIdentifier(value) {
                 if (!value) {
@@ -306,7 +334,7 @@
                         const latlng = [d.latitude, d.longitude];
                         allLatLngs.push(latlng);
 
-                        const marker = L.marker(latlng).addTo(map);
+                        const marker = L.marker(latlng, { icon: markerStatusIcons.unknown }).addTo(map);
                         const key = resolveDeviceKey(d);
                         const identifierLabel = buildIdentifierDisplay(d);
                         const popupContent = "Device: " + (d.name || '') + "<br>" +
@@ -317,6 +345,9 @@
                         marker.bindPopup(popupContent);
                         marker.on("mouseover", function () { this.openPopup(); });
                         marker.on("mouseout", function () { this.closePopup(); });
+
+                        const status = resolveDeviceStatus(d);
+                        marker.setIcon(markerStatusIcons[status] || markerStatusIcons.unknown);
 
                         if (key) {
                                 markerByDeviceKey.set(key, marker);
