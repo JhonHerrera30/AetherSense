@@ -118,7 +118,8 @@
                                           <thead>
                                                   <tr>
                                                           <th scope="col">Name</th>
-                                                          <th scope="col">DevEUI</th>
+                                                      <th scope="col"
+                                                          th:text="${project.id == 101} ? 'MacAddress' : 'DevEUI'">DevEUI</th>
                                                           <th scope="col">Type of device</th>
                                                           <th scope="col">Operator</th>
                                                           <th scope="col">Activated</th>
