@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title th:text="'Activation Requests - ' + ${project.name}">Activation Requests</title>
+    <title th:text="'Activation Requests'">Activation Requests</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/formNewDeviceLtrad.css}" />
@@ -45,11 +45,10 @@
 <section class="notifications-panel" aria-labelledby="activation-title">
     <header class="notifications-header">
         <div class="notifications-header-text">
-            <h2 id="activation-title" class="notifications-title" th:text="'Activation requests · ' + ${project.name}">Activation requests</h2>
+            <h2 id="activation-title" class="notifications-title" th:text="'Activation requests'">Activation requests</h2>
             <p class="notifications-description">Pending devices that need an operator decision.</p>
         </div>
         <div class="notifications-header-actions">
-            <button type="button" class="btn-add" id="activation-refresh">Refresh</button>
             <a th:href="@{'/operator/' + ${project.id}}" class="btn-back" title="Back to map">Back to map</a>
         </div>
     </header>
@@ -68,7 +67,6 @@
     const requestContainer = document.getElementById('activation-list');
     const emptyState = document.getElementById('activation-empty');
     const feedbackElement = document.getElementById('activation-feedback');
-    const refreshButton = document.getElementById('activation-refresh');
 
     const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
     const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
@@ -170,10 +168,22 @@
         if (title) {
             title.textContent = notification.deviceName || 'Unnamed device';
         }
-        const macValue = element.querySelector('.activation-device-mac');
-        if (macValue) {
-            const formatted = formatMac(notification.macAddress);
-            macValue.textContent = formatted || (notification.devEui || 'n/a');
+        const identifierLabel = element.querySelector('.activation-identifier-label');
+        const identifierValue = element.querySelector('.activation-identifier-value');
+        if (identifierLabel && identifierValue) {
+            const hasMac = Boolean(notification.macAddress);
+            const hasDevEui = Boolean(notification.devEui);
+            if (hasMac) {
+                identifierLabel.textContent = 'MAC:';
+                const formatted = formatMac(notification.macAddress);
+                identifierValue.textContent = formatted || notification.macAddress;
+            } else if (hasDevEui) {
+                identifierLabel.textContent = 'DevEUI:';
+                identifierValue.textContent = notification.devEui;
+            } else {
+                identifierLabel.textContent = 'Identifier:';
+                identifierValue.textContent = 'n/a';
+            }
         }
         const adminValue = element.querySelector('.activation-device-admin');
         if (adminValue) {
@@ -211,9 +221,9 @@
         title.className = 'activation-device-name';
         main.appendChild(title);
 
-        const macLine = document.createElement('p');
-        macLine.innerHTML = '<strong>MAC:</strong> <span class="activation-device-mac"></span>';
-        main.appendChild(macLine);
+        const identifierLine = document.createElement('p');
+        identifierLine.innerHTML = '<strong class="activation-identifier-label"></strong> <span class="activation-identifier-value"></span>';
+        main.appendChild(identifierLine);
 
         const adminLine = document.createElement('p');
         adminLine.innerHTML = '<strong>Admin:</strong> <span class="activation-device-admin"></span>';
@@ -243,7 +253,7 @@
 
         const refuseButton = document.createElement('button');
         refuseButton.type = 'button';
-        refuseButton.className = 'btn-spec';
+        refuseButton.className = 'btn-add btn-refuse';
         refuseButton.textContent = 'Refuse';
         refuseButton.addEventListener('click', () => respondToRequest(entry, false));
         actions.appendChild(refuseButton);
@@ -433,10 +443,6 @@
                 showFeedback('Unable to load activation requests. Please try again later.', true);
             }
         }
-    }
-
-    if (refreshButton) {
-        refreshButton.addEventListener('click', () => loadRequests(true));
     }
 
     loadRequests(false);

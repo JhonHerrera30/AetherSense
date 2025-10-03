@@ -587,6 +587,24 @@ body {
     outline-offset: 3px;
 }
 
+.notifications-panel .btn-refuse {
+    background-color: #c44536;
+    box-shadow: 0 14px 30px rgba(196, 69, 54, 0.35);
+}
+
+.notifications-panel .btn-refuse::before {
+    content: '\2715';
+}
+
+.notifications-panel .btn-refuse:hover {
+    box-shadow: 0 20px 40px rgba(196, 69, 54, 0.45);
+    background-color: #a43729;
+}
+
+.notifications-panel .btn-refuse:focus-visible {
+    outline: 2px solid rgba(255, 196, 182, 0.85);
+}
+
 @media (max-width: 900px) {
     .notifications-panel {
         margin: 3rem 1.5rem;
