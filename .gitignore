@@ -3,3 +3,5 @@ target/
 .project
 .settings/
 .DS_Store
+secrets.env
+*.env

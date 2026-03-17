@@ -1,0 +1,15 @@
+[Unit]
+Description=AetherSense IoT Platform
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/AetherSense
+EnvironmentFile=/etc/aethersense/secrets.env
+ExecStart=/usr/bin/java -jar /root/AetherSense/target/ltrad-1.0.jar
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -1,29 +1,72 @@
 # AetherSense
 
-## Configurazione del database
+## Requisiti
+- Java 21
+- Maven
+- PostgreSQL
+- Linux con systemd
 
-L'applicazione legge i dettagli di connessione al database dalle seguenti variabili d'ambiente:
+## Configurazione
 
-| Variabile | Descrizione |
-|-----------|-------------|
-| `DB_URL`  | URL JDBC del database, ad esempio `jdbc:postgresql://localhost:5432/nome_db` |
-| `DB_USER` | Nome utente del database |
-| `DB_PASS` | Password del database |
+### 1. Variabili d'ambiente
+Crea il file dei segreti sul server:
+```bash
+mkdir -p /etc/aethersense
+nano /etc/aethersense/secrets.env
+chmod 600 /etc/aethersense/secrets.env
+```
 
-### Impostazione delle variabili su una VPS
+Inserisci nel file:
+```
+DB_URL=jdbc:postgresql://localhost:5432/nome_db
+DB_USER=utente_db
+DB_PASS=password_db
+API_KEY=genera_con_openssl_rand_hex_32
+```
 
-Per configurare le variabili su una VPS basata su Linux:
+### 2. Prima compilazione
+```bash
+cd /root/AetherSense
+./mvnw package -DskipTests
+```
 
-1. Accedere al server tramite SSH.
-2. Esportare le variabili nella shell corrente (sostituendo i valori di esempio con quelli reali):
+### 3. Servizio systemd
+Copia e abilita il servizio:
+```bash
+cp deploy/aethersense.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable aethersense
+systemctl start aethersense
+```
 
-   ```bash
-   export DB_URL="jdbc:postgresql://<host>:5432/<database>"
-   export DB_USER="<utente>"
-   export DB_PASS="<password>"
-   ```
+L'applicazione si avvia automaticamente 
+ad ogni riavvio del server.
 
-3. Per renderle persistenti tra i riavvii, aggiungere le stesse righe al file `~/.bashrc` dell'utente oppure definirle in un file di servizio `systemd` utilizzando la direttiva `Environment=`.
+### 4. Aggiornamento dopo modifiche al codice
+```bash
+systemctl stop aethersense
+./mvnw package -DskipTests
+systemctl start aethersense
+```
 
-Una volta impostate le variabili, avviare l'applicazione con `./mvnw spring-boot:run` o tramite il sistema di gestione dei servizi preferito.
+### 5. Monitoraggio
+```bash
+systemctl status aethersense
+journalctl -u aethersense -f
+```
 
+## API Key TTN
+Genera la chiave:
+```bash
+openssl rand -hex 32
+```
+Aggiungila come header nei webhook TTN:
+```
+X-API-Key: il_valore_generato
+```
+
+## Note di sicurezza
+- Il file `secrets.env` non va mai 
+  committato su GitHub
+- Generare una nuova API Key per ogni 
+  ambiente di deployment
