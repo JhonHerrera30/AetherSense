@@ -298,7 +298,7 @@ public class DeviceController {
                         Model model) {
                 UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
                 Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
-                if(!Objects.equals(credentials.getProjectId(), ProjectId)){
+                if(!Objects.equals(credentials.getProjectId(), projectId)){
                         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Non hai i permessi per visualizzare questo progetto.");
                 }
                 String normalizedKey = MacAddressUtils.normalize(deviceKey);
