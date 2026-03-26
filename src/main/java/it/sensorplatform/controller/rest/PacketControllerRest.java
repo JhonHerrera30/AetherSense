@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * REST endpoint that receives generic JSON packets and delegates the
@@ -33,10 +35,10 @@ public class PacketControllerRest {
             System.out.println("PacketControllerRest.handle - invalid or missing API key");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        /*if(Duration.between(istant.now(), PacketDTO.payloa.timestamp) >= 5){
+        if(packet.getTimestamp() == null || Duration.between(packet.getTimestamp(), Instant.now()).toMinutes()>= 5){
+             System.out.println("PacketControllerRest.body - invalid timestamp");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            
-        }*/ //placeholder per un futuro timer (questo è sbagliato per ora)
+        } 
         System.out.println("PacketControllerRest.handle - received packet: " + packet);
         PacketService.Result result = packetService.handlePacket(packet);
         System.out.println("PacketControllerRest.handle - processing result: " + result);

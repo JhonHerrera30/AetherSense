@@ -6,6 +6,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * Generic DTO representing a JSON packet sent by a device or an operator.
@@ -22,6 +24,7 @@ public class PacketDTO {
     private Map<String, Object> payload;
     private List<SpecEntry> spec;
     private List<String> indicator;
+    private Instant timestamp;
 
     public String getMacAddress() {
         return macAddress;
@@ -89,6 +92,13 @@ public class PacketDTO {
 
     public List<String> getIndicator() {
         return indicator;
+    }
+
+    public Instant getTimestamp(){
+        return timestamp;
+    }
+    public void setTimestamp(Instant timestamp){
+        this.timestamp = timestamp;
     }
 
     @JsonSetter("indicator")
