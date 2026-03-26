@@ -296,6 +296,11 @@ public class DeviceController {
         @GetMapping("/device/{projectId}/{macAddress}")
         public String aboutDevice(@PathVariable("projectId") Long projectId, @PathVariable("macAddress") String deviceKey,
                         Model model) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                if(!Objects.equals(credentials.getProjectId(), getProjectId)){
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Non hai i permessi per visualizzare questo progetto.");
+                }
                 String normalizedKey = MacAddressUtils.normalize(deviceKey);
                 Project project = projectService.getProjectById(projectId);
                 if (normalizedKey == null || normalizedKey.isBlank()) {
@@ -306,6 +311,9 @@ public class DeviceController {
                         return "error";
                 }
                 Device device = deviceOpt.get();
+                if(device.getProject() == null || !Objects.equals(device.getProject().getId(),projectId)){
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incongruenza: Il dispositivo richiesto non appartiene a questo progetto.");
+                }
                 UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
                 Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
                 model.addAttribute("user", credentials);
@@ -318,6 +326,13 @@ public class DeviceController {
         public String updateDevice(@PathVariable Long projectId, @PathVariable String macAddress, @RequestParam String name,
                         @RequestParam(required = false) Double latitude, @RequestParam(required = false) Double longitude,
                         RedirectAttributes redirectAttributes) {
+                
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                
+                if (!Objects.equals(credentials.getProjectId(), projectId)) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Non puoi modificare i dispositivi di un altro progetto.");
+                }
 
                 String normalizedKey = MacAddressUtils.normalize(macAddress);
 
@@ -338,6 +353,9 @@ public class DeviceController {
                 }
 
                 Device device = deviceOpt.get();
+                if (device.getProject() == null || !Objects.equals(device.getProject().getId(), projectId)) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incongruenza: Il dispositivo non appartiene a questo progetto.");
+                }
                 // Aggiorna solo i campi modificabili
                 device.setName(name);
                 if (latitude != null && longitude != null) {
