@@ -31,6 +31,8 @@ import org.springframework.util.StringUtils;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -359,6 +361,10 @@ public class DeviceController {
 	public String formRegisterOperator(@PathVariable Long projectId, Model model) {
 		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                // CONTROLLO DI SICUREZZA: L'Admin sta provando ad accedere a un progetto non suo?
+                if (!Objects.equals(credentials.getProjectId(), projectId)) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Non hai i permessi per questo progetto.");
+                }
 		model.addAttribute("user", credentials);
 		// model.addAttribute("user", new User());
 		model.addAttribute("credentials", new Credentials());
@@ -371,9 +377,14 @@ public class DeviceController {
 	@PostMapping("/admin/registerOperator/{projectId}")
 	public String registerOperator(@PathVariable Long projectId, @Valid Credentials credentials,
 			BindingResult bindingResult, @RequestParam("confirmPassword") String confirmPassword, Model model) {
-		boolean error = false;
+		
 		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		Credentials userCredentials = credentialsService.getCredentials(userDetails.getUsername());
+                // CONTROLLO DI SICUREZZA POST: Impedisce la creazione forzata tramite Postman/API
+                if (!Objects.equals(userCredentials.getProjectId(), projectId)) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Operazione non autorizzata su questo progetto.");
+                }
+                boolean error = false;
                 model.addAttribute("user", userCredentials);
                 model.addAttribute("projectId", projectId);
                 Project project = projectService.getProjectById(projectId);
@@ -431,6 +442,11 @@ public class DeviceController {
         @PostMapping("/admin/selectOperator/{macAddress}/{opId}/{projectId}")
         public String assignOperatorToDevice(@PathVariable ("projectId") Long projectId, @PathVariable ("macAddress") String macAddress,
                                                                                 @PathVariable("opId") Long opId, RedirectAttributes ra) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                Credentials userCredentials = credentialsService.getCredentials(userDetails.getUsername());
+                if (!Objects.equals(userCredentials.getProjectId(), projectId)) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Operazione non autorizzata su questo progetto.");
+                }
                 String normalizedKey = MacAddressUtils.normalize(macAddress);
                 if (normalizedKey == null || normalizedKey.isBlank()) {
                         ra.addFlashAttribute("errorMessage", "Device not found.");
@@ -442,6 +458,10 @@ public class DeviceController {
                         return "redirect:/admin/group/"+projectId;
                 }
                 Device d = deviceOpt.get();
+                // CONTROLLO DI COERENZA: Il dispositivo appartiene davvero al progetto passato nell'URL?
+                if (d.getProject() == null || !Objects.equals(d.getProject().getId(), projectId)) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incongruenza: Il dispositivo non appartiene a questo progetto.");
+                }
                 Credentials operator = credentialsService.findById(opId);
 
                 d.setOperator(operator);
@@ -453,6 +473,11 @@ public class DeviceController {
         @PostMapping("/admin/removeOperator/{macAddress}/{projectId}")
         public String removeOperatorfromDevice(@PathVariable ("projectId") Long projectId, @PathVariable ("macAddress") String macAddress,
                                                                                  RedirectAttributes ra) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                Credentials userCredentials = credentialsService.getCredentials(userDetails.getUsername());
+                if (!Objects.equals(userCredentials.getProjectId(), projectId)) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Operazione non autorizzata su questo progetto.");
+                }
                 String normalizedKey = MacAddressUtils.normalize(macAddress);
                 if (normalizedKey == null || normalizedKey.isBlank()) {
                         ra.addFlashAttribute("errorMessage", "Device not found.");
@@ -464,7 +489,10 @@ public class DeviceController {
                         return "redirect:/admin/group/"+projectId;
                 }
                 Device d = deviceOpt.get();
-
+                // CONTROLLO DI COERENZA: Il dispositivo appartiene davvero al progetto passato nell'URL?
+                if (d.getProject() == null || !Objects.equals(d.getProject().getId(), projectId)) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incongruenza: Il dispositivo non appartiene a questo progetto.");
+                }
                 d.setOperator(null);
                 d.setActivated(false);
                 deviceService.save(d);

@@ -7,6 +7,10 @@ import it.sensorplatform.service.CredentialsService;
 import it.sensorplatform.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -24,6 +28,21 @@ public class OperatorControllerRest {
     public List<OperatorDTO> listOperators(@PathVariable Long projectId) {
         Project p = projectService.getProjectById(projectId);
 
+       // Prende l'utente dalla sessione corrente
+        Authentication auth = SecurityContextHolder
+        .getContext().getAuthentication();
+        String username = auth.getName();
+
+        // Cerca le sue credenziali nel database
+        Credentials currentUser = credentialsService
+        .getCredentials(username);
+
+        // Confronta il suo projectId con quello nell'URL
+        if (!currentUser.getProjectId().equals(projectId)) {
+        throw new ResponseStatusException(
+                HttpStatus.FORBIDDEN, "Accesso non autorizzato"
+        );
+        }
         String adminRole;
         if ("LTRAD".equals(p.getName()))       adminRole = Credentials.LTRAD_ADMIN_ROLE;
         else if ("FIRE".equals(p.getName()))   adminRole = Credentials.FIRE_ADMIN_ROLE;
