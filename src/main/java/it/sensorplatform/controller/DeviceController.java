@@ -298,7 +298,7 @@ public class DeviceController {
                         Model model) {
                 UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
                 Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
-                if(!Objects.equals(credentials.getProjectId(), getProjectId)){
+                if(!Objects.equals(credentials.getProjectId(), ProjectId)){
                         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Non hai i permessi per visualizzare questo progetto.");
                 }
                 String normalizedKey = MacAddressUtils.normalize(deviceKey);
@@ -314,8 +314,6 @@ public class DeviceController {
                 if(device.getProject() == null || !Objects.equals(device.getProject().getId(),projectId)){
                         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incongruenza: Il dispositivo richiesto non appartiene a questo progetto.");
                 }
-                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
                 model.addAttribute("user", credentials);
                 model.addAttribute("project", project);
                 model.addAttribute("device", device);
