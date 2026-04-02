@@ -252,6 +252,10 @@ private AdminService adminService;
 	          credentials.getRole().equals(VOLCANO_OPERATOR_ROLE))) {
 	        return "error";
 	    }
+            if (credentials.getProjectId() != null && 
+                !credentials.getProjectId().equals(projectId)) {
+                return "error";
+                }
 
 	    Project project = this.projectService.getProjectById(projectId);
 	    if (project == null) return "error";
