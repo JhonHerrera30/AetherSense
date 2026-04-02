@@ -35,7 +35,7 @@ public class PacketControllerRest {
             System.out.println("PacketControllerRest.handle - invalid or missing API key");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        if(packet.getTimestamp() == null || Duration.between(packet.getTimestamp(), Instant.now()).toMinutes()>= 5){
+        if(packet.getTimestamp() == null || Duration.between(packet.getTimestamp(), Instant.now()).toMinutes()>= 5 || Duration.between(Instant.now(), packet.getTimestamp()).toMinutes() >= 1){
              System.out.println("PacketControllerRest.body - invalid timestamp");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } 
