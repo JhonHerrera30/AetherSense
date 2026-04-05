@@ -26,8 +26,18 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         }
 
         if(projectIdParam.equals("SUPERADMIN")) {
+            request.getSession().setMaxInactiveInterval(60);
             response.sendRedirect("/success");
             return;
+        }
+         if(authentication.getAuthorities().stream()
+        .anyMatch(a -> a.getAuthority().contains("ADMIN"))){
+            request.getSession().setMaxInactiveInterval(120);
+        }
+        
+        if(authentication.getAuthorities().stream()
+        .anyMatch(a -> a.getAuthority().contains("OPERATOR"))){
+            request.getSession().setMaxInactiveInterval(300);
         }
         Long projectId = Long.parseLong(projectIdParam);
         String url = "/success?projectId=" + projectId;
