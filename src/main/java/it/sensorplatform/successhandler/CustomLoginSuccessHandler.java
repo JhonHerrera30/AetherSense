@@ -26,18 +26,18 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         }
 
         if(projectIdParam.equals("SUPERADMIN")) {
-            request.getSession().setMaxInactiveInterval(60);
+            request.getSession().setMaxInactiveInterval(900);
             response.sendRedirect("/success");
             return;
         }
          if(authentication.getAuthorities().stream()
         .anyMatch(a -> a.getAuthority().contains("ADMIN"))){
-            request.getSession().setMaxInactiveInterval(120);
+            request.getSession().setMaxInactiveInterval(1800);
         }
         
         if(authentication.getAuthorities().stream()
         .anyMatch(a -> a.getAuthority().contains("OPERATOR"))){
-            request.getSession().setMaxInactiveInterval(300);
+            request.getSession().setMaxInactiveInterval(7200);
         }
         Long projectId = Long.parseLong(projectIdParam);
         String url = "/success?projectId=" + projectId;
