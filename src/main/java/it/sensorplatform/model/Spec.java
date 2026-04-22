@@ -6,9 +6,15 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+
 public class Spec {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -22,38 +28,11 @@ public class Spec {
 	
 	//@NotBlank
 	private String component;
-	
-	public Long getId() {
-		return id;
-	}
 
-	public void setId(Long id) {
-		this.id=id;
-	}
+	private Double min;
 
-	public String getMeasurement() {
-		return measurement;
-	}
+	private Double max;
 
-	public void setMeasurement(String measurement) {
-		this.measurement = measurement;
-	}
-
-	public String getComponent() {
-		return component;
-	}
-
-	public void setComponent(String component) {
-		this.component = component;
-	}
-
-	public String getUnitOfMeasurement() {
-		return unitOfMeasurement;
-	}
-
-	public void setUnitOfMeasurement(String unitOfMeasurement) {
-		this.unitOfMeasurement = unitOfMeasurement;
-	}
 
 	@Override
 	public int hashCode() {
