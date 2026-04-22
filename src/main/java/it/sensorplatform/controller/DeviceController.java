@@ -17,6 +17,7 @@ import it.sensorplatform.service.DeviceService;
 import it.sensorplatform.service.ProjectService;
 import it.sensorplatform.service.SuperadminService;
 import it.sensorplatform.util.MacAddressUtils;
+import it.sensorplatform.util.SanitizationUtils;
 import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
@@ -257,7 +258,7 @@ public class DeviceController {
 
                 Device device = deviceOpt.get();
                 // Aggiorna solo i campi modificabili
-                device.setName(name);
+                device.setName(SanitizationUtils.sanitize(name));
                 if (latitude != null && longitude != null) {
                         device.setLatitude(latitude);
                         device.setLongitude(longitude);
@@ -355,7 +356,7 @@ public class DeviceController {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incongruenza: Il dispositivo non appartiene a questo progetto.");
                 }
                 // Aggiorna solo i campi modificabili
-                device.setName(name);
+                device.setName(SanitizationUtils.sanitize(name));
                 if (latitude != null && longitude != null) {
                         device.setLatitude(latitude);
                         device.setLongitude(longitude);

@@ -14,6 +14,8 @@ import it.sensorplatform.service.IndicatorService;
 import it.sensorplatform.service.SpecService;
 import it.sensorplatform.service.UnknownDeviceService;
 import it.sensorplatform.util.MacAddressUtils;
+import it.sensorplatform.util.SanitizationUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -66,9 +68,9 @@ public class NotificationControllerRest {
         }
         logger.info("Consumed notification for project {} key {}: mac {} devEui {}", projectId, normalizedKey, notif.getMacAddress(), notif.getDevEui());
         Project project = projectRepository.findById(projectId).orElse(null);
-        TypeOfDevice tod = typeOfDeviceRepository.findByName(notif.getTypeOfDevice()).orElseGet(() -> {
+        TypeOfDevice tod = typeOfDeviceRepository.findByName(SanitizationUtils.sanitize(notif.getTypeOfDevice())).orElseGet(() -> {
             TypeOfDevice created = new TypeOfDevice();
-            created.setName(notif.getTypeOfDevice());
+            created.setName(SanitizationUtils.sanitize(notif.getTypeOfDevice()));
             return created;
         });
 
