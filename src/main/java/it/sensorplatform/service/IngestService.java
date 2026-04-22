@@ -4,6 +4,8 @@ import it.sensorplatform.dto.PacketDTO;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.Indicator;
 import it.sensorplatform.model.Spec;
+
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -19,35 +21,45 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import it.sensorplatform.model.MeasurementEntity;
+import it.sensorplatform.model.SampleEntity;
+import it.sensorplatform.repository.SampleRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 /**
- * IngestService: punto unico che riceve dati normalizzati (deviceId/devEui, timestamp, metrics)
+ * IngestService: punto unico che riceve dati normalizzati (deviceId/devEui,
+ * timestamp, metrics)
  * e li memorizza in un buffer in-memory per i test locali.
  *
- * Fase 2 (quando vorrai): qui dentro collegheremo i repository per persistere su DB.
+ * Fase 2 (quando vorrai): qui dentro collegheremo i repository per persistere
+ * su DB.
  */
 @Service
 public class IngestService {
 
     /** Record di un singolo campione ricevuto */
     public static record Sample(String deviceId,
-                                String devEui,
-                                Instant ts,
-                                List<MeasurementSample> measurements,
-                                List<IndicatorSample> indicators,
-                                Map<String, Object> info) { }
+            String devEui,
+            Instant ts,
+            List<MeasurementSample> measurements,
+            List<IndicatorSample> indicators,
+            Map<String, Object> info) {
+    }
 
     public static record MeasurementSample(String key,
-                                           String label,
-                                           String displayName,
-                                           String component,
-                                           String unit,
-                                           Double min,
-                                           Double max,
-                                           Double value) { }
+            String label,
+            String displayName,
+            String component,
+            String unit,
+            Double min,
+            Double max,
+            Double value) {
+    }
 
     public static record IndicatorSample(String key,
-                                         String label,
-                                         Integer value) { }
+            String label,
+            Integer value) {
+    }
 
     /** Ultimi N campioni per device (buffer circolare) */
     private final Map<String, Deque<Sample>> store = new ConcurrentHashMap<>();
@@ -61,58 +73,69 @@ public class IngestService {
             "bat_V",
             "bat_pct",
             "latitude",
-            "longitude"
-    );
+            "longitude");
 
-    private record IndicatorDescriptor(String key, String label) { }
+    private record IndicatorDescriptor(String key, String label) {
+    }
+
+    private final SampleRepository sampleRepository;
+
+    public IngestService(SampleRepository sampleRepository) {
+        this.sampleRepository = sampleRepository;
+    }
 
     /**
      * Normalizza e memorizza un pacchetto ricevuto.
+     * 
      * @param deviceId nome del device (se null, prova a usare devEui)
      * @param devEui   EUI del device (opzionale, usato come fallback per l'id)
      * @param ts       istante della misura (UTC)
-     * @param metrics  mappa chiave=tipo misura, valore=numero (es. temp, hum, pm2p5)
+     * @param metrics  mappa chiave=tipo misura, valore=numero (es. temp, hum,
+     *                 pm2p5)
      */
     public void process(Device device,
-                        Instant ts,
-                        Map<String, Object> metrics,
-                        List<PacketDTO.SpecEntry> specEntries,
-                        List<String> indicatorLabels) {
+            Instant ts,
+            Map<String, Object> metrics,
+            List<PacketDTO.SpecEntry> specEntries,
+            List<String> indicatorLabels) {
         String deviceId = device != null ? device.getMacAddress() : null;
         String devEui = device != null ? device.getDevEui() : null;
         List<Spec> savedSpecs = device != null && device.getTod() != null && device.getTod().getSpecs() != null
                 ? device.getTod().getSpecs()
                 : List.of();
-        List<Indicator> savedIndicators = device != null && device.getTod() != null && device.getTod().getIndicators() != null
-                ? device.getTod().getIndicators()
-                : List.of();
+        List<Indicator> savedIndicators = device != null && device.getTod() != null
+                && device.getTod().getIndicators() != null
+                        ? device.getTod().getIndicators()
+                        : List.of();
         process(deviceId, devEui, ts, metrics, specEntries, indicatorLabels, savedSpecs, savedIndicators);
     }
 
     public void process(String deviceId,
-                        String devEui,
-                        Instant ts,
-                        Map<String, Object> metrics,
-                        List<PacketDTO.SpecEntry> specEntries,
-                        List<String> indicatorLabels) {
+            String devEui,
+            Instant ts,
+            Map<String, Object> metrics,
+            List<PacketDTO.SpecEntry> specEntries,
+            List<String> indicatorLabels) {
         process(deviceId, devEui, ts, metrics, specEntries, indicatorLabels, List.of(), List.of());
     }
 
-    private void process(String deviceId,
-                         String devEui,
-                         Instant ts,
-                         Map<String, Object> metrics,
-                         List<PacketDTO.SpecEntry> specEntries,
-                         List<String> indicatorLabels,
-                         List<Spec> savedSpecs,
-                         List<Indicator> savedIndicators) {
+    @Transactional
+    void process(String deviceId,
+            String devEui,
+            Instant ts,
+            Map<String, Object> metrics,
+            List<PacketDTO.SpecEntry> specEntries,
+            List<String> indicatorLabels,
+            List<Spec> savedSpecs,
+            List<Indicator> savedIndicators) {
         if (deviceId == null && devEui != null) {
             deviceId = devEui.toLowerCase(Locale.ROOT);
         }
         if (deviceId == null || deviceId.isBlank()) {
             throw new IllegalArgumentException("deviceId o devEui richiesto");
         }
-        if (ts == null) ts = Instant.now();
+        if (ts == null)
+            ts = Instant.now();
 
         Map<String, Object> safeMetrics = metrics != null ? new LinkedHashMap<>(metrics) : new LinkedHashMap<>();
         List<PacketDTO.SpecEntry> safeSpecEntries = specEntries != null ? specEntries : List.of();
@@ -143,17 +166,42 @@ public class IngestService {
             }
         }
 
-        List<MeasurementSample> measurements = buildMeasurements(safeMetrics, safeSpecEntries, safeSavedSpecs, indicatorKeyHints);
+        List<MeasurementSample> measurements = buildMeasurements(safeMetrics, safeSpecEntries, safeSavedSpecs,
+                indicatorKeyHints);
         Set<String> measurementKeys = new LinkedHashSet<>();
         for (MeasurementSample measurement : measurements) {
             measurementKeys.add(measurement.key());
         }
-        List<IndicatorSample> indicators = buildIndicators(safeMetrics, indicatorDescriptors, measurementKeys, safeSavedIndicators);
+        List<IndicatorSample> indicators = buildIndicators(safeMetrics, indicatorDescriptors, measurementKeys,
+                safeSavedIndicators);
         Map<String, Object> info = extractInfo(safeMetrics);
 
-        Deque<Sample> queue = store.computeIfAbsent(deviceId, k -> new ArrayDeque<>());
-        queue.addLast(new Sample(deviceId, devEui, ts, measurements, indicators, Map.copyOf(info)));
+        // idempotency check — scarta pacchetti duplicati
+        String effectiveDevEui = devEui != null ? devEui : deviceId;
+        if (sampleRepository.findByDevEuiAndTimestamp(
+                effectiveDevEui, ts).isPresent()) {
+            System.out.println("IngestService - duplicato ignorato: "
+                    + effectiveDevEui + " " + ts);
+            return;
+        }
 
+        // salva su database
+        SampleEntity sampleEntity = new SampleEntity(deviceId, effectiveDevEui, ts);
+        for (MeasurementSample m : measurements) {
+            sampleEntity.addMeasurement(
+                    MeasurementEntity.fromMeasurement(m));
+        }
+        for (IndicatorSample i : indicators) {
+            sampleEntity.addMeasurement(
+                    MeasurementEntity.fromIndicator(i));
+        }
+        sampleRepository.save(sampleEntity);
+
+        // mantieni buffer in memoria per compatibilità frontend
+        Deque<Sample> queue = store.computeIfAbsent(
+                deviceId, k -> new ArrayDeque<>());
+        queue.addLast(new Sample(deviceId, devEui, ts,
+                measurements, indicators, Map.copyOf(info)));
         while (queue.size() > MAX_SAMPLES_PER_DEVICE) {
             queue.removeFirst();
         }
@@ -164,22 +212,24 @@ public class IngestService {
      */
     public List<Sample> last(String deviceId, int n) {
         Deque<Sample> q = store.getOrDefault(deviceId, new ArrayDeque<>());
-        if (n <= 0 || q.isEmpty()) return List.of();
+        if (n <= 0 || q.isEmpty())
+            return List.of();
         int skip = Math.max(0, q.size() - n);
         return q.stream().skip(skip).toList();
     }
 
     private List<MeasurementSample> buildMeasurements(Map<String, Object> metrics,
-                                                      List<PacketDTO.SpecEntry> specEntries,
-                                                      List<Spec> savedSpecs,
-                                                      Set<String> indicatorKeyHints) {
+            List<PacketDTO.SpecEntry> specEntries,
+            List<Spec> savedSpecs,
+            Set<String> indicatorKeyHints) {
         List<MeasurementSample> result = new ArrayList<>();
         List<PacketDTO.SpecEntry> safeSpecEntries = specEntries != null ? specEntries : List.of();
         List<Spec> safeSavedSpecs = savedSpecs != null ? savedSpecs : List.of();
 
         Map<String, PacketDTO.SpecEntry> specByKey = indexSpecEntries(safeSpecEntries);
         Map<String, Spec> savedSpecByKey = indexSavedSpecs(safeSavedSpecs);
-        List<String> measurementKeys = resolveMeasurementKeys(metrics, safeSpecEntries, safeSavedSpecs, indicatorKeyHints);
+        List<String> measurementKeys = resolveMeasurementKeys(metrics, safeSpecEntries, safeSavedSpecs,
+                indicatorKeyHints);
 
         for (int i = 0; i < measurementKeys.size(); i++) {
             String key = measurementKeys.get(i);
@@ -205,14 +255,15 @@ public class IngestService {
     }
 
     private List<IndicatorSample> buildIndicators(Map<String, Object> metrics,
-                                                  List<IndicatorDescriptor> indicatorDescriptors,
-                                                  Set<String> measurementKeys,
-                                                  List<Indicator> savedIndicators) {
+            List<IndicatorDescriptor> indicatorDescriptors,
+            Set<String> measurementKeys,
+            List<Indicator> savedIndicators) {
         List<IndicatorSample> result = new ArrayList<>();
         List<IndicatorDescriptor> safeDescriptors = indicatorDescriptors != null ? indicatorDescriptors : List.of();
         Map<String, Indicator> savedIndicatorsByKey = indexSavedIndicators(savedIndicators);
         Map<String, IndicatorDescriptor> descriptorsByCanonical = indexIndicatorDescriptors(safeDescriptors);
-        List<String> indicatorKeys = resolveIndicatorKeys(metrics, safeDescriptors, measurementKeys, savedIndicatorsByKey);
+        List<String> indicatorKeys = resolveIndicatorKeys(metrics, safeDescriptors, measurementKeys,
+                savedIndicatorsByKey);
         for (int i = 0; i < indicatorKeys.size(); i++) {
             String key = indicatorKeys.get(i);
             Object rawValue = metrics.get(key);
@@ -297,9 +348,9 @@ public class IngestService {
     }
 
     private List<String> resolveMeasurementKeys(Map<String, Object> metrics,
-                                                List<PacketDTO.SpecEntry> specEntries,
-                                                List<Spec> savedSpecs,
-                                                Set<String> indicatorKeyHints) {
+            List<PacketDTO.SpecEntry> specEntries,
+            List<Spec> savedSpecs,
+            Set<String> indicatorKeyHints) {
         LinkedHashSet<String> keys = new LinkedHashSet<>();
         Set<String> canonicalIndicatorHints = new LinkedHashSet<>();
         if (indicatorKeyHints != null) {
@@ -401,9 +452,9 @@ public class IngestService {
     }
 
     private String resolveMeasurementDisplayName(String key,
-                                                 String label,
-                                                 PacketDTO.SpecEntry specEntry,
-                                                 Spec savedSpec) {
+            String label,
+            PacketDTO.SpecEntry specEntry,
+            Spec savedSpec) {
         if (savedSpec != null) {
             String measurement = sanitize(savedSpec.getMeasurement());
             String prettyMeasurement = prettify(measurement);
@@ -435,8 +486,8 @@ public class IngestService {
     }
 
     private String resolveMeasurementComponent(String label,
-                                               PacketDTO.SpecEntry specEntry,
-                                               Spec savedSpec) {
+            PacketDTO.SpecEntry specEntry,
+            Spec savedSpec) {
         if (savedSpec != null) {
             String component = sanitize(savedSpec.getComponent());
             if (component != null) {
@@ -503,7 +554,7 @@ public class IngestService {
         if (specEntry == null) {
             return null;
         }
-        String[] accessors = {"getUnit", "getUnitOfMeasurement"};
+        String[] accessors = { "getUnit", "getUnitOfMeasurement" };
         for (String accessor : accessors) {
             try {
                 Object value = specEntry.getClass().getMethod(accessor).invoke(specEntry);
@@ -549,9 +600,9 @@ public class IngestService {
     }
 
     private List<String> resolveIndicatorKeys(Map<String, Object> metrics,
-                                              List<IndicatorDescriptor> indicatorDescriptors,
-                                              Set<String> measurementKeys,
-                                              Map<String, Indicator> savedIndicatorsByKey) {
+            List<IndicatorDescriptor> indicatorDescriptors,
+            Set<String> measurementKeys,
+            Map<String, Indicator> savedIndicatorsByKey) {
         LinkedHashMap<String, String> canonicalToActual = new LinkedHashMap<>();
         if (indicatorDescriptors != null) {
             for (IndicatorDescriptor descriptor : indicatorDescriptors) {
@@ -618,9 +669,9 @@ public class IngestService {
     }
 
     private String resolveIndicatorLabel(String key,
-                                         String canonicalKey,
-                                         Map<String, IndicatorDescriptor> descriptorsByCanonical,
-                                         Map<String, Indicator> savedIndicatorsByKey) {
+            String canonicalKey,
+            Map<String, IndicatorDescriptor> descriptorsByCanonical,
+            Map<String, Indicator> savedIndicatorsByKey) {
         if (canonicalKey != null && descriptorsByCanonical != null) {
             IndicatorDescriptor descriptor = descriptorsByCanonical.get(canonicalKey);
             if (descriptor != null) {
@@ -742,5 +793,17 @@ public class IngestService {
             }
         }
         return null;
+    }
+
+    // retention policy — cancella record più vecchi di 3 mesi
+    // viene eseguito automaticamente ogni giorno a mezzanotte
+    @Transactional
+    @Scheduled(cron = "0 0 0 * * *")
+    public void deleteOldSamples() {
+        Instant cutoff = Instant.now()
+                .minus(90, java.time.temporal.ChronoUnit.DAYS);
+        sampleRepository.deleteOlderThan(cutoff);
+        System.out.println("IngestService - retention policy eseguita, " +
+                "cancellati record precedenti a: " + cutoff);
     }
 }
