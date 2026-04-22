@@ -10,28 +10,23 @@ import org.springframework.stereotype.Repository;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+
 @Repository
 public interface SampleRepository extends JpaRepository<SampleEntity, Long> {
     Optional<SampleEntity> findByDevEuiAndTimestamp(
-        String devEui,
-        Instant timestamp
-    );
-    @Query(
-        "SELECT s FROM SampleEntity s " + 
-        "WHERE s.deviceId = :deviceId " +
-        "ORDER BY s.timestamp ASC"
-    )
+            String devEui,
+            Instant timestamp);
+
+    @Query("SELECT s FROM SampleEntity s " +
+            "WHERE s.deviceId = :deviceId " +
+            "ORDER BY s.timestamp ASC")
     List<SampleEntity> findByDeviceIdOrderByTimestamp(
-        @Param("deviceId") String deviceId
-    );
+            @Param("deviceId") String deviceId);
 
     @Modifying
-    @Query(
-        "DELETE FROM SampleEntity s " +
-        "WHERE s.timestamp < :cutoff"
-    )
-    void deleteByTimestampBefore(
-        @Param("cutoff") Instant cutoff
-    );
+    @Query("DELETE FROM SampleEntity s " +
+            "WHERE s.timestamp < :cutoff")
+    void deleteOlderThan(
+            @Param("cutoff") Instant cutoff);
 
 }
