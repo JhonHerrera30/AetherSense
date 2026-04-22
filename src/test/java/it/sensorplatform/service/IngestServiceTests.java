@@ -5,7 +5,10 @@ import it.sensorplatform.model.Device;
 import it.sensorplatform.model.Indicator;
 import it.sensorplatform.model.Spec;
 import it.sensorplatform.model.TypeOfDevice;
+import it.sensorplatform.repository.SampleRepository;
+
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.time.Instant;
 import java.util.List;
@@ -17,7 +20,8 @@ class IngestServiceTests {
 
     @Test
     void usesSavedSpecsForMeasurementMetadata() {
-        IngestService ingestService = new IngestService();
+        SampleRepository mockRepo = Mockito.mock(SampleRepository.class);
+        IngestService ingestService = new IngestService(mockRepo);
 
         Spec spec = new Spec();
         spec.setMeasurement("ambient_carbon");
@@ -43,8 +47,7 @@ class IngestServiceTests {
                 Instant.parse("2024-01-01T00:00:00Z"),
                 Map.of("ambient_carbon", 420.5),
                 List.of(specEntry),
-                List.of()
-        );
+                List.of());
 
         List<IngestService.Sample> samples = ingestService.last(device.getMacAddress(), 1);
         assertEquals(1, samples.size());
@@ -61,7 +64,8 @@ class IngestServiceTests {
 
     @Test
     void fallsBackToSpecsWhenPacketDoesNotProvideLabel() {
-        IngestService ingestService = new IngestService();
+        SampleRepository mockRepo = Mockito.mock(SampleRepository.class);
+        IngestService ingestService = new IngestService(mockRepo);
 
         Spec spec = new Spec();
         spec.setMeasurement("voc_index");
@@ -81,8 +85,7 @@ class IngestServiceTests {
                 Instant.parse("2024-02-01T00:00:00Z"),
                 Map.of("voc_index", 123),
                 List.of(),
-                List.of()
-        );
+                List.of());
 
         List<IngestService.Sample> samples = ingestService.last(device.getMacAddress(), 1);
         assertEquals(1, samples.size());
@@ -97,7 +100,8 @@ class IngestServiceTests {
 
     @Test
     void usesSavedIndicatorsForLabels() {
-        IngestService ingestService = new IngestService();
+        SampleRepository mockRepo = Mockito.mock(SampleRepository.class);
+        IngestService ingestService = new IngestService(mockRepo);
 
         Indicator indicator = new Indicator();
         indicator.setKey("sen55_fan_err");
@@ -116,8 +120,7 @@ class IngestServiceTests {
                 Instant.parse("2024-03-01T00:00:00Z"),
                 Map.of("sen55_fan_err", 1),
                 List.of(),
-                List.of()
-        );
+                List.of());
 
         List<IngestService.Sample> samples = ingestService.last(device.getMacAddress(), 1);
         assertEquals(1, samples.size());
@@ -130,7 +133,8 @@ class IngestServiceTests {
 
     @Test
     void buildsMeasurementsAndIndicatorsFromPacketSpec() {
-        IngestService ingestService = new IngestService();
+        SampleRepository mockRepo = Mockito.mock(SampleRepository.class);
+        IngestService ingestService = new IngestService(mockRepo);
 
         PacketDTO.SpecEntry specEntry = new PacketDTO.SpecEntry();
         specEntry.setKey("SEN55-PM2.5-ug/m3");
@@ -144,11 +148,9 @@ class IngestServiceTests {
                 Instant.parse("2024-04-01T00:00:00Z"),
                 Map.of(
                         "SEN55-PM2.5-ug/m3", 12.3,
-                        "SEN55-FanError-none", 1
-                ),
+                        "SEN55-FanError-none", 1),
                 List.of(specEntry),
-                List.of("SEN55-FanError-none")
-        );
+                List.of("SEN55-FanError-none"));
 
         List<IngestService.Sample> samples = ingestService.last("AA:BB:CC:DD:EE:FF", 1);
         assertEquals(1, samples.size());
@@ -171,7 +173,8 @@ class IngestServiceTests {
 
     @Test
     void mergesIndicatorKeysWithDifferentCasing() {
-        IngestService ingestService = new IngestService();
+        SampleRepository mockRepo = Mockito.mock(SampleRepository.class);
+        IngestService ingestService = new IngestService(mockRepo);
 
         Indicator indicator = new Indicator();
         indicator.setKey("sen55-fanerror-none");
@@ -190,8 +193,7 @@ class IngestServiceTests {
                 Instant.parse("2024-05-01T00:00:00Z"),
                 Map.of("SEN55-FanError-none", 1),
                 List.of(),
-                List.of()
-        );
+                List.of());
 
         List<IngestService.Sample> samples = ingestService.last(device.getMacAddress(), 1);
         assertEquals(1, samples.size());
@@ -206,4 +208,3 @@ class IngestServiceTests {
         assertEquals(1, indicatorSample.value());
     }
 }
-
