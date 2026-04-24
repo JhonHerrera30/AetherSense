@@ -24,6 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import it.sensorplatform.model.MeasurementEntity;
 import it.sensorplatform.model.SampleEntity;
 import it.sensorplatform.repository.SampleRepository;
+import it.sensorplatform.util.SignalDictionary;
+
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -399,6 +401,9 @@ public class IngestService {
                     continue;
                 }
                 if (canonicalIndicatorHints.contains(canonical)) {
+                    continue;
+                }
+                if(SignalDictionary.isIndicator(key)){
                     continue;
                 }
                 keys.add(key);
