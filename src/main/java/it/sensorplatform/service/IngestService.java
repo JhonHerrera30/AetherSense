@@ -381,7 +381,12 @@ public class IngestService {
                 if (spec == null) {
                     continue;
                 }
-                String key = sanitize(spec.getMeasurement());
+                String key;
+                if (spec.getPayloadKey() != null) {
+                    key = sanitize(spec.getPayloadKey());
+                } else {
+                    key = sanitize(spec.getMeasurement());
+                }
                 if (key != null) {
                     keys.add(key);
                 }

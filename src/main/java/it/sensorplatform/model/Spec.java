@@ -19,20 +19,21 @@ public class Spec {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	
-	//@NotBlank
+
+	// @NotBlank
 	private String measurement;
-	
-	//@NotBlank
+
+	// @NotBlank
 	private String unitOfMeasurement;
-	
-	//@NotBlank
+
+	// @NotBlank
 	private String component;
 
 	private Double min;
 
 	private Double max;
 
+	private String payloadKey;
 
 	@Override
 	public int hashCode() {
@@ -50,8 +51,5 @@ public class Spec {
 		Spec other = (Spec) obj;
 		return Objects.equals(component, other.component) && Objects.equals(measurement, other.measurement);
 	}
-	
-	
-	
-}
 
+}
