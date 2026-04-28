@@ -44,11 +44,12 @@ public class DeviceTelemetryController {
     private final DeviceService deviceService;
     private final CredentialsService credentialsService;
     private final IngestService ingestService;
-    SampleRepository sampleRepository;
+    private final SampleRepository sampleRepository;
 
     public DeviceTelemetryController(DeviceService deviceService,
             CredentialsService credentialsService,
-            IngestService ingestService) {
+            IngestService ingestService,
+            SampleRepository sampleRepository) {
         this.deviceService = deviceService;
         this.credentialsService = credentialsService;
         this.ingestService = ingestService;
