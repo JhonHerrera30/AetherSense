@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 import it.sensorplatform.service.IngestService;
 
 public record TelemetrySampleDTO(Instant timestamp,
-                                 List<MeasurementDTO> measurements,
-                                 List<IndicatorDTO> indicators,
-                                 Map<String, Object> info) {
+        List<MeasurementDTO> measurements,
+        List<IndicatorDTO> indicators,
+        Map<String, Object> info) {
 
     public static TelemetrySampleDTO fromSample(IngestService.Sample sample) {
         if (sample == null) {
@@ -26,38 +26,47 @@ public record TelemetrySampleDTO(Instant timestamp,
     }
 
     public static TelemetrySampleDTO fromEntity(
-        it.sensorplatform.model.SampleEntity entity) {
-    if (entity == null) return null;
-    
-    List<MeasurementDTO> measurements = entity.getMeasurements().stream()
-        .filter(m -> m.getType() == 
-            it.sensorplatform.model.MeasurementEntity.MeasurementType.MEASUREMENT)
-        .map(m -> new MeasurementDTO(
-            m.getKey(), m.getLabel(), m.getDisplayName(),
-            m.getComponent(), m.getUnit(),
-            m.getMin(), m.getMax(), m.getDoubleValue()))
-        .collect(java.util.stream.Collectors.toList());
-    
-    List<IndicatorDTO> indicators = entity.getMeasurements().stream()
-        .filter(m -> m.getType() == 
-            it.sensorplatform.model.MeasurementEntity.MeasurementType.INDICATOR)
-        .map(m -> new IndicatorDTO(
-            m.getKey(), m.getLabel(), m.getIntValue()))
-        .collect(java.util.stream.Collectors.toList());
-    
-    return new TelemetrySampleDTO(
-        entity.getTimestamp(), measurements, indicators, 
-        java.util.Map.of());
+            it.sensorplatform.model.SampleEntity entity) {
+        if (entity == null)
+            return null;
+
+        List<MeasurementDTO> measurements = entity.getMeasurements().stream()
+                .filter(m -> m.getType() == it.sensorplatform.model.MeasurementEntity.MeasurementType.MEASUREMENT)
+                .map(m -> {
+                    it.sensorplatform.util.SignalDictionary.ChartConfig config = it.sensorplatform.util.SignalDictionary
+                            .getConfig(
+                                    m.getKey(), m.getMin(), m.getMax());
+                    return new MeasurementDTO(
+                            m.getKey(),
+                            m.getLabel(),
+                            config.displayName(),
+                            m.getComponent(),
+                            config.unit(),
+                            config.defaultMin(),
+                            config.defaultMax(),
+                            m.getDoubleValue());
+                })
+                .collect(java.util.stream.Collectors.toList());
+
+        List<IndicatorDTO> indicators = entity.getMeasurements().stream()
+                .filter(m -> m.getType() == it.sensorplatform.model.MeasurementEntity.MeasurementType.INDICATOR)
+                .map(m -> new IndicatorDTO(
+                        m.getKey(), m.getLabel(), m.getIntValue()))
+                .collect(java.util.stream.Collectors.toList());
+
+        return new TelemetrySampleDTO(
+                entity.getTimestamp(), measurements, indicators,
+                java.util.Map.of());
     }
 
     public record MeasurementDTO(String key,
-                                 String label,
-                                 String displayName,
-                                 String component,
-                                 String unit,
-                                 Double min,
-                                 Double max,
-                                 Double value) {
+            String label,
+            String displayName,
+            String component,
+            String unit,
+            Double min,
+            Double max,
+            Double value) {
 
         private static MeasurementDTO fromMeasurement(IngestService.MeasurementSample measurement) {
             return new MeasurementDTO(
@@ -68,8 +77,7 @@ public record TelemetrySampleDTO(Instant timestamp,
                     measurement.unit(),
                     measurement.min(),
                     measurement.max(),
-                    measurement.value()
-            );
+                    measurement.value());
         }
     }
 
