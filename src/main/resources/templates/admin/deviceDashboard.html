@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
 <head>
         <title>Device dashboard</title>
@@ -15,22 +14,27 @@
         <header class="navbar">
                 <div class="nav-left">
                         <h1>
-                                <a th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link" th:text="${project.name}">Project</a>
+                                <a th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link"
+                                        th:text="${project.name}">Project</a>
                         </h1>
                 </div>
                 <div class="nav-right">
                         <div sec:authorize="isAuthenticated()" class="auth-user dropdown">
-                                <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true" aria-expanded="false">
+                                <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true"
+                                        aria-expanded="false">
                                         Hi, <strong th:text="${user.visibleUsername}">utente</strong>
-                                        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16"
-                                                fill="white">
+                                        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24" width="16" height="16" fill="white">
                                                 <path d="M7 10l5 5 5-5z" />
                                         </svg>
                                 </button>
-                                <div class="dropdown-menu" id="userDropdownMenu" role="menu" aria-labelledby="userDropdown">
-                                        <a th:href="@{/personal-area}" class="dropdown-link" role="menuitem">Personal Area</a>
+                                <div class="dropdown-menu" id="userDropdownMenu" role="menu"
+                                        aria-labelledby="userDropdown">
+                                        <a th:href="@{/personal-area}" class="dropdown-link" role="menuitem">Personal
+                                                Area</a>
                                         <form th:action="@{/logout}" method="post" th:csrf="true">
-                                                <button type="submit" class="dropdown-logout" role="menuitem">Logout</button>
+                                                <button type="submit" class="dropdown-logout"
+                                                        role="menuitem">Logout</button>
                                         </form>
                                 </div>
                         </div>
@@ -49,17 +53,24 @@
                         <div>
                                 <h2 th:text="${device.name}">Device name</h2>
                                 <p class="device-meta">
-                                        <span th:if="${device.macAddress != null}">MAC: <strong th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">--</strong></span>
-                                        <span th:if="${device.macAddress == null}">DevEUI: <strong th:text="${device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui) : '--'}">--</strong></span>
-                                        <span th:if="${device.tod != null}">Type: <strong th:text="${device.tod.name}">Type</strong></span>
-                                        <span>Status: <strong th:text="${device.activated} ? 'activated' : 'deactivated'">--</strong></span>
+                                        <span th:if="${device.macAddress != null}">MAC: <strong
+                                                        th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">--</strong></span>
+                                        <span th:if="${device.macAddress == null}">DevEUI: <strong
+                                                        th:text="${device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui) : '--'}">--</strong></span>
+                                        <span th:if="${device.tod != null}">Type: <strong
+                                                        th:text="${device.tod.name}">Type</strong></span>
+                                        <span>Status: <strong
+                                                        th:text="${device.activated} ? 'activated' : 'deactivated'">--</strong></span>
                                 </p>
                         </div>
                         <div class="device-actions">
                                 <a th:href="@{'/admin/group/' + ${project.id}}" class="back-to-map">Back to map</a>
-                                <div class="device-location" th:if="${device.latitude != null && device.longitude != null}">
-                                        <span>Lat: <strong th:text="${#numbers.formatDecimal(device.latitude, 1, 6)}">0</strong></span>
-                                        <span>Lng: <strong th:text="${#numbers.formatDecimal(device.longitude, 1, 6)}">0</strong></span>
+                                <div class="device-location"
+                                        th:if="${device.latitude != null && device.longitude != null}">
+                                        <span>Lat: <strong
+                                                        th:text="${#numbers.formatDecimal(device.latitude, 1, 6)}">0</strong></span>
+                                        <span>Lng: <strong
+                                                        th:text="${#numbers.formatDecimal(device.longitude, 1, 6)}">0</strong></span>
                                 </div>
                         </div>
                 </section>
@@ -68,10 +79,12 @@
                         <div class="panel metrics-panel">
                                 <div class="panel-header">
                                         <h3>Latest measurements</h3>
-                                        <span class="panel-subtitle">Last update: <span id="last-update">--</span></span>
+                                        <span class="panel-subtitle">Last update: <span
+                                                        id="last-update">--</span></span>
                                 </div>
                                 <div id="metrics-grid" class="metrics-grid"></div>
-                                <p id="metrics-empty" class="empty-state">No measurement specs available for this device.</p>
+                                <p id="metrics-empty" class="empty-state">No measurement specs available for this
+                                        device.</p>
                         </div>
 
                         <div class="panel chart-panel">
@@ -98,7 +111,8 @@
                         </div>
                         <dl id="info-grid" class="info-grid"></dl>
                         <div class="gsheet-link-wrapper" th:if="${device.gsheet != null}">
-                                <a class="gsheet-link-button" th:href="${device.gsheet}" target="_blank" rel="noopener noreferrer">View Gsheet</a>
+                                <a class="gsheet-link-button" th:href="${device.gsheet}" target="_blank"
+                                        rel="noopener noreferrer">View Gsheet</a>
                         </div>
                         <p id="info-empty" class="empty-state">No additional information available.</p>
                 </section>
@@ -430,15 +444,18 @@
                                 const title = getDescriptorTitle(descriptor);
                                 const unit = descriptor.unit ? descriptor.unit : '';
                                 card.innerHTML = `
-                                        <div class="metric-heading">
-                                                <span class="metric-title">${title}</span>
-                                                <span class="metric-subtitle" data-component></span>
+                                <div class="metric-heading">
+                                        <span class="metric-title">${title}</span>
+                                        <span class="metric-subtitle" data-component></span>
+                                </div>
+                                <div class="gauge-wrapper">
+                                        <canvas id="gauge-${descriptor.key}" class="gauge-canvas"></canvas>
+                                        <div class="gauge-value-overlay">
+                                        <span class="metric-value" data-value>--</span>
+                                        <span class="metric-unit" data-unit>${unit}</span>
                                         </div>
-                                        <div class="metric-reading">
-                                                <span class="metric-value" data-value>--</span>
-                                                <span class="metric-unit" data-unit>${unit}</span>
-                                        </div>
-                                        <div class="metric-range" data-range>${formatRange(descriptor.min, descriptor.max, descriptor.unit)}</div>
+                                </div>
+                                <div class="metric-range" data-range>${formatRange(descriptor.min, descriptor.max, descriptor.unit)}</div>
                                 `;
                                 const subtitleEl = card.querySelector('[data-component]');
                                 if (subtitleEl) {
@@ -448,6 +465,47 @@
                                 container.appendChild(card);
                         });
                         state.specCardsRendered = true;
+                }
+
+                function renderGauge(canvasId, value, min, max, unit, color) {
+                        const canvas = document.getElementById(canvasId);
+                        if (!canvas) return;
+                        const ctx = canvas.getContext('2d');
+
+                        // calcola percentuale nel range
+                        const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
+                        const filled = pct * 180; // 180 gradi = semicerchio
+
+                        // colore basato sulla percentuale
+                        const hue = (1 - pct) * 120; // verde→giallo→rosso
+                        const arcColor = `hsl(${hue}, 80%, 55%)`;
+
+                        if (window._gaugeCharts && window._gaugeCharts[canvasId]) {
+                                window._gaugeCharts[canvasId].destroy();
+                        }
+                        if (!window._gaugeCharts) window._gaugeCharts = {};
+
+                        window._gaugeCharts[canvasId] = new Chart(ctx, {
+                                type: 'doughnut',
+                                data: {
+                                        datasets: [{
+                                                data: [pct, 1 - pct],
+                                                backgroundColor: [arcColor, 'rgba(255,255,255,0.08)'],
+                                                borderWidth: 0,
+                                                circumference: 180,
+                                                rotation: 270
+                                        }]
+                                },
+                                options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        cutout: '75%',
+                                        plugins: {
+                                                legend: { display: false },
+                                                tooltip: { enabled: false }
+                                        }
+                                }
+                        });
                 }
 
                 function updateFromSample(sample) {
@@ -480,6 +538,14 @@
                                         return;
                                 }
                                 valueEl.textContent = formatValue(measurement.value);
+                                // aggiorna gauge
+                                const min = measurement.min ?? descriptor.min ?? 0;
+                                const max = measurement.max ?? descriptor.max ?? 100;
+                                renderGauge(
+                                        `gauge-${descriptor.key}`,
+                                        toNumber(measurement.value) ?? 0,
+                                        min, max, measurement.unit
+                                );
                                 if (unitEl) {
                                         unitEl.textContent = measurement.unit || descriptor.unit || '';
                                 }
@@ -920,4 +986,3 @@
 </body>
 
 </html>
-
