@@ -467,45 +467,43 @@
                         state.specCardsRendered = true;
                 }
 
-                function renderGauge(canvasId, value, min, max, unit, color) {
+                function renderGauge(canvasId, value, min, max) {
                         const canvas = document.getElementById(canvasId);
                         if (!canvas) return;
+
+                        const w = canvas.offsetWidth || 200;
+                        const h = 80;
+                        canvas.width = w;
+                        canvas.height = h;
+
                         const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, w, h);
 
-                        // calcola percentuale nel range
+                        const cx = w / 2;
+                        const cy = h - 10;
+                        const r = Math.min(w / 2, h) - 8;
+
                         const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
-                        const filled = pct * 180; // 180 gradi = semicerchio
+                        const startAngle = Math.PI;
+                        const endAngle = 2 * Math.PI;
+                        const valueAngle = startAngle + pct * Math.PI;
 
-                        // colore basato sulla percentuale
-                        const hue = (1 - pct) * 120; // verde→giallo→rosso
-                        const arcColor = `hsl(${hue}, 80%, 55%)`;
+                        // sfondo arco
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, r, startAngle, endAngle);
+                        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                        ctx.lineWidth = 10;
+                        ctx.lineCap = 'round';
+                        ctx.stroke();
 
-                        if (window._gaugeCharts && window._gaugeCharts[canvasId]) {
-                                window._gaugeCharts[canvasId].destroy();
-                        }
-                        if (!window._gaugeCharts) window._gaugeCharts = {};
-
-                        window._gaugeCharts[canvasId] = new Chart(ctx, {
-                                type: 'doughnut',
-                                data: {
-                                        datasets: [{
-                                                data: [pct, 1 - pct],
-                                                backgroundColor: [arcColor, 'rgba(255,255,255,0.08)'],
-                                                borderWidth: 0,
-                                                circumference: 180,
-                                                rotation: 270
-                                        }]
-                                },
-                                options: {
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        cutout: '75%',
-                                        plugins: {
-                                                legend: { display: false },
-                                                tooltip: { enabled: false }
-                                        }
-                                }
-                        });
+                        // arco valore
+                        const hue = (1 - pct) * 120;
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, r, startAngle, valueAngle);
+                        ctx.strokeStyle = `hsl(${hue}, 80%, 55%)`;
+                        ctx.lineWidth = 10;
+                        ctx.lineCap = 'round';
+                        ctx.stroke();
                 }
 
                 function updateFromSample(sample) {
