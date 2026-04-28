@@ -27,10 +27,13 @@ import it.sensorplatform.dto.TelemetrySampleDTO;
 import it.sensorplatform.model.Credentials;
 import it.sensorplatform.model.Device;
 import it.sensorplatform.model.Project;
+import it.sensorplatform.model.SampleEntity;
+import it.sensorplatform.model.MeasurementEntity;
 import it.sensorplatform.service.CredentialsService;
 import it.sensorplatform.service.DeviceService;
 import it.sensorplatform.service.IngestService;
 import it.sensorplatform.util.MacAddressUtils;
+import it.sensorplatform.repository.SampleRepository;
 
 @RestController
 @RequestMapping("/api/admin/devices")
@@ -41,13 +44,15 @@ public class DeviceTelemetryController {
     private final DeviceService deviceService;
     private final CredentialsService credentialsService;
     private final IngestService ingestService;
+    SampleRepository sampleRepository;
 
     public DeviceTelemetryController(DeviceService deviceService,
-                                     CredentialsService credentialsService,
-                                     IngestService ingestService) {
+            CredentialsService credentialsService,
+            IngestService ingestService) {
         this.deviceService = deviceService;
         this.credentialsService = credentialsService;
         this.ingestService = ingestService;
+        this.sampleRepository = sampleRepository;
     }
 
     @GetMapping("/{macAddress}/specs")
@@ -61,13 +66,16 @@ public class DeviceTelemetryController {
         if (telemetryKey == null) {
             return ResponseEntity.ok(Collections.emptyList());
         }
-        List<IngestService.Sample> samples = ingestService.last(telemetryKey, 1);
+        List<SampleEntity> samples = sampleRepository.findByDeviceIdOrderByTimestamp(telemetryKey);
         if (samples.isEmpty()) {
             return ResponseEntity.ok(Collections.emptyList());
         }
-        IngestService.Sample sample = samples.get(samples.size() - 1);
-        List<SpecDTO> specs = sample.measurements().stream()
-                .map(SpecDTO::fromMeasurement)
+        SampleEntity sample = samples.get(samples.size() - 1);
+        List<SpecDTO> specs = sample.getMeasurements().stream()
+                .filter(m -> m.getType() == MeasurementEntity.MeasurementType.MEASUREMENT)
+                .map(m -> new SpecDTO(m.getKey(), m.getLabel(), m.getDisplayName(),
+                        m.getComponent(), m.getUnit(),
+                        m.getMin(), m.getMax()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(specs);
     }
@@ -83,17 +91,18 @@ public class DeviceTelemetryController {
         if (telemetryKey == null) {
             return ResponseEntity.noContent().build();
         }
-        List<IngestService.Sample> samples = ingestService.last(telemetryKey, 1);
-        if (samples.isEmpty()) {
+
+        List<SampleEntity> all = sampleRepository.findByDeviceIdOrderByTimestamp(telemetryKey);
+        if (all.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        TelemetrySampleDTO dto = TelemetrySampleDTO.fromSample(samples.get(samples.size() - 1));
+        TelemetrySampleDTO dto = TelemetrySampleDTO.fromEntity(all.get(all.size() - 1));
         return ResponseEntity.ok(dto);
     }
 
     @GetMapping("/{macAddress}/telemetry/history")
     public ResponseEntity<List<TelemetrySampleDTO>> getHistory(@PathVariable("macAddress") String deviceKey,
-                                                               @RequestParam(value = "limit", defaultValue = "50") int limit) {
+            @RequestParam(value = "limit", defaultValue = "50") int limit) {
         Optional<Device> deviceOpt = resolveAuthorizedDevice(deviceKey);
         if (deviceOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -104,8 +113,10 @@ public class DeviceTelemetryController {
             return ResponseEntity.ok(Collections.emptyList());
         }
         int safeLimit = Math.max(1, Math.min(limit, MAX_HISTORY));
-        List<TelemetrySampleDTO> history = ingestService.last(telemetryKey, safeLimit).stream()
-                .map(TelemetrySampleDTO::fromSample)
+        List<SampleEntity> all = sampleRepository.findByDeviceIdOrderByTimestamp(telemetryKey);
+        List<SampleEntity> limited = all.subList(Math.max(0, all.size() - safeLimit), all.size());
+        List<TelemetrySampleDTO> history = limited.stream()
+                .map(TelemetrySampleDTO::fromEntity)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(history);
     }
@@ -162,4 +173,3 @@ public class DeviceTelemetryController {
                 || VOLCANO_ADMIN_ROLE.equals(role);
     }
 }
-

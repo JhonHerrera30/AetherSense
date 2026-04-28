@@ -25,6 +25,31 @@ public record TelemetrySampleDTO(Instant timestamp,
         return new TelemetrySampleDTO(sample.ts(), measurementDTOs, indicatorDTOs, sample.info());
     }
 
+    public static TelemetrySampleDTO fromEntity(
+        it.sensorplatform.model.SampleEntity entity) {
+    if (entity == null) return null;
+    
+    List<MeasurementDTO> measurements = entity.getMeasurements().stream()
+        .filter(m -> m.getType() == 
+            it.sensorplatform.model.MeasurementEntity.MeasurementType.MEASUREMENT)
+        .map(m -> new MeasurementDTO(
+            m.getKey(), m.getLabel(), m.getDisplayName(),
+            m.getComponent(), m.getUnit(),
+            m.getMin(), m.getMax(), m.getDoubleValue()))
+        .collect(java.util.stream.Collectors.toList());
+    
+    List<IndicatorDTO> indicators = entity.getMeasurements().stream()
+        .filter(m -> m.getType() == 
+            it.sensorplatform.model.MeasurementEntity.MeasurementType.INDICATOR)
+        .map(m -> new IndicatorDTO(
+            m.getKey(), m.getLabel(), m.getIntValue()))
+        .collect(java.util.stream.Collectors.toList());
+    
+    return new TelemetrySampleDTO(
+        entity.getTimestamp(), measurements, indicators, 
+        java.util.Map.of());
+    }
+
     public record MeasurementDTO(String key,
                                  String label,
                                  String displayName,

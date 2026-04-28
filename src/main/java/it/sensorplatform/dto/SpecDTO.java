@@ -24,4 +24,12 @@ public record SpecDTO(String key,
                 measurement.max()
         );
     }
+    public static SpecDTO fromMeasurementEntity(
+        it.sensorplatform.model.MeasurementEntity m) {
+    if (m == null) return new SpecDTO(null,null,null,null,null,null,null);
+    return new SpecDTO(
+        m.getKey(), m.getLabel(), m.getDisplayName(),
+        m.getComponent(), m.getUnit(),
+        m.getMin(), m.getMax());
+    }
 }
