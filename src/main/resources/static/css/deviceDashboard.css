@@ -503,26 +503,26 @@
 .gauge-wrapper {
         position: relative;
         width: 100%;
-        height: 100px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        height: 70px;
+        margin: 0.25rem 0;
 }
 
 .gauge-canvas {
         width: 100% !important;
-        height: 200px !important;
+        height: 70px !important;
+        display: block;
 }
 
 .gauge-value-overlay {
         position: absolute;
-        bottom: 8px;
+        bottom: 2px;
         left: 50%;
         transform: translateX(-50%);
         display: flex;
         align-items: baseline;
         gap: 0.3rem;
         white-space: nowrap;
+        pointer-events: none;
 }
 
 @media (max-width: 768px) {

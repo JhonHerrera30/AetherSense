@@ -472,38 +472,51 @@
                         if (!canvas) return;
 
                         const w = canvas.offsetWidth || 200;
-                        const h = 80;
+                        const h = 70;
                         canvas.width = w;
                         canvas.height = h;
 
-                        const ctx = canvas.getContext('2d');
-                        ctx.clearRect(0, 0, w, h);
-
-                        const cx = w / 2;
-                        const cy = h - 10;
-                        const r = Math.min(w / 2, h) - 8;
-
                         const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
-                        const startAngle = Math.PI;
-                        const endAngle = 2 * Math.PI;
-                        const valueAngle = startAngle + pct * Math.PI;
+                        const duration = 800;
+                        const start = performance.now();
 
-                        // sfondo arco
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, r, startAngle, endAngle);
-                        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-                        ctx.lineWidth = 10;
-                        ctx.lineCap = 'round';
-                        ctx.stroke();
+                        function animate(now) {
+                                const elapsed = now - start;
+                                const progress = Math.min(elapsed / duration, 1);
+                                // easing ease-out
+                                const ease = 1 - Math.pow(1 - progress, 3);
+                                const currentPct = ease * pct;
 
-                        // arco valore
-                        const hue = (1 - pct) * 120;
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, r, startAngle, valueAngle);
-                        ctx.strokeStyle = `hsl(${hue}, 80%, 55%)`;
-                        ctx.lineWidth = 10;
-                        ctx.lineCap = 'round';
-                        ctx.stroke();
+                                const ctx = canvas.getContext('2d');
+                                ctx.clearRect(0, 0, w, h);
+
+                                const cx = w / 2;
+                                const cy = h - 4;
+                                const r = Math.min(w / 2 - 12, h - 8);
+
+                                // sfondo arco
+                                ctx.beginPath();
+                                ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI);
+                                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+                                ctx.lineWidth = 8;
+                                ctx.lineCap = 'round';
+                                ctx.stroke();
+
+                                // arco valore
+                                const hue = (1 - currentPct) * 120;
+                                ctx.beginPath();
+                                ctx.arc(cx, cy, r, Math.PI, Math.PI + currentPct * Math.PI);
+                                ctx.strokeStyle = `hsl(${hue}, 80%, 55%)`;
+                                ctx.lineWidth = 8;
+                                ctx.lineCap = 'round';
+                                ctx.stroke();
+
+                                if (progress < 1) {
+                                        requestAnimationFrame(animate);
+                                }
+                        }
+
+                        requestAnimationFrame(animate);
                 }
 
                 function updateFromSample(sample) {
