@@ -1,42 +1,85 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pagina non trovata</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <title>AetherSense – Error</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Roboto', sans-serif;
             background: #0d1b2a;
-            color: #ffffff;
-            padding: 2rem;
+            color: #dde1f2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-
         header {
+            background: #1a2a3a;
+            padding: 1rem 2rem;
+            border-bottom: 2px solid #2d6cdf;
+        }
+        header h1 {
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .error-code {
+            font-size: 6rem;
+            font-weight: 700;
+            color: #2d6cdf;
+            line-height: 1;
+            margin-bottom: 1rem;
+        }
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: #ffffff;
+            margin-bottom: 0.75rem;
+        }
+        .error-message {
+            font-size: 1rem;
+            color: #a0aec0;
             margin-bottom: 2rem;
+            max-width: 400px;
         }
-
-        h1 {
-            color: #e74c3c;
+        .back-link {
+            display: inline-block;
+            background: #2d6cdf;
+            color: #ffffff;
+            padding: 0.75rem 2rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
         }
-
-        a {
-            color: #3498db;
+        .back-link:hover {
+            background: #1a4fa0;
         }
     </style>
 </head>
-
 <body>
-    <header id="navbar">
-        <div class="nav-left">
-            <h1>AetherSense</h1>
-        </div>
-
+    <header>
+        <h1>AetherSense</h1>
     </header>
-    <h1>Non abbiamo potuto trovare la pagina</h1>
-    <p>Sembra che tu abbia cliccato un link o eseguito un adress sbagliato</p> <a href="/">Torna al menu principale</a>
+    <main>
+        <div class="error-code">404</div>
+        <div class="error-title">Page not found</div>
+        <div class="error-message">
+            The page you are looking for does not exist or you may not have permission to view it.
+        </div>
+        <a href="/" class="back-link">Back to home</a>
+    </main>
 </body>
-
 </html>
