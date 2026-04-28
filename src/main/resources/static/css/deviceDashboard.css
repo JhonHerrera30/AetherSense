@@ -374,6 +374,11 @@
         padding: 0.35rem 0.75rem;
 }
 
+.history-controls select option {
+        background: #1B263B;
+        color: #ffffff;
+}
+
 .info-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -519,4 +524,3 @@
                 align-items: flex-start;
         }
 }
-
