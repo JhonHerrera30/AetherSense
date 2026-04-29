@@ -146,9 +146,6 @@
                 const state = {
                         specDescriptors: [],
                         specCardsRendered: false,
-                        chartCanvasesRendered: false,
-                        charts: new Map(),
-                        historyLimit: 60,
                         lastSamples: [],
                         latestTimestamp: null
                 };
@@ -163,11 +160,6 @@
                 document.addEventListener('DOMContentLoaded', () => {
                         setupDropdown();
                         initializeDashboard().catch(error => showError(error.message));
-                        const historySelect = document.getElementById('history-window');
-                        historySelect.addEventListener('change', async (event) => {
-                                state.historyLimit = parseInt(event.target.value, 10);
-                                await loadHistory();
-                        });
                         setInterval(refreshLatestSample, 15000);
                 });
 
@@ -210,23 +202,16 @@
                         state.specDescriptors = descriptors;
                         if (changed) {
                                 state.specCardsRendered = false;
-                                state.chartCanvasesRendered = false;
-                                resetCharts();
-                                clearTrendCanvases();
                                 if (state.specDescriptors.length) {
                                         renderMetricCards();
-                                        ensureTrendCanvases();
                                         const latestSample = state.lastSamples[state.lastSamples.length - 1];
                                         if (latestSample) {
                                                 updateFromSample(latestSample);
-                                                buildOrUpdateCharts(state.lastSamples);
                                         } else {
                                                 updateMetricCards(new Map());
-                                                resetCharts();
                                         }
                                 } else {
                                         document.getElementById('metrics-grid').innerHTML = '';
-                                        resetCharts();
                                 }
                                 const metricsEmpty = document.getElementById('metrics-empty');
                                 if (metricsEmpty) {
@@ -237,7 +222,7 @@
 
                 async function loadHistory() {
                         clearError();
-                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_KEY)}/telemetry/history?limit=${state.historyLimit}`);
+                        const response = await fetch(`/api/admin/devices/${encodeURIComponent(DEVICE_KEY)}/telemetry/history?limit=60`);
                         if (response.status === 403) {
                                 throw new Error('Non sei autorizzato a visualizzare questo dispositivo.');
                         }
@@ -249,31 +234,23 @@
 
                         const metricsGrid = document.getElementById('metrics-grid');
                         const metricsEmpty = document.getElementById('metrics-empty');
-                        const chartEmpty = document.getElementById('chart-empty');
 
                         if (!state.specDescriptors.length && state.lastSamples.length) {
                                 const fallback = buildDescriptorsFromSample(state.lastSamples[state.lastSamples.length - 1]);
                                 if (fallback.length) {
                                         state.specDescriptors = fallback;
                                         state.specCardsRendered = false;
-                                        state.chartCanvasesRendered = false;
-                                        resetCharts();
-                                        clearTrendCanvases();
                                 }
                         }
 
                         if (!state.specDescriptors.length) {
                                 metricsGrid.innerHTML = '';
                                 metricsEmpty.hidden = false;
-                                resetCharts();
-                                clearTrendCanvases();
                         } else if (!state.specCardsRendered) {
                                 renderMetricCards();
                                 metricsEmpty.hidden = true;
-                                ensureTrendCanvases();
                         } else {
                                 metricsEmpty.hidden = true;
-                                ensureTrendCanvases();
                         }
 
                         if (!state.lastSamples.length) {
@@ -282,7 +259,6 @@
                                 } else {
                                         metricsGrid.innerHTML = '';
                                 }
-                                resetCharts();
                                 updateStatusFlags([]);
                                 updateInfoPanel(null);
                                 state.latestTimestamp = null;
@@ -292,7 +268,6 @@
 
                         const latestSample = state.lastSamples[state.lastSamples.length - 1];
                         updateFromSample(latestSample);
-                        buildOrUpdateCharts(state.lastSamples);
                 }
 
                 async function refreshLatestSample() {
@@ -316,11 +291,7 @@
                                 return;
                         }
                         state.lastSamples.push(sample);
-                        if (state.lastSamples.length > state.historyLimit) {
-                                state.lastSamples.splice(0, state.lastSamples.length - state.historyLimit);
-                        }
                         updateFromSample(sample);
-                        buildOrUpdateCharts(state.lastSamples);
                 }
 
                 function getDescriptorComponent(descriptor) {
@@ -748,168 +719,6 @@
                                 `;
                                 container.appendChild(flag);
                         });
-                }
-
-                function ensureTrendCanvases() {
-                        const container = document.getElementById('trend-grid');
-                        if (!container) {
-                                return;
-                        }
-                        if (!state.specDescriptors.length) {
-                                clearTrendCanvases();
-                                return;
-                        }
-                        if (state.chartCanvasesRendered) {
-                                return;
-                        }
-                        container.innerHTML = '';
-                        state.specDescriptors.forEach(descriptor => {
-                                const canvas = document.createElement('canvas');
-                                canvas.dataset.specKey = descriptor.key;
-                                canvas.setAttribute('role', 'img');
-                                canvas.setAttribute('aria-label', `${descriptor.displayName} trend`);
-                                canvas.hidden = true;
-                                container.appendChild(canvas);
-                        });
-                        state.chartCanvasesRendered = true;
-                }
-
-                function clearTrendCanvases() {
-                        const container = document.getElementById('trend-grid');
-                        if (container) {
-                                container.innerHTML = '';
-                        }
-                        state.chartCanvasesRendered = false;
-                }
-
-                function buildOrUpdateCharts(samples) {
-                        const chartEmpty = document.getElementById('chart-empty');
-                        if (!samples.length || !state.specDescriptors.length) {
-                                resetCharts();
-                                if (chartEmpty) {
-                                        chartEmpty.hidden = false;
-                                }
-                                return;
-                        }
-
-                        ensureTrendCanvases();
-
-                        const labels = samples.map(sample => formatTimestamp(sample.timestamp, true));
-                        const datasetsByKey = buildDatasetsByKey(samples);
-                        const descriptorKeys = new Set(state.specDescriptors.map(descriptor => descriptor.key));
-                        let hasAnyChart = false;
-
-                        Array.from(state.charts.keys()).forEach(key => {
-                                if (!descriptorKeys.has(key) || !datasetsByKey.has(key)) {
-                                        const chart = state.charts.get(key);
-                                        if (chart) {
-                                                chart.destroy();
-                                        }
-                                        state.charts.delete(key);
-                                }
-                        });
-
-                        state.specDescriptors.forEach(descriptor => {
-                                const dataset = datasetsByKey.get(descriptor.key);
-                                const canvas = document.querySelector(`canvas[data-spec-key="${descriptor.key}"]`);
-                                if (!canvas) {
-                                        return;
-                                }
-                                if (!dataset) {
-                                        canvas.hidden = true;
-                                        return;
-                                }
-                                canvas.hidden = false;
-                                hasAnyChart = true;
-                                let chart = state.charts.get(descriptor.key);
-                                if (!chart) {
-                                        const ctx = canvas.getContext('2d');
-                                        chart = new Chart(ctx, {
-                                                type: 'line',
-                                                data: { labels, datasets: [dataset] },
-                                                options: {
-                                                        responsive: true,
-                                                        maintainAspectRatio: false,
-                                                        layout: {
-                                                                padding: {
-                                                                        bottom: 16
-                                                                }
-                                                        },
-                                                        interaction: { mode: 'index', intersect: false },
-                                                        plugins: {
-                                                                legend: { labels: { color: '#ffffff' } },
-                                                                tooltip: {
-                                                                        callbacks: {
-                                                                                label: (context) => `${context.dataset.label}: ${formatValue(context.parsed.y)}`
-                                                                        }
-                                                                }
-                                                        },
-                                                        scales: {
-                                                                x: {
-                                                                        ticks: {
-                                                                                color: '#dde1f2',
-                                                                                padding: 8
-                                                                        },
-                                                                        grid: { color: 'rgba(255,255,255,0.1)' }
-                                                                },
-                                                                y: { ticks: { color: '#dde1f2' }, grid: { color: 'rgba(255,255,255,0.1)' } }
-                                                        }
-                                                }
-                                        });
-                                        state.charts.set(descriptor.key, chart);
-                                } else {
-                                        chart.data.labels = labels;
-                                        chart.data.datasets = [dataset];
-                                        chart.update('none');
-                                }
-                        });
-
-                        if (chartEmpty) {
-                                chartEmpty.hidden = hasAnyChart;
-                        }
-                }
-
-                function resetCharts() {
-                        state.charts.forEach(chart => chart.destroy());
-                        state.charts.clear();
-                        document.querySelectorAll('#trend-grid canvas').forEach(canvas => {
-                                canvas.hidden = true;
-                        });
-                        const chartEmpty = document.getElementById('chart-empty');
-                        if (chartEmpty) {
-                                chartEmpty.hidden = false;
-                        }
-                }
-
-                function buildDatasetsByKey(samples) {
-                        const theme = (PROJECT_KEY && palettes[PROJECT_KEY]) ? PROJECT_KEY : 'default';
-                        const palette = palettes[theme];
-                        const descriptors = state.specDescriptors;
-                        const measurementMaps = samples.map(sample => mapMeasurements(sample.measurements));
-                        let colorIndex = 0;
-                        const datasets = new Map();
-                        descriptors.forEach(descriptor => {
-                                const values = measurementMaps.map(measurements => {
-                                        const measurement = measurements.get(descriptor.key);
-                                        return measurement ? toNumber(measurement.value) : null;
-                                });
-                                if (values.every(value => value === null)) {
-                                        return;
-                                }
-                                const color = palette[colorIndex % palette.length];
-                                colorIndex += 1;
-                                const descriptorTitle = getDescriptorTitle(descriptor) || descriptor.displayName;
-                                const label = descriptor.unit ? `${descriptorTitle} (${descriptor.unit})` : descriptorTitle;
-                                datasets.set(descriptor.key, {
-                                        label,
-                                        data: values,
-                                        borderColor: color,
-                                        backgroundColor: color + '33',
-                                        spanGaps: true,
-                                        tension: 0.3
-                                });
-                        });
-                        return datasets;
                 }
 
                 function buildDescriptorFromSpec(spec) {
