@@ -472,7 +472,7 @@
                         if (!canvas) return;
 
                         const w = canvas.offsetWidth || 200;
-                        const h = 70;
+                        const h = 90;
                         canvas.width = w;
                         canvas.height = h;
 
@@ -483,7 +483,6 @@
                         function animate(now) {
                                 const elapsed = now - start;
                                 const progress = Math.min(elapsed / duration, 1);
-                                // easing ease-out
                                 const ease = 1 - Math.pow(1 - progress, 3);
                                 const currentPct = ease * pct;
 
@@ -491,8 +490,8 @@
                                 ctx.clearRect(0, 0, w, h);
 
                                 const cx = w / 2;
-                                const cy = h - 4;
-                                const r = Math.min(w / 2 - 12, h - 8);
+                                const cy = h - 12;
+                                const r = Math.min(w / 2 - 20, h - 20);
 
                                 // sfondo arco
                                 ctx.beginPath();
@@ -510,6 +509,33 @@
                                 ctx.lineWidth = 8;
                                 ctx.lineCap = 'round';
                                 ctx.stroke();
+
+                                // segni intermedi — 5 tacche
+                                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                                ctx.lineWidth = 1.5;
+                                for (let i = 0; i <= 4; i++) {
+                                        const angle = Math.PI + (i / 4) * Math.PI;
+                                        const innerR = r - 10;
+                                        const outerR = r + 2;
+                                        ctx.beginPath();
+                                        ctx.moveTo(
+                                                cx + innerR * Math.cos(angle),
+                                                cy + innerR * Math.sin(angle)
+                                        );
+                                        ctx.lineTo(
+                                                cx + outerR * Math.cos(angle),
+                                                cy + outerR * Math.sin(angle)
+                                        );
+                                        ctx.stroke();
+                                }
+
+                                // etichette min e max
+                                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                                ctx.font = `${Math.max(9, r * 0.18)}px Roboto, sans-serif`;
+                                ctx.textAlign = 'left';
+                                ctx.fillText(formatValue(min), cx - r - 16, cy + 10);
+                                ctx.textAlign = 'right';
+                                ctx.fillText(formatValue(max), cx + r + 16, cy + 10);
 
                                 if (progress < 1) {
                                         requestAnimationFrame(animate);
