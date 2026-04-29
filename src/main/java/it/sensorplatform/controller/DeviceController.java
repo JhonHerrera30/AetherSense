@@ -3,6 +3,7 @@ package it.sensorplatform.controller;
 import static it.sensorplatform.model.Credentials.FIRE_ADMIN_ROLE;
 import static it.sensorplatform.model.Credentials.LTRAD_ADMIN_ROLE;
 import static it.sensorplatform.model.Credentials.VOLCANO_ADMIN_ROLE;
+import org.springframework.transaction.annotation.Transactional;
 
 import it.sensorplatform.dto.DeviceDTO;
 import it.sensorplatform.model.Admin;
@@ -594,6 +595,7 @@ public class DeviceController {
                 return "admin/deviceDashboard";
         }
 
+        @Transactional(readOnly = true)
         @GetMapping("/admin/device-history/{projectId}/{macAddress}")
         public String viewDeviceHistory(@PathVariable("projectId") Long projectId,
                         @PathVariable("macAddress") String macAddress,
