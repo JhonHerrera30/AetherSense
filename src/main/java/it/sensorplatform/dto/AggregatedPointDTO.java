@@ -12,8 +12,16 @@ public record AggregatedPointDTO(
         Double max) {
 
     public static AggregatedPointDTO fromRow(Object[] row) {
+        Instant bucket;
+        if (row[0] instanceof java.sql.Timestamp ts) {
+            bucket = ts.toInstant();
+        } else if (row[0] instanceof Instant i) {
+            bucket = i;
+        } else {
+            bucket = Instant.parse(row[0].toString());
+        }
         return new AggregatedPointDTO(
-                ((java.sql.Timestamp) row[0]).toInstant(),
+                bucket,
                 (String) row[1],
                 (String) row[2],
                 (String) row[3],
