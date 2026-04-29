@@ -64,6 +64,14 @@ const SIGNAL_UNIT = {
     'pm4_0_ugm3': 'µg/m³',
     'pm10_0_ugm3': 'µg/m³',
 };
+const SIGNAL_ORDER = [
+    'temperature_celsius', 'humidity_percent', 'pressure_hpa',
+    'co2concentration_ppm', 'gasresistance_ohm', 'voc_index', 'nox_index',
+    'pm1_0_ugm3', 'pm2_5_ugm3', 'pm4_0_ugm3', 'pm10_0_ugm3',
+    'si_m_s', 'pga_m_s2',
+    'earthquake_flag', 'shutoff', 'collapse',
+    'state', 'axis_state'
+];
 
 function getChartType(signalKey) {
     return SIGNAL_CHART_TYPE[(signalKey || '').toLowerCase()] || 'gauge+line';
@@ -122,7 +130,13 @@ async function loadAggregated() {
     const palette = palettes[PROJECT_KEY] || palettes['default'];
     let colorIdx = 0;
 
-    byKey.forEach((pts, key) => {
+    const sortedKeys = [...byKey.keys()].sort((a, b) => {
+        const ai = SIGNAL_ORDER.indexOf(a.toLowerCase());
+        const bi = SIGNAL_ORDER.indexOf(b.toLowerCase());
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    });
+    sortedKeys.forEach(key => {
+        const pts = byKey.get(key);
         const color = palette[colorIdx % palette.length];
         colorIdx++;
         const keyLow = key.toLowerCase();
@@ -130,6 +144,14 @@ async function loadAggregated() {
         const unit = SIGNAL_UNIT[keyLow] || pts[0].unit || '';
         const chartType = getChartType(key);
         const labels = pts.map(p => formatBucket(p.bucket, period));
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0.4rem;';
+
+        const lbl = document.createElement('p');
+        lbl.style.cssText = 'margin:0;font-size:0.85rem;font-weight:500;color:rgba(255,255,255,0.65);letter-spacing:0.03em;text-transform:uppercase;';
+        lbl.textContent = unit ? `${title} (${unit})` : title;
+        wrapper.appendChild(lbl);
 
         if (pts.length < 2 && chartType !== 'boolean' && chartType !== 'status') {
             const msg = document.createElement('p');
@@ -139,14 +161,6 @@ async function loadAggregated() {
             grid.appendChild(wrapper);
             return;
         }
-
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0.4rem;';
-
-        const lbl = document.createElement('p');
-        lbl.style.cssText = 'margin:0;font-size:0.85rem;font-weight:500;color:rgba(255,255,255,0.65);letter-spacing:0.03em;text-transform:uppercase;';
-        lbl.textContent = unit ? `${title} (${unit})` : title;
-        wrapper.appendChild(lbl);
 
         const canvas = document.createElement('canvas');
         const canvasH = (chartType === 'boolean' || chartType === 'status') ? '100px' : '200px';
