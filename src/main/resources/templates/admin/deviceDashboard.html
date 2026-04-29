@@ -469,7 +469,7 @@
 
                         const wrapper = canvas.parentElement;
                         const W = wrapper.offsetWidth || 220;
-                        const H = 140;
+                        const H = 150;
                         canvas.width = W;
                         canvas.height = H;
                         canvas.style.height = H + 'px';
@@ -479,8 +479,8 @@
                         const start = performance.now();
 
                         const cx = W / 2;
-                        const cy = H - 38;
-                        const r = Math.min(W / 2 - 32, H - 32);
+                        const cy = H - 45;
+                        const r = Math.min(W / 2 - 32, cy - 8);
 
                         function fmtTick(v) {
                                 if (Math.abs(v) >= 10000) return (v / 1000).toFixed(0) + 'k';
@@ -561,14 +561,15 @@
                                 ctx.textAlign = 'center';
                                 ctx.font = `500 ${vSize}px Roboto, sans-serif`;
                                 ctx.fillStyle = '#ffffff';
-                                ctx.fillText(fmtTick(value), cx, cy - 8);
+                                ctx.fillText(fmtTick(value), cx, cy + 22);
 
-                                /* unità sotto il numero */
+                                /* unità a destra del numero */
                                 if (unit) {
-                                        ctx.font = `400 ${Math.max(10, vSize * 0.42)}px Roboto, sans-serif`;
+                                        const numWidth = ctx.measureText(fmtTick(value)).width;
+                                        ctx.font = `400 ${Math.max(10, vSize * 0.4)}px Roboto, sans-serif`;
                                         ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                                        ctx.textAlign = 'center';
-                                        ctx.fillText(unit, cx, cy + 8);
+                                        ctx.textAlign = 'left';
+                                        ctx.fillText(unit, cx + numWidth / 2 + 3, cy + 22 - vSize * 0.3);
                                 }
 
                                 /* ── etichette min / mid / max ── */
@@ -579,15 +580,13 @@
 
                                 // min — sotto l'estremità sinistra
                                 ctx.textAlign = 'left';
-                                ctx.fillText(fmtTick(min), cx - r + 4, cy + 6);
-
-                                // mid — sopra al centro
+                                ctx.fillText(fmtTick(min), cx - r + 4, cy + 10);
+                                // mid
                                 ctx.textAlign = 'center';
-                                ctx.fillText(fmtTick((min + max) / 2), cx, cy - r - lblSize - 4);
-
-                                // max — sotto l'estremità destra
+                                ctx.fillText(fmtTick((min + max) / 2), cx, cy - r - lblSize - 2);
+                                // max
                                 ctx.textAlign = 'right';
-                                ctx.fillText(fmtTick(max), cx + r - 4, cy + 6);
+                                ctx.fillText(fmtTick(max), cx + r - 4, cy + 10);
                         }
 
                         function animate(now) {
