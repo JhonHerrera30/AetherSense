@@ -469,7 +469,7 @@
 
                         const wrapper = canvas.parentElement;
                         const W = wrapper.offsetWidth || 220;
-                        const H = 120;
+                        const H = 140;
                         canvas.width = W;
                         canvas.height = H;
                         canvas.style.height = H + 'px';
@@ -479,7 +479,7 @@
                         const start = performance.now();
 
                         const cx = W / 2;
-                        const cy = H - 22;
+                        const cy = H - 38;
                         const r = Math.min(W / 2 - 32, H - 32);
 
                         function fmtTick(v) {
@@ -577,7 +577,7 @@
                                 ctx.fillStyle = 'rgba(255,255,255,0.38)';
                                 ctx.textBaseline = 'top';
 
-                                // min — sotto l'estremità sinistra dell'arco
+                                // min — sotto l'estremità sinistra
                                 ctx.textAlign = 'left';
                                 ctx.fillText(fmtTick(min), cx - r + 4, cy + 6);
 
@@ -585,7 +585,7 @@
                                 ctx.textAlign = 'center';
                                 ctx.fillText(fmtTick((min + max) / 2), cx, cy - r - lblSize - 4);
 
-                                // max — sotto l'estremità destra dell'arco
+                                // max — sotto l'estremità destra
                                 ctx.textAlign = 'right';
                                 ctx.fillText(fmtTick(max), cx + r - 4, cy + 6);
                         }
