@@ -495,9 +495,94 @@
                                 return String(v);
                         }
 
-                        function arcColor(p) {
-                                const hue = Math.round((1 - p) * 120);
-                                return `hsl(${hue}, 78%, 52%)`;
+                        function arcColor(p, signalKey, projectKey) {
+                                const key = (signalKey || '').toLowerCase();
+                                const proj = (projectKey || 'default').toLowerCase();
+
+                                // Definisce zone [soglia_warning, soglia_critica] come percentuale del range
+                                // "low is good" — verde in basso, rosso in alto
+                                const lowIsGood = {
+                                        'co2concentration_ppm': proj === 'volcano' ? [0.4, 0.7] : [0.2, 0.5],
+                                        'pm1_0_ugm3': [0.2, 0.5],
+                                        'pm2_5_ugm3': [0.2, 0.5],
+                                        'pm4_0_ugm3': [0.2, 0.5],
+                                        'pm10_0_ugm3': [0.2, 0.5],
+                                        'voc_index': [0.3, 0.6],
+                                        'nox_index': [0.3, 0.6],
+                                        'gasresistance_ohm': null, // high is good — gestito sotto
+                                };
+
+                                // "high is bad" — se il valore è alto è un problema
+                                const highIsBad = ['co2concentration_ppm', 'pm1_0_ugm3', 'pm2_5_ugm3',
+                                        'pm4_0_ugm3', 'pm10_0_ugm3', 'voc_index', 'nox_index'];
+
+                                // "center is good" — verde al centro, rosso agli estremi
+                                const centerIsGood = ['temperature_celsius', 'humidity_percent',
+                                        'pressure_hpa', 'si_m_s', 'pga_m_s2'];
+
+                                // soglie centro per progetto
+                                const centerThresholds = {
+                                        'temperature_celsius': {
+                                                'ltrad': { ok: [0.35, 0.65], warn: [0.15, 0.85] },
+                                                'fire': { ok: [0.10, 0.40], warn: [0.05, 0.60] },
+                                                'volcano': { ok: [0.20, 0.70], warn: [0.05, 0.90] },
+                                                'default': { ok: [0.25, 0.75], warn: [0.10, 0.90] }
+                                        },
+                                        'humidity_percent': {
+                                                'ltrad': { ok: [0.35, 0.65], warn: [0.15, 0.85] },
+                                                'fire': { ok: [0.10, 0.50], warn: [0.05, 0.70] },
+                                                'volcano': { ok: [0.20, 0.70], warn: [0.05, 0.90] },
+                                                'default': { ok: [0.30, 0.70], warn: [0.10, 0.90] }
+                                        },
+                                        'pressure_hpa': {
+                                                'ltrad': { ok: [0.50, 0.75], warn: [0.30, 0.90] },
+                                                'fire': { ok: [0.50, 0.75], warn: [0.30, 0.90] },
+                                                'volcano': { ok: [0.20, 0.80], warn: [0.05, 0.95] },
+                                                'default': { ok: [0.45, 0.75], warn: [0.25, 0.90] }
+                                        },
+                                        'si_m_s': {
+                                                'default': { ok: [0.00, 0.15], warn: [0.15, 0.40] }
+                                        },
+                                        'pga_m_s2': {
+                                                'default': { ok: [0.00, 0.15], warn: [0.15, 0.40] }
+                                        }
+                                };
+
+                                // gas resistance: alto = aria pulita = verde
+                                if (key === 'gasresistance_ohm') {
+                                        if (p > 0.6) return '#4caf50';
+                                        if (p > 0.3) return '#ffb300';
+                                        return '#ef5350';
+                                }
+
+                                // segnali sismici e PGA: basso = verde, alto = rosso (sempre)
+                                if (key === 'si_m_s' || key === 'pga_m_s2') {
+                                        const t = centerThresholds[key]?.['default'] || { ok: [0, 0.15], warn: [0, 0.40] };
+                                        if (p <= t.ok[1]) return '#4caf50';
+                                        if (p <= t.warn[1]) return '#ffb300';
+                                        return '#ef5350';
+                                }
+
+                                // high is bad
+                                if (highIsBad.includes(key)) {
+                                        const thresholds = lowIsGood[key] || [0.3, 0.6];
+                                        if (p < thresholds[0]) return '#4caf50';
+                                        if (p < thresholds[1]) return '#ffb300';
+                                        return '#ef5350';
+                                }
+
+                                // center is good
+                                if (centerIsGood.includes(key)) {
+                                        const projKey = proj in (centerThresholds[key] || {}) ? proj : 'default';
+                                        const t = centerThresholds[key]?.[projKey] || { ok: [0.35, 0.65], warn: [0.15, 0.85] };
+                                        if (p >= t.ok[0] && p <= t.ok[1]) return '#4caf50';
+                                        if (p >= t.warn[0] && p <= t.warn[1]) return '#ffb300';
+                                        return '#ef5350';
+                                }
+
+                                if (p < 0.4) return '#4caf50';
+                                if (p < 0.7) return '#ffb300';
+                                return '#ef5350';
                         }
 
                         function draw(progress) {
@@ -521,7 +606,7 @@
                                 if (cur > 0.001) {
                                         ctx.beginPath();
                                         ctx.arc(cx, cy, r, Math.PI, Math.PI + cur * Math.PI);
-                                        ctx.strokeStyle = arcColor(cur);
+                                        ctx.strokeStyle = arcColor(cur, canvasId.replace('gauge-', ''), PROJECT_KEY);
                                         ctx.lineWidth = trackW;
                                         ctx.lineCap = 'round';
                                         ctx.stroke();
