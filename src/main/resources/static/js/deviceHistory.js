@@ -1,13 +1,12 @@
 const charts = new Map();
 
 const palettes = {
-    'ltrad': ['#007bff', '#4dabf7', '#a5d8ff'],
-    'fire': ['#e85d04', '#ff922b', '#ffba08'],
-    'volcano': ['#9d0208', '#f48c06', '#ffba08'],
-    'default': ['#2d6cdf', '#4c9f70', '#dd6b20']
+    'ltrad': ['#4dabf7', '#69db7c', '#ffd43b', '#ff8787', '#da77f2'],
+    'fire': ['#ff6b35', '#ff922b', '#ffd43b', '#ff8787', '#f783ac'],
+    'volcano': ['#ff6348', '#ffa502', '#eccc68', '#a29bfe', '#74b9ff'],
+    'default': ['#4dabf7', '#69db7c', '#ffd43b', '#ff8787', '#da77f2']
 };
 
-// Dizionario JS speculare al SignalDictionary.java
 const SIGNAL_CHART_TYPE = {
     'temperature_celsius': 'gauge+line',
     'humidity_percent': 'gauge+line',
@@ -28,6 +27,7 @@ const SIGNAL_CHART_TYPE = {
     'state': 'status',
     'axis_state': 'status',
 };
+
 const SIGNAL_DISPLAY_NAME = {
     'temperature_celsius': 'Temperature',
     'humidity_percent': 'Relative Humidity',
@@ -42,6 +42,11 @@ const SIGNAL_DISPLAY_NAME = {
     'pm2_5_ugm3': 'PM2.5 Particulate',
     'pm4_0_ugm3': 'PM4.0 Particulate',
     'pm10_0_ugm3': 'PM10 Particulate',
+    'earthquake_flag': 'Earthquake Detected',
+    'shutoff': 'Shutoff',
+    'collapse': 'Collapse',
+    'state': 'Sensor State',
+    'axis_state': 'Axis State',
 };
 
 const SIGNAL_UNIT = {
@@ -98,11 +103,9 @@ async function loadAggregated() {
     const res = await fetch(
         `/api/admin/devices/${encodeURIComponent(DEVICE_KEY)}/telemetry/aggregated?period=${period}&days=${days}`
     );
-
     if (!res.ok) { empty.hidden = false; grid.innerHTML = ''; return; }
 
     const points = await res.json();
-
     const byKey = new Map();
     points.forEach(p => {
         if (!byKey.has(p.signalKey)) byKey.set(p.signalKey, []);
@@ -122,22 +125,22 @@ async function loadAggregated() {
     byKey.forEach((pts, key) => {
         const color = palette[colorIdx % palette.length];
         colorIdx++;
-        const info = pts[0];
-        const title = SIGNAL_DISPLAY_NAME[key.toLowerCase()] || info.displayName || key;
-        const unit = SIGNAL_UNIT[key.toLowerCase()] || info.unit || '';
+        const keyLow = key.toLowerCase();
+        const title = SIGNAL_DISPLAY_NAME[keyLow] || pts[0].displayName || key;
+        const unit = SIGNAL_UNIT[keyLow] || pts[0].unit || '';
         const chartType = getChartType(key);
         const labels = pts.map(p => formatBucket(p.bucket, period));
 
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0.5rem;';
+        wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0.4rem;';
 
         const lbl = document.createElement('p');
-        lbl.style.cssText = 'margin:0;font-size:0.9rem;font-weight:500;color:rgba(255,255,255,0.7);';
+        lbl.style.cssText = 'margin:0;font-size:0.85rem;font-weight:500;color:rgba(255,255,255,0.65);letter-spacing:0.03em;text-transform:uppercase;';
         lbl.textContent = unit ? `${title} (${unit})` : title;
         wrapper.appendChild(lbl);
 
         const canvas = document.createElement('canvas');
-        const canvasH = (chartType === 'boolean' || chartType === 'status') ? '80px' : '220px';
+        const canvasH = (chartType === 'boolean' || chartType === 'status') ? '70px' : '200px';
         canvas.style.cssText = `width:100%!important;height:${canvasH}!important;`;
         wrapper.appendChild(canvas);
         grid.appendChild(wrapper);
@@ -146,139 +149,109 @@ async function loadAggregated() {
         let chart;
 
         if (chartType === 'boolean') {
-            // Step chart 0/1 con area rossa quando 1
+            // Bar chart: verde = 0 (OK), rosso = 1 (Issue)
+            const barColors = pts.map(p => {
+                const v = p.avg != null ? Math.round(p.avg) : 0;
+                return v === 1 ? 'rgba(239,83,80,0.85)' : 'rgba(102,187,106,0.7)';
+            });
             chart = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels,
                     datasets: [{
                         label: title,
-                        data: pts.map(p => p.avg != null ? Math.round(p.avg) : null),
-                        borderColor: '#ef5350',
-                        backgroundColor: 'rgba(239,83,80,0.25)',
-                        borderWidth: 2,
-                        stepped: true,
-                        fill: 'origin',
-                        pointRadius: 3,
-                        spanGaps: true
+                        data: pts.map(() => 1),
+                        backgroundColor: barColors,
+                        borderColor: barColors,
+                        borderWidth: 0,
+                        borderRadius: 3,
                     }]
                 },
-                options: chartOptions(unit, { yMin: -0.1, yMax: 1.1, yTicks: [0, 1] })
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx2) => {
+                                    const v = pts[ctx2.dataIndex]?.avg;
+                                    return v != null ? (Math.round(v) === 1 ? 'Issue' : 'OK') : '--';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#dde1f2', maxTicksLimit: 12 }, grid: { display: false } },
+                        y: { display: false, min: 0, max: 1.2 }
+                    }
+                }
             });
 
         } else if (chartType === 'status') {
-            // Step chart con valori discreti
+            // Bar chart con valore numerico, colore da palette discreta
+            const stateColors = ['#74b9ff', '#a29bfe', '#fd79a8', '#fdcb6e', '#00b894', '#ff7675', '#6c5ce7', '#e17055'];
+            const barCols = pts.map(p => {
+                const v = p.avg != null ? Math.round(p.avg) : 0;
+                return stateColors[v % stateColors.length] + 'cc';
+            });
             chart = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels,
                     datasets: [{
                         label: title,
-                        data: pts.map(p => p.avg != null ? Math.round(p.avg) : null),
-                        borderColor: color,
-                        backgroundColor: color + '33',
-                        borderWidth: 2,
-                        stepped: true,
-                        fill: 'origin',
-                        pointRadius: 3,
-                        spanGaps: true
+                        data: pts.map(p => p.avg != null ? Math.round(p.avg) : 0),
+                        backgroundColor: barCols,
+                        borderWidth: 0,
+                        borderRadius: 3,
                     }]
                 },
-                options: chartOptions(unit, {})
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx2 => `State: ${ctx2.parsed.y}`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#dde1f2', maxTicksLimit: 12 }, grid: { display: false } },
+                        y: { ticks: { color: '#dde1f2', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.06)' }, min: 0 }
+                    }
+                }
             });
 
         } else if (chartType === 'area+line') {
-            // Area piena con banda min-max
             chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
                     datasets: [
-                        {
-                            label: 'Max',
-                            data: pts.map(p => p.max),
-                            borderColor: color + '55',
-                            backgroundColor: color + '22',
-                            borderWidth: 1,
-                            borderDash: [4, 3],
-                            pointRadius: 0,
-                            fill: '+1',
-                            tension: 0.3,
-                            spanGaps: true
-                        },
-                        {
-                            label: 'Avg',
-                            data: pts.map(p => p.avg),
-                            borderColor: color,
-                            backgroundColor: color + '44',
-                            borderWidth: 2,
-                            pointRadius: 2,
-                            fill: 'origin',
-                            tension: 0.3,
-                            spanGaps: true
-                        },
-                        {
-                            label: 'Min',
-                            data: pts.map(p => p.min),
-                            borderColor: color + '55',
-                            backgroundColor: color + '22',
-                            borderWidth: 1,
-                            borderDash: [4, 3],
-                            pointRadius: 0,
-                            fill: '-1',
-                            tension: 0.3,
-                            spanGaps: true
-                        }
+                        { label: 'Max', data: pts.map(p => p.max), borderColor: color + '66', backgroundColor: color + '18', borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: '+1', tension: 0.35, spanGaps: true },
+                        { label: 'Avg', data: pts.map(p => p.avg), borderColor: color, backgroundColor: color + '40', borderWidth: 2.5, pointRadius: 2, pointHoverRadius: 5, fill: 'origin', tension: 0.35, spanGaps: true },
+                        { label: 'Min', data: pts.map(p => p.min), borderColor: color + '66', backgroundColor: color + '18', borderWidth: 1, borderDash: [4, 3], pointRadius: 0, fill: '-1', tension: 0.35, spanGaps: true }
                     ]
                 },
-                options: chartOptions(unit, {})
+                options: lineChartOptions(unit)
             });
 
         } else {
-            // gauge+line — linea avg con banda min-max sottile
+            // gauge+line — linea Avg prominente, banda Min-Max sottile
             chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels,
                     datasets: [
-                        {
-                            label: 'Max',
-                            data: pts.map(p => p.max),
-                            borderColor: color + '44',
-                            backgroundColor: color + '11',
-                            borderWidth: 1,
-                            borderDash: [3, 3],
-                            pointRadius: 0,
-                            fill: '+1',
-                            tension: 0.3,
-                            spanGaps: true
-                        },
-                        {
-                            label: 'Avg',
-                            data: pts.map(p => p.avg),
-                            borderColor: color,
-                            backgroundColor: 'transparent',
-                            borderWidth: 2.5,
-                            pointRadius: 2,
-                            pointHoverRadius: 5,
-                            tension: 0.3,
-                            spanGaps: true
-                        },
-                        {
-                            label: 'Min',
-                            data: pts.map(p => p.min),
-                            borderColor: color + '44',
-                            backgroundColor: color + '11',
-                            borderWidth: 1,
-                            borderDash: [3, 3],
-                            pointRadius: 0,
-                            fill: '-1',
-                            tension: 0.3,
-                            spanGaps: true
-                        }
+                        { label: 'Max', data: pts.map(p => p.max), borderColor: color + '40', backgroundColor: color + '0d', borderWidth: 1, borderDash: [3, 3], pointRadius: 0, fill: '+1', tension: 0.35, spanGaps: true },
+                        { label: 'Avg', data: pts.map(p => p.avg), borderColor: color, backgroundColor: 'transparent', borderWidth: 2.5, pointRadius: 2.5, pointHoverRadius: 5, tension: 0.35, spanGaps: true },
+                        { label: 'Min', data: pts.map(p => p.min), borderColor: color + '40', backgroundColor: color + '0d', borderWidth: 1, borderDash: [3, 3], pointRadius: 0, fill: '-1', tension: 0.35, spanGaps: true }
                     ]
                 },
-                options: chartOptions(unit, {})
+                options: lineChartOptions(unit)
             });
         }
 
@@ -286,38 +259,25 @@ async function loadAggregated() {
     });
 }
 
-function chartOptions(unit, extra) {
-    const yOpts = {
-        ticks: { color: '#dde1f2' },
-        grid: { color: 'rgba(255,255,255,0.08)' }
-    };
-    if (extra.yMin !== undefined) yOpts.min = extra.yMin;
-    if (extra.yMax !== undefined) yOpts.max = extra.yMax;
-    if (extra.yTicks) {
-        yOpts.ticks = {
-            ...yOpts.ticks,
-            callback: v => extra.yTicks.includes(v) ? v : '',
-            stepSize: 1
-        };
-    }
+function lineChartOptions(unit) {
     return {
         responsive: true,
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-            legend: { labels: { color: '#ffffff', boxWidth: 12, font: { size: 11 } } },
+            legend: { labels: { color: '#ffffff', boxWidth: 10, font: { size: 11 } } },
             tooltip: {
                 callbacks: {
                     label: ctx => {
                         const v = ctx.parsed.y;
-                        return `${ctx.dataset.label}: ${v != null ? v.toFixed(2) : '--'} ${unit}`;
+                        return `${ctx.dataset.label}: ${v != null ? v.toFixed(2) : '--'}${unit ? ' ' + unit : ''}`;
                     }
                 }
             }
         },
         scales: {
-            x: { ticks: { color: '#dde1f2', maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.08)' } },
-            y: yOpts
+            x: { ticks: { color: '#9fa8c7', maxTicksLimit: 12, font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' } },
+            y: { ticks: { color: '#9fa8c7', font: { size: 11 } }, grid: { color: 'rgba(255,255,255,0.06)' } }
         }
     };
 }
