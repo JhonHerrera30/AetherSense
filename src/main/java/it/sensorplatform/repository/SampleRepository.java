@@ -40,7 +40,7 @@ public interface SampleRepository extends JpaRepository<SampleEntity, Long> {
                             MAX(m.double_value)              AS maxVal
                         FROM sample s
                         JOIN measurement_entity m ON m.sample_id = s.id
-                        WHERE s.device_id   = :deviceId
+                        WHERE LOWER(REPLACE(s.device_id, ':', '')) = LOWER(REPLACE(:deviceId, ':', ''))
                           AND s.timestamp  >= :from
                           AND s.timestamp  <  :to
                           AND m.type       = 'MEASUREMENT'
