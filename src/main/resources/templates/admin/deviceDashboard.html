@@ -555,49 +555,39 @@
                                 ctx.fillStyle = 'rgba(255,255,255,0.45)';
                                 ctx.fill();
 
-                                /* ── valore numerico ── */
+                                /* ── valore numerico centrato ── */
                                 const vSize = Math.max(20, Math.min(28, r * 0.52));
                                 ctx.textBaseline = 'alphabetic';
-                                ctx.textAlign = 'right';
+                                ctx.textAlign = 'center';
                                 ctx.font = `500 ${vSize}px Roboto, sans-serif`;
                                 ctx.fillStyle = '#ffffff';
-                                const numStr = fmtTick(value);
-                                ctx.fillText(numStr, cx + 2, cy - 6);
+                                ctx.fillText(fmtTick(value), cx, cy - 8);
 
-                                /* unità accanto al numero */
+                                /* unità sotto il numero */
                                 if (unit) {
                                         ctx.font = `400 ${Math.max(10, vSize * 0.42)}px Roboto, sans-serif`;
                                         ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                                        ctx.textAlign = 'left';
-                                        ctx.fillText(unit, cx + 5, cy - 6);
+                                        ctx.textAlign = 'center';
+                                        ctx.fillText(unit, cx, cy + 8);
                                 }
 
-                                /* ── etichette min / mid / max fuori dall'arco ── */
+                                /* ── etichette min / mid / max ── */
                                 const lblSize = Math.max(9, r * 0.19);
                                 ctx.font = `400 ${lblSize}px Roboto, sans-serif`;
                                 ctx.fillStyle = 'rgba(255,255,255,0.38)';
-
-                                const labelR = r + trackW / 2 + 14;
-
-                                // min  (angolo = π  → sinistra)
-                                const minAng = Math.PI;
-                                ctx.textAlign = 'center';
                                 ctx.textBaseline = 'top';
-                                ctx.fillText(fmtTick(min),
-                                        cx + labelR * Math.cos(minAng),
-                                        cy + labelR * Math.sin(minAng));
 
-                                // mid  (angolo = 3π/2 → sopra)
-                                const midAng = Math.PI * 1.5;
-                                ctx.fillText(fmtTick((min + max) / 2),
-                                        cx + labelR * Math.cos(midAng),
-                                        cy + labelR * Math.sin(midAng) - lblSize / 2);
+                                // min — sotto l'estremità sinistra dell'arco
+                                ctx.textAlign = 'left';
+                                ctx.fillText(fmtTick(min), cx - r + 4, cy + 6);
 
-                                // max  (angolo = 2π → destra)
-                                const maxAng = 2 * Math.PI;
-                                ctx.fillText(fmtTick(max),
-                                        cx + labelR * Math.cos(maxAng),
-                                        cy + labelR * Math.sin(maxAng));
+                                // mid — sopra al centro
+                                ctx.textAlign = 'center';
+                                ctx.fillText(fmtTick((min + max) / 2), cx, cy - r - lblSize - 4);
+
+                                // max — sotto l'estremità destra dell'arco
+                                ctx.textAlign = 'right';
+                                ctx.fillText(fmtTick(max), cx + r - 4, cy + 6);
                         }
 
                         function animate(now) {
