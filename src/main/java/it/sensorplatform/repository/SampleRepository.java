@@ -35,16 +35,15 @@ public interface SampleRepository extends JpaRepository<SampleEntity, Long> {
                             m.key_name                       AS signalKey,
                             m.display_name                   AS displayName,
                             m.unit                           AS unit,
-                            AVG(m.double_value)              AS avgVal,
-                            MIN(m.double_value)              AS minVal,
-                            MAX(m.double_value)              AS maxVal
+                            AVG(COALESCE(m.double_value, m.int_value::float)) AS avgVal,
+                            MIN(COALESCE(m.double_value, m.int_value::float)) AS minVal,
+                            MAX(COALESCE(m.double_value, m.int_value::float)) AS maxVal
                         FROM sample s
                         JOIN measurement_entity m ON m.sample_id = s.id
                         WHERE LOWER(REPLACE(s.device_id, ':', '')) = LOWER(REPLACE(:deviceId, ':', ''))
                           AND s.timestamp  >= :from
                           AND s.timestamp  <  :to
-                          AND m.type       = 'MEASUREMENT'
-                          AND m.double_value IS NOT NULL
+                          AND COALESCE(m.double_value, m.int_value::float) IS NOT NULL
                         GROUP BY bucket, m.key_name, m.display_name, m.unit
                         ORDER BY bucket ASC
                         """, nativeQuery = true)
