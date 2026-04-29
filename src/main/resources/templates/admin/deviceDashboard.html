@@ -581,9 +581,9 @@
                                 // min — sotto l'estremità sinistra
                                 ctx.textAlign = 'left';
                                 ctx.fillText(fmtTick(min), cx - r + 4, cy + 10);
-                                // mid
+                                // mid — sopra l'arco, agganciato al canvas
                                 ctx.textAlign = 'center';
-                                ctx.fillText(fmtTick((min + max) / 2), cx, cy - r - lblSize - 2);
+                                ctx.fillText(fmtTick((min + max) / 2), cx, Math.max(2, cy - r - lblSize - 2));
                                 // max
                                 ctx.textAlign = 'right';
                                 ctx.fillText(fmtTick(max), cx + r - 4, cy + 10);
