@@ -140,7 +140,7 @@ async function loadAggregated() {
         wrapper.appendChild(lbl);
 
         const canvas = document.createElement('canvas');
-        const canvasH = (chartType === 'boolean' || chartType === 'status') ? '70px' : '200px';
+        const canvasH = (chartType === 'boolean' || chartType === 'status') ? '100px' : '200px';
         canvas.style.cssText = `width:100%!important;height:${canvasH}!important;`;
         wrapper.appendChild(canvas);
         grid.appendChild(wrapper);
@@ -162,8 +162,9 @@ async function loadAggregated() {
                         data: values.map(() => 1),
                         backgroundColor: barColors,
                         borderColor: barColors,
-                        borderWidth: 0,
-                        borderRadius: 3,
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        borderSkipped: false,
                     }]
                 },
                 options: {
