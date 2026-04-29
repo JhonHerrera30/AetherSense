@@ -131,6 +131,15 @@ async function loadAggregated() {
         const chartType = getChartType(key);
         const labels = pts.map(p => formatBucket(p.bucket, period));
 
+        if (pts.length < 2 && chartType !== 'boolean' && chartType !== 'status') {
+            const msg = document.createElement('p');
+            msg.style.cssText = 'margin:0;font-size:0.8rem;color:rgba(255,255,255,0.4);padding:0.5rem 0;';
+            msg.textContent = `Only ${pts.length} data point — add more data to see the trend.`;
+            wrapper.appendChild(msg);
+            grid.appendChild(wrapper);
+            return;
+        }
+
         const wrapper = document.createElement('div');
         wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0.4rem;';
 
