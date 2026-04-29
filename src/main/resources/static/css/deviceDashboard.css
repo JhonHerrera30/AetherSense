@@ -241,9 +241,10 @@
 }
 
 .widgets-section {
+        /* Cambiato così siccome non lo vogliamo più nella dashboard principale ma in una pagina dedicata */
         display: block;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
+        /* grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem; */
 }
 
 .panel {
