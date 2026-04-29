@@ -13,20 +13,44 @@ import java.util.Optional;
 
 @Repository
 public interface SampleRepository extends JpaRepository<SampleEntity, Long> {
-    Optional<SampleEntity> findByDevEuiAndTimestamp(
-            String devEui,
-            Instant timestamp);
+        Optional<SampleEntity> findByDevEuiAndTimestamp(
+                        String devEui,
+                        Instant timestamp);
 
-    @Query("SELECT s FROM SampleEntity s " +
-            "WHERE s.deviceId = :deviceId " +
-            "ORDER BY s.timestamp ASC")
-    List<SampleEntity> findByDeviceIdOrderByTimestamp(
-            @Param("deviceId") String deviceId);
+        @Query("SELECT s FROM SampleEntity s " +
+                        "WHERE s.deviceId = :deviceId " +
+                        "ORDER BY s.timestamp ASC")
+        List<SampleEntity> findByDeviceIdOrderByTimestamp(
+                        @Param("deviceId") String deviceId);
 
-    @Modifying
-    @Query("DELETE FROM SampleEntity s " +
-            "WHERE s.timestamp < :cutoff")
-    void deleteOlderThan(
-            @Param("cutoff") Instant cutoff);
+        @Modifying
+        @Query("DELETE FROM SampleEntity s " +
+                        "WHERE s.timestamp < :cutoff")
+        void deleteOlderThan(
+                        @Param("cutoff") Instant cutoff);
 
+        @Query(value = """
+                        SELECT
+                            DATE_TRUNC(:period, s.timestamp) AS bucket,
+                            m.key_name                       AS signalKey,
+                            m.display_name                   AS displayName,
+                            m.unit                           AS unit,
+                            AVG(m.double_value)              AS avgVal,
+                            MIN(m.double_value)              AS minVal,
+                            MAX(m.double_value)              AS maxVal
+                        FROM sample s
+                        JOIN measurement_entity m ON m.sample_id = s.id
+                        WHERE s.device_id   = :deviceId
+                          AND s.timestamp  >= :from
+                          AND s.timestamp  <  :to
+                          AND m.type       = 'MEASUREMENT'
+                          AND m.double_value IS NOT NULL
+                        GROUP BY bucket, m.key_name, m.display_name, m.unit
+                        ORDER BY bucket ASC
+                        """, nativeQuery = true)
+        List<Object[]> findAggregated(
+                        @Param("deviceId") String deviceId,
+                        @Param("from") Instant from,
+                        @Param("to") Instant to,
+                        @Param("period") String period);
 }

@@ -4,12 +4,16 @@ import static it.sensorplatform.model.Credentials.FIRE_ADMIN_ROLE;
 import static it.sensorplatform.model.Credentials.LTRAD_ADMIN_ROLE;
 import static it.sensorplatform.model.Credentials.VOLCANO_ADMIN_ROLE;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import it.sensorplatform.dto.AggregatedPointDTO;
 import it.sensorplatform.dto.SpecDTO;
 import it.sensorplatform.dto.TelemetrySampleDTO;
 import it.sensorplatform.model.Credentials;
@@ -34,6 +39,7 @@ import it.sensorplatform.service.DeviceService;
 import it.sensorplatform.service.IngestService;
 import it.sensorplatform.util.MacAddressUtils;
 import it.sensorplatform.repository.SampleRepository;
+import it.sensorplatform.dto.AggregatedPointDTO;
 
 @RestController
 @RequestMapping("/api/admin/devices")
@@ -75,8 +81,8 @@ public class DeviceTelemetryController {
         List<SpecDTO> specs = sample.getMeasurements().stream()
                 .filter(m -> m.getType() == MeasurementEntity.MeasurementType.MEASUREMENT)
                 .map(m -> {
-                    it.sensorplatform.util.SignalDictionary.ChartConfig config =
-                            it.sensorplatform.util.SignalDictionary.getConfig(
+                    it.sensorplatform.util.SignalDictionary.ChartConfig config = it.sensorplatform.util.SignalDictionary
+                            .getConfig(
                                     m.getKey(), m.getMin(), m.getMax());
                     return new SpecDTO(
                             m.getKey(),
@@ -130,6 +136,43 @@ public class DeviceTelemetryController {
                 .map(TelemetrySampleDTO::fromEntity)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(history);
+    }
+
+    @GetMapping("/{macAddress}/telemetry/aggregated")
+    public ResponseEntity<List<AggregatedPointDTO>> getAggregated(
+            @PathVariable("macAddress") String deviceKey,
+            @RequestParam(value = "period", defaultValue = "day") String period,
+            @RequestParam(value = "days", defaultValue = "7") int days) {
+
+        Optional<Device> deviceOpt = resolveAuthorizedDevice(deviceKey);
+        if (deviceOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        String telemetryKey = telemetryIdentifier(deviceOpt.get());
+        if (telemetryKey == null) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
+
+        // whitelist period — previene SQL injection sul DATE_TRUNC
+        String safePeriod = switch (period) {
+            case "hour", "day", "week" -> period;
+            default -> "day";
+        };
+
+        int safeDays = Math.max(1, Math.min(days, 365));
+
+        Instant to = Instant.now();
+        Instant from = to.minus(safeDays, ChronoUnit.DAYS);
+
+        List<Object[]> rows = sampleRepository.findAggregated(
+                telemetryKey, from, to, safePeriod);
+
+        List<AggregatedPointDTO> result = rows.stream()
+                .map(AggregatedPointDTO::fromRow)
+                .toList();
+
+        return ResponseEntity.ok(result);
     }
 
     private Optional<Device> resolveAuthorizedDevice(String deviceKey) {
