@@ -450,10 +450,6 @@
                                 </div>
                                 <div class="gauge-wrapper">
                                         <canvas id="gauge-${descriptor.key}" class="gauge-canvas"></canvas>
-                                        <div class="gauge-value-overlay">
-                                        <span class="metric-value" data-value>--</span>
-                                        <span class="metric-unit" data-unit>${unit}</span>
-                                        </div>
                                 </div>
                                 <div class="metric-range" data-range>${formatRange(descriptor.min, descriptor.max, descriptor.unit)}</div>
                                 `;
@@ -467,81 +463,147 @@
                         state.specCardsRendered = true;
                 }
 
-                function renderGauge(canvasId, value, min, max) {
+                function renderGauge(canvasId, value, min, max, unit) {
                         const canvas = document.getElementById(canvasId);
                         if (!canvas) return;
 
-                        const w = canvas.offsetWidth || 200;
-                        const h = 90;
-                        canvas.width = w;
-                        canvas.height = h;
+                        const wrapper = canvas.parentElement;
+                        const W = wrapper.offsetWidth || 220;
+                        const H = 120;
+                        canvas.width = W;
+                        canvas.height = H;
+                        canvas.style.height = H + 'px';
 
                         const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
-                        const duration = 800;
+                        const duration = 900;
                         const start = performance.now();
 
-                        function animate(now) {
-                                const elapsed = now - start;
-                                const progress = Math.min(elapsed / duration, 1);
+                        const cx = W / 2;
+                        const cy = H - 22;
+                        const r = Math.min(W / 2 - 32, H - 32);
+
+                        function fmtTick(v) {
+                                if (Math.abs(v) >= 10000) return (v / 1000).toFixed(0) + 'k';
+                                if (Math.abs(v) >= 1000) return (v / 1000).toFixed(1) + 'k';
+                                if (!Number.isInteger(v)) return v.toFixed(1);
+                                return String(v);
+                        }
+
+                        function arcColor(p) {
+                                const hue = Math.round((1 - p) * 120);
+                                return `hsl(${hue}, 78%, 52%)`;
+                        }
+
+                        function draw(progress) {
                                 const ease = 1 - Math.pow(1 - progress, 3);
-                                const currentPct = ease * pct;
+                                const cur = ease * pct;
 
                                 const ctx = canvas.getContext('2d');
-                                ctx.clearRect(0, 0, w, h);
+                                ctx.clearRect(0, 0, W, H);
 
-                                const cx = w / 2;
-                                const cy = h - 12;
-                                const r = Math.min(w / 2 - 20, h - 20);
+                                const trackW = 10;
 
-                                // sfondo arco
+                                /* ── traccia sfondo ── */
                                 ctx.beginPath();
                                 ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI);
-                                ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-                                ctx.lineWidth = 8;
+                                ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+                                ctx.lineWidth = trackW;
                                 ctx.lineCap = 'round';
                                 ctx.stroke();
 
-                                // arco valore
-                                const hue = (1 - currentPct) * 120;
-                                ctx.beginPath();
-                                ctx.arc(cx, cy, r, Math.PI, Math.PI + currentPct * Math.PI);
-                                ctx.strokeStyle = `hsl(${hue}, 80%, 55%)`;
-                                ctx.lineWidth = 8;
-                                ctx.lineCap = 'round';
-                                ctx.stroke();
-
-                                // segni intermedi — 5 tacche
-                                ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-                                ctx.lineWidth = 1.5;
-                                for (let i = 0; i <= 4; i++) {
-                                        const angle = Math.PI + (i / 4) * Math.PI;
-                                        const innerR = r - 10;
-                                        const outerR = r + 2;
+                                /* ── arco valore ── */
+                                if (cur > 0.001) {
                                         ctx.beginPath();
-                                        ctx.moveTo(
-                                                cx + innerR * Math.cos(angle),
-                                                cy + innerR * Math.sin(angle)
-                                        );
-                                        ctx.lineTo(
-                                                cx + outerR * Math.cos(angle),
-                                                cy + outerR * Math.sin(angle)
-                                        );
+                                        ctx.arc(cx, cy, r, Math.PI, Math.PI + cur * Math.PI);
+                                        ctx.strokeStyle = arcColor(cur);
+                                        ctx.lineWidth = trackW;
+                                        ctx.lineCap = 'round';
                                         ctx.stroke();
                                 }
 
-                                // etichette min e max
-                                ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                                ctx.font = `${Math.max(9, r * 0.18)}px Roboto, sans-serif`;
-                                ctx.textAlign = 'left';
-                                ctx.fillText(formatValue(min), cx - r - 16, cy + 10);
-                                ctx.textAlign = 'right';
-                                ctx.fillText(formatValue(max), cx + r + 16, cy + 10);
-
-                                if (progress < 1) {
-                                        requestAnimationFrame(animate);
+                                /* ── tacche: 8 divisioni, principali più lunghe ── */
+                                const NUM_TICKS = 8;
+                                for (let i = 0; i <= NUM_TICKS; i++) {
+                                        const angle = Math.PI + (i / NUM_TICKS) * Math.PI;
+                                        const isMain = (i === 0 || i === NUM_TICKS / 2 || i === NUM_TICKS);
+                                        const innerR = r - trackW / 2 - 2;
+                                        const outerR = r + trackW / 2 + (isMain ? 8 : 4);
+                                        ctx.beginPath();
+                                        ctx.moveTo(cx + innerR * Math.cos(angle), cy + innerR * Math.sin(angle));
+                                        ctx.lineTo(cx + outerR * Math.cos(angle), cy + outerR * Math.sin(angle));
+                                        ctx.strokeStyle = isMain ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.2)';
+                                        ctx.lineWidth = isMain ? 2 : 1;
+                                        ctx.stroke();
                                 }
+
+                                /* ── ago ── */
+                                const needleAngle = Math.PI + cur * Math.PI;
+                                const needleLen = r - trackW / 2 - 8;
+                                ctx.beginPath();
+                                ctx.moveTo(cx, cy);
+                                ctx.lineTo(
+                                        cx + needleLen * Math.cos(needleAngle),
+                                        cy + needleLen * Math.sin(needleAngle)
+                                );
+                                ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+                                ctx.lineWidth = 1.5;
+                                ctx.lineCap = 'round';
+                                ctx.stroke();
+                                /* perno centrale */
+                                ctx.beginPath();
+                                ctx.arc(cx, cy, 4, 0, 2 * Math.PI);
+                                ctx.fillStyle = 'rgba(255,255,255,0.45)';
+                                ctx.fill();
+
+                                /* ── valore numerico ── */
+                                const vSize = Math.max(20, Math.min(28, r * 0.52));
+                                ctx.textBaseline = 'alphabetic';
+                                ctx.textAlign = 'right';
+                                ctx.font = `500 ${vSize}px Roboto, sans-serif`;
+                                ctx.fillStyle = '#ffffff';
+                                const numStr = fmtTick(value);
+                                ctx.fillText(numStr, cx + 2, cy - 6);
+
+                                /* unità accanto al numero */
+                                if (unit) {
+                                        ctx.font = `400 ${Math.max(10, vSize * 0.42)}px Roboto, sans-serif`;
+                                        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                                        ctx.textAlign = 'left';
+                                        ctx.fillText(unit, cx + 5, cy - 6);
+                                }
+
+                                /* ── etichette min / mid / max fuori dall'arco ── */
+                                const lblSize = Math.max(9, r * 0.19);
+                                ctx.font = `400 ${lblSize}px Roboto, sans-serif`;
+                                ctx.fillStyle = 'rgba(255,255,255,0.38)';
+
+                                const labelR = r + trackW / 2 + 14;
+
+                                // min  (angolo = π  → sinistra)
+                                const minAng = Math.PI;
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'top';
+                                ctx.fillText(fmtTick(min),
+                                        cx + labelR * Math.cos(minAng),
+                                        cy + labelR * Math.sin(minAng));
+
+                                // mid  (angolo = 3π/2 → sopra)
+                                const midAng = Math.PI * 1.5;
+                                ctx.fillText(fmtTick((min + max) / 2),
+                                        cx + labelR * Math.cos(midAng),
+                                        cy + labelR * Math.sin(midAng) - lblSize / 2);
+
+                                // max  (angolo = 2π → destra)
+                                const maxAng = 2 * Math.PI;
+                                ctx.fillText(fmtTick(max),
+                                        cx + labelR * Math.cos(maxAng),
+                                        cy + labelR * Math.sin(maxAng));
                         }
 
+                        function animate(now) {
+                                draw(Math.min((now - start) / duration, 1));
+                                if ((now - start) < duration) requestAnimationFrame(animate);
+                        }
                         requestAnimationFrame(animate);
                 }
 
@@ -559,34 +621,25 @@
                 function updateMetricCards(measurements) {
                         state.specDescriptors.forEach(descriptor => {
                                 const card = document.querySelector(`.metric-card[data-spec-key="${descriptor.key}"]`);
-                                if (!card) {
-                                        return;
-                                }
-                                const valueEl = card.querySelector('[data-value]');
+                                if (!card) return;
+
                                 const rangeEl = card.querySelector('[data-range]');
-                                const unitEl = card.querySelector('[data-unit]');
                                 const measurement = measurements.get(descriptor.key);
+
                                 if (!measurement) {
-                                        valueEl.textContent = '--';
-                                        if (unitEl) {
-                                                unitEl.textContent = descriptor.unit || '';
-                                        }
-                                        rangeEl.textContent = formatRange(descriptor.min, descriptor.max, descriptor.unit);
+                                        if (rangeEl) rangeEl.textContent = formatRange(descriptor.min, descriptor.max, descriptor.unit);
                                         return;
                                 }
-                                valueEl.textContent = formatValue(measurement.value);
-                                // aggiorna gauge
+
                                 const min = measurement.min ?? descriptor.min ?? 0;
                                 const max = measurement.max ?? descriptor.max ?? 100;
                                 renderGauge(
                                         `gauge-${descriptor.key}`,
                                         toNumber(measurement.value) ?? 0,
-                                        min, max, measurement.unit
+                                        min, max,
+                                        measurement.unit || descriptor.unit || ''
                                 );
-                                if (unitEl) {
-                                        unitEl.textContent = measurement.unit || descriptor.unit || '';
-                                }
-                                rangeEl.textContent = formatRange(measurement.min, measurement.max, measurement.unit || descriptor.unit);
+                                if (rangeEl) rangeEl.textContent = formatRange(min, max, measurement.unit || descriptor.unit);
                         });
                 }
 
