@@ -149,18 +149,17 @@ async function loadAggregated() {
         let chart;
 
         if (chartType === 'boolean') {
-            // Bar chart: verde = 0 (OK), rosso = 1 (Issue)
-            const barColors = pts.map(p => {
-                const v = p.avg != null ? Math.round(p.avg) : 0;
-                return v === 1 ? 'rgba(239,83,80,0.85)' : 'rgba(102,187,106,0.7)';
-            });
+            const values = pts.map(p => p.avg != null ? Math.round(p.avg) : 0);
+            const barColors = values.map(v =>
+                v === 1 ? 'rgba(239,83,80,0.85)' : 'rgba(102,187,106,0.7)'
+            );
             chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels,
                     datasets: [{
                         label: title,
-                        data: pts.map(() => 1),
+                        data: values.map(() => 1),
                         backgroundColor: barColors,
                         borderColor: barColors,
                         borderWidth: 0,
@@ -175,8 +174,7 @@ async function loadAggregated() {
                         tooltip: {
                             callbacks: {
                                 label: (ctx2) => {
-                                    const v = pts[ctx2.dataIndex]?.avg;
-                                    return v != null ? (Math.round(v) === 1 ? 'Issue' : 'OK') : '--';
+                                    return values[ctx2.dataIndex] === 1 ? '⚠ Issue' : '✓ OK';
                                 }
                             }
                         }
