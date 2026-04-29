@@ -65,6 +65,11 @@
                         </div>
                         <div class="device-actions">
                                 <a th:href="@{'/admin/group/' + ${project.id}}" class="back-to-map">Back to map</a>
+                                <a th:href="@{'/admin/device-history/' + ${project.id} + '/' + ${device.deviceKey}}"
+                                        class="back-to-map"
+                                        style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+                                        Historical data
+                                </a>
                                 <div class="device-location"
                                         th:if="${device.latitude != null && device.longitude != null}">
                                         <span>Lat: <strong

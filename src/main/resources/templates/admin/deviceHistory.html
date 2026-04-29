@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+
+<head>
+    <title>Device History</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" th:href="@{/css/deviceDashboard.css}" />
+    <script th:src="@{/js/chart.umd.min.js}"></script>
+</head>
+
+<body th:class="'dashboard-body theme-' + ${projectKey}">
+    <header class="navbar">
+        <div class="nav-left">
+            <h1>
+                <a th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link"
+                    th:text="${project.name}">Project</a>
+            </h1>
+        </div>
+        <div class="nav-right">
+            <div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+                <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true"
+                    aria-expanded="false">
+                    Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+                    <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+                        height="16" fill="white">
+                        <path d="M7 10l5 5 5-5z" />
+                    </svg>
+                </button>
+                <div class="dropdown-menu" id="userDropdownMenu" role="menu" aria-labelledby="userDropdown">
+                    <a th:href="@{/personal-area}" class="dropdown-link" role="menuitem">Personal Area</a>
+                    <form th:action="@{/logout}" method="post" th:csrf="true">
+                        <button type="submit" class="dropdown-logout" role="menuitem">Logout</button>
+                    </form>
+                </div>
+            </div>
+            <a href="/" class="home-button" title="Homepage">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <section class="device-header">
+            <div>
+                <h2 th:text="${device.name}">Device name</h2>
+                <p class="device-meta">
+                    <span th:if="${device.macAddress != null}">MAC: <strong
+                            th:text="${T(it.sensorplatform.util.MacAddressUtils).format(device.macAddress)}">--</strong></span>
+                    <span th:if="${device.macAddress == null}">DevEUI: <strong
+                            th:text="${device.devEui != null ? T(it.sensorplatform.util.MacAddressUtils).format(device.devEui) : '--'}">--</strong></span>
+                    <span>Status: <strong th:text="${device.activated} ? 'activated' : 'deactivated'">--</strong></span>
+                </p>
+            </div>
+            <div class="device-actions">
+                <a th:href="@{'/admin/group/' + ${project.id}}" class="back-to-map">Back to map</a>
+                <a th:href="@{'/admin/device-dashboard/' + ${project.id} + '/' + ${device.deviceKey}}"
+                    class="back-to-map"
+                    style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+                    ← Back to dashboard
+                </a>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <h3>Historical data — <span th:text="${device.name}">device</span></h3>
+                <div class="history-controls">
+                    <label for="agg-period">Aggregation</label>
+                    <select id="agg-period">
+                        <option value="hour">Hourly</option>
+                        <option value="day" selected>Daily</option>
+                        <option value="week">Weekly</option>
+                    </select>
+                    <label for="agg-days">Range</label>
+                    <select id="agg-days">
+                        <option value="7" selected>Last 7 days</option>
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                </div>
+            </div>
+            <div id="history-grid" class="trend-grid"
+                style="grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 1.5rem;"></div>
+            <p id="history-empty" class="empty-state" hidden>No historical data available for this period.</p>
+        </section>
+    </main>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        const DEVICE_KEY = /*[[${device.deviceKey}]]*/ '';
+        const PROJECT_KEY = /*[[${projectKey}]]*/ 'default';
+        /*]]>*/
+    </script>
+    <script>
+        const charts = new Map();
+
+        const palettes = {
+            'ltrad': ['#007bff', '#4dabf7', '#a5d8ff'],
+            'fire': ['#e85d04', '#ff922b', '#ffba08'],
+            'volcano': ['#6a040f', '#9d0208', '#f48c06'],
+            'default': ['#2d6cdf', '#4c9f70', '#dd6b20']
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupDropdown();
+            loadAggregated();
+            document.getElementById('agg-period').addEventListener('change', loadAggregated);
+            document.getElementById('agg-days').addEventListener('change', loadAggregated);
+        });
+
+        function setupDropdown() {
+            const toggle = document.getElementById('userDropdown');
+            const menu = document.getElementById('userDropdownMenu');
+            if (!toggle || !menu) return;
+            toggle.addEventListener('click', e => {
+                e.stopPropagation();
+                const expanded = toggle.getAttribute('aria-expanded') === 'true';
+                toggle.setAttribute('aria-expanded', (!expanded).toString());
+                menu.classList.toggle('show');
+            });
+            document.addEventListener('click', e => {
+                if (!menu.contains(e.target) && e.target !== toggle) {
+                    menu.classList.remove('show');
+                    toggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
+
+        async function loadAggregated() {
+            const period = document.getElementById('agg-period').value;
+            const days = document.getElementById('agg-days').value;
+            const empty = document.getElementById('history-empty');
+            const grid = document.getElementById('history-grid');
+
+            const res = await fetch(
+                `/api/admin/devices/${encodeURIComponent(DEVICE_KEY)}/telemetry/aggregated?period=${period}&days=${days}`
+            );
+
+            if (!res.ok) {
+                empty.hidden = false;
+                grid.innerHTML = '';
+                return;
+            }
+
+            const points = await res.json();
+
+            // raggruppa per segnale
+            const byKey = new Map();
+            points.forEach(p => {
+                if (!byKey.has(p.signalKey)) byKey.set(p.signalKey, []);
+                byKey.get(p.signalKey).push(p);
+            });
+
+            // distruggi vecchi chart
+            charts.forEach(c => c.destroy());
+            charts.clear();
+            grid.innerHTML = '';
+
+            if (!byKey.size) {
+                empty.hidden = false;
+                return;
+            }
+            empty.hidden = true;
+
+            const palette = palettes[PROJECT_KEY] || palettes['default'];
+            let colorIdx = 0;
+
+            byKey.forEach((pts, key) => {
+                const color = palette[colorIdx % palette.length];
+                colorIdx++;
+                const info = pts[0];
+                const labels = pts.map(p => formatBucket(p.bucket, period));
+                const unit = info.unit || '';
+                const title = info.displayName || key;
+
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = 'display:flex;flex-direction:column;gap:0.5rem;';
+
+                const lbl = document.createElement('p');
+                lbl.style.cssText = 'margin:0;font-size:0.9rem;font-weight:500;color:rgba(255,255,255,0.7);';
+                lbl.textContent = unit ? `${title} (${unit})` : title;
+                wrapper.appendChild(lbl);
+
+                const canvas = document.createElement('canvas');
+                canvas.style.cssText = 'width:100%!important;height:220px!important;';
+                wrapper.appendChild(canvas);
+                grid.appendChild(wrapper);
+
+                const ctx = canvas.getContext('2d');
+                const chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels,
+                        datasets: [
+                            {
+                                label: 'Max',
+                                data: pts.map(p => p.max),
+                                borderColor: color + '66',
+                                backgroundColor: color + '18',
+                                borderWidth: 1,
+                                borderDash: [4, 3],
+                                pointRadius: 0,
+                                fill: '+1',
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Avg',
+                                data: pts.map(p => p.avg),
+                                borderColor: color,
+                                backgroundColor: 'transparent',
+                                borderWidth: 2,
+                                pointRadius: 2,
+                                pointHoverRadius: 4,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Min',
+                                data: pts.map(p => p.min),
+                                borderColor: color + '66',
+                                backgroundColor: color + '18',
+                                borderWidth: 1,
+                                borderDash: [4, 3],
+                                pointRadius: 0,
+                                fill: '-1',
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: {
+                                labels: { color: '#ffffff', boxWidth: 12, font: { size: 11 } }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => {
+                                        const v = ctx.parsed.y;
+                                        return `${ctx.dataset.label}: ${v != null ? v.toFixed(2) : '--'} ${unit}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#dde1f2', maxTicksLimit: 12 },
+                                grid: { color: 'rgba(255,255,255,0.08)' }
+                            },
+                            y: {
+                                ticks: { color: '#dde1f2' },
+                                grid: { color: 'rgba(255,255,255,0.08)' }
+                            }
+                        }
+                    }
+                });
+                charts.set(key, chart);
+            });
+        }
+
+        function formatBucket(iso, period) {
+            const d = new Date(iso);
+            if (period === 'hour')
+                return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            if (period === 'week')
+                return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        }
+    </script>
+</body>
+
+</html>

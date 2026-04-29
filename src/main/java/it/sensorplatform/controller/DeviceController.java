@@ -53,8 +53,8 @@ public class DeviceController {
         @Autowired
         private DeviceService deviceService;
 
-	@Autowired
-	private ProjectService projectService;
+        @Autowired
+        private ProjectService projectService;
 
         @Autowired
         private CredentialsService credentialsService;
@@ -65,12 +65,13 @@ public class DeviceController {
         @Autowired
         private SuperadminService superadminService;
 
-	@GetMapping("/superadmin/manageProjectDevices/{projectId}")
-	public String manageProjectDevices(@PathVariable("projectId") Long projectId,
-			@RequestParam(value = "deviceQuery", required = false) String deviceQuery, Model model) {
-		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
-		model.addAttribute("user", credentials);
+        @GetMapping("/superadmin/manageProjectDevices/{projectId}")
+        public String manageProjectDevices(@PathVariable("projectId") Long projectId,
+                        @RequestParam(value = "deviceQuery", required = false) String deviceQuery, Model model) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
+                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                model.addAttribute("user", credentials);
                 Project project = projectService.getProjectById(projectId);
                 Superadmin superadmin = superadminService.findByCredentials(credentials);
                 Set<Device> devicesFiltred;
@@ -78,10 +79,10 @@ public class DeviceController {
                         devicesFiltred = deviceService.findByNameStartingWithIgnoreCase(deviceQuery);
                         devicesFiltred.addAll(deviceService.findByMacAddressStartingWithIgnoreCase(deviceQuery));
                         devicesFiltred.addAll(deviceService.findByEmailOwnerStartingWithIgnoreCase(deviceQuery));
-			devicesFiltred.addAll(deviceService.findByTod_NameStartingWithIgnoreCase(deviceQuery));
-		} else {
-			devicesFiltred = deviceService.findAllByProjectId(projectId);
-		}
+                        devicesFiltred.addAll(deviceService.findByTod_NameStartingWithIgnoreCase(deviceQuery));
+                } else {
+                        devicesFiltred = deviceService.findAllByProjectId(projectId);
+                }
                 List<Device> devices = new ArrayList<>(devicesFiltred);
                 this.loadDeviceDTO(devices, model);
                 model.addAttribute("adminEmails",
@@ -104,9 +105,8 @@ public class DeviceController {
                         return "redirect:/superadmin/manageProjectDevices/" + projectId;
                 }
 
-                final String emailToAssign =
-                                StringUtils.hasText(newEmail) ? newEmail.trim()
-                                                : StringUtils.hasText(existingEmail) ? existingEmail.trim() : null;
+                final String emailToAssign = StringUtils.hasText(newEmail) ? newEmail.trim()
+                                : StringUtils.hasText(existingEmail) ? existingEmail.trim() : null;
 
                 if (!StringUtils.hasText(emailToAssign)) {
                         redirectAttributes.addFlashAttribute("errorMessage",
@@ -128,7 +128,8 @@ public class DeviceController {
                         deviceService.save(device);
                 });
 
-                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
                 Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
                 Superadmin superadmin = superadminService.findByCredentials(credentials);
                 if (superadmin != null) {
@@ -192,19 +193,22 @@ public class DeviceController {
                         deviceService.save(device);
                 });
 
-                logger.info("Assigned Google Sheet link to {} device(s) for project {}", devicesToUpdate.size(), projectId);
+                logger.info("Assigned Google Sheet link to {} device(s) for project {}", devicesToUpdate.size(),
+                                projectId);
 
                 redirectAttributes.addFlashAttribute("successMessage",
                                 devicesToUpdate.size() == 1
                                                 ? "Google Sheet link assigned to 1 device."
-                                                : "Google Sheet link assigned to " + devicesToUpdate.size() + " devices.");
+                                                : "Google Sheet link assigned to " + devicesToUpdate.size()
+                                                                + " devices.");
 
                 return "redirect:/superadmin/manageProjectDevices/" + projectId;
         }
 
         @GetMapping("/superadmin/formNewDevice/{projectId}")
         public String formNewDevice(@PathVariable("projectId") Long projectId, Model model) {
-                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
                 Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
                 model.addAttribute("user", credentials);
                 Project project = projectService.getProjectById(projectId);
@@ -225,7 +229,8 @@ public class DeviceController {
                         return "error";
                 }
                 Device device = deviceOpt.get();
-                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
                 Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
                 model.addAttribute("user", credentials);
                 model.addAttribute("project", project);
@@ -236,7 +241,8 @@ public class DeviceController {
         @PostMapping("/superadmin/updateDevice/{projectId}/{macAddress}")
         public String adminUpdateDevice(@PathVariable("projectId") Long projectId,
                         @PathVariable("macAddress") String deviceKey, @RequestParam String name,
-                        @RequestParam(required = false) Double latitude, @RequestParam(required = false) Double longitude,
+                        @RequestParam(required = false) Double latitude,
+                        @RequestParam(required = false) Double longitude,
                         RedirectAttributes redirectAttributes) {
 
                 if (name == null || name.trim().isEmpty()) {
@@ -277,7 +283,8 @@ public class DeviceController {
         }
 
         @PostMapping("/superadmin/deleteDevice/{projectId}/{macAddress}")
-        public String deleteDevice(@PathVariable("projectId") Long projectId, @PathVariable("macAddress") String deviceKey,
+        public String deleteDevice(@PathVariable("projectId") Long projectId,
+                        @PathVariable("macAddress") String deviceKey,
                         RedirectAttributes redirectAttributes) {
                 String normalizedKey = MacAddressUtils.normalize(deviceKey);
                 if (normalizedKey == null || normalizedKey.isBlank()) {
@@ -295,12 +302,15 @@ public class DeviceController {
         }
 
         @GetMapping("/device/{projectId}/{macAddress}")
-        public String aboutDevice(@PathVariable("projectId") Long projectId, @PathVariable("macAddress") String deviceKey,
+        public String aboutDevice(@PathVariable("projectId") Long projectId,
+                        @PathVariable("macAddress") String deviceKey,
                         Model model) {
-                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
                 Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
-                if(!Objects.equals(credentials.getProjectId(), projectId)){
-                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Non hai i permessi per visualizzare questo progetto.");
+                if (!Objects.equals(credentials.getProjectId(), projectId)) {
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                        "Accesso negato: Non hai i permessi per visualizzare questo progetto.");
                 }
                 String normalizedKey = MacAddressUtils.normalize(deviceKey);
                 Project project = projectService.getProjectById(projectId);
@@ -312,25 +322,30 @@ public class DeviceController {
                         return "error";
                 }
                 Device device = deviceOpt.get();
-                if(device.getProject() == null || !Objects.equals(device.getProject().getId(),projectId)){
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incongruenza: Il dispositivo richiesto non appartiene a questo progetto.");
+                if (device.getProject() == null || !Objects.equals(device.getProject().getId(), projectId)) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                        "Incongruenza: Il dispositivo richiesto non appartiene a questo progetto.");
                 }
                 model.addAttribute("user", credentials);
                 model.addAttribute("project", project);
                 model.addAttribute("device", device);
-		return "updateDevice";
-	}
+                return "updateDevice";
+        }
 
         @PostMapping("/updateDevice/{projectId}/{macAddress}")
-        public String updateDevice(@PathVariable Long projectId, @PathVariable String macAddress, @RequestParam String name,
-                        @RequestParam(required = false) Double latitude, @RequestParam(required = false) Double longitude,
+        public String updateDevice(@PathVariable Long projectId, @PathVariable String macAddress,
+                        @RequestParam String name,
+                        @RequestParam(required = false) Double latitude,
+                        @RequestParam(required = false) Double longitude,
                         RedirectAttributes redirectAttributes) {
-                
-                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
                 Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
-                
+
                 if (!Objects.equals(credentials.getProjectId(), projectId)) {
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Non puoi modificare i dispositivi di un altro progetto.");
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                        "Accesso negato: Non puoi modificare i dispositivi di un altro progetto.");
                 }
 
                 String normalizedKey = MacAddressUtils.normalize(macAddress);
@@ -353,7 +368,8 @@ public class DeviceController {
 
                 Device device = deviceOpt.get();
                 if (device.getProject() == null || !Objects.equals(device.getProject().getId(), projectId)) {
-                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incongruenza: Il dispositivo non appartiene a questo progetto.");
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                        "Incongruenza: Il dispositivo non appartiene a questo progetto.");
                 }
                 // Aggiorna solo i campi modificabili
                 device.setName(SanitizationUtils.sanitize(name));
@@ -374,32 +390,39 @@ public class DeviceController {
                 return "redirect:/device/" + projectId + "/" + normalizedKey;
         }
 
-	@GetMapping("/admin/formRegisterOperator/{projectId}")
-	public String formRegisterOperator(@PathVariable Long projectId, Model model) {
-		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
-                // CONTROLLO DI SICUREZZA: L'Admin sta provando ad accedere a un progetto non suo?
+        @GetMapping("/admin/formRegisterOperator/{projectId}")
+        public String formRegisterOperator(@PathVariable Long projectId, Model model) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
+                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                // CONTROLLO DI SICUREZZA: L'Admin sta provando ad accedere a un progetto non
+                // suo?
                 if (!Objects.equals(credentials.getProjectId(), projectId)) {
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Non hai i permessi per questo progetto.");
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                        "Accesso negato: Non hai i permessi per questo progetto.");
                 }
-		model.addAttribute("user", credentials);
-		// model.addAttribute("user", new User());
-		model.addAttribute("credentials", new Credentials());
-		model.addAttribute("projectId", projectId);
+                model.addAttribute("user", credentials);
+                // model.addAttribute("user", new User());
+                model.addAttribute("credentials", new Credentials());
+                model.addAttribute("projectId", projectId);
 
-            return "admin/formRegisterOperator";
+                return "admin/formRegisterOperator";
 
-	}
+        }
 
-	@PostMapping("/admin/registerOperator/{projectId}")
-	public String registerOperator(@PathVariable Long projectId, @Valid Credentials credentials,
-			BindingResult bindingResult, @RequestParam("confirmPassword") String confirmPassword, Model model) {
-		
-		UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		Credentials userCredentials = credentialsService.getCredentials(userDetails.getUsername());
-                // CONTROLLO DI SICUREZZA POST: Impedisce la creazione forzata tramite Postman/API
+        @PostMapping("/admin/registerOperator/{projectId}")
+        public String registerOperator(@PathVariable Long projectId, @Valid Credentials credentials,
+                        BindingResult bindingResult, @RequestParam("confirmPassword") String confirmPassword,
+                        Model model) {
+
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
+                Credentials userCredentials = credentialsService.getCredentials(userDetails.getUsername());
+                // CONTROLLO DI SICUREZZA POST: Impedisce la creazione forzata tramite
+                // Postman/API
                 if (!Objects.equals(userCredentials.getProjectId(), projectId)) {
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Operazione non autorizzata su questo progetto.");
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                        "Accesso negato: Operazione non autorizzata su questo progetto.");
                 }
                 boolean error = false;
                 model.addAttribute("user", userCredentials);
@@ -409,36 +432,36 @@ public class DeviceController {
                 String email = credentials.getEmail();
                 String username = credentials.getUsername();
                 String projectName = project.getName();
-		credentials.setVisibleUsername(username);
-		username = username + "|" + projectName;
-		
-		if (!bindingResult.hasErrors()) {
-			if (!credentials.getPassword().equals(confirmPassword)) {
-				error = true;
-				model.addAttribute("passwordMismatchError", "Passwords do not match.");
-			}
-			if (credentialsService.existsByUsername(username)) {
-				error = true;
-				model.addAttribute("usernameAlreadyInUse", "Username already in use for this project");
-			}
-			if (credentialsService.existsByEmailAndProjectId(email, projectId)) {
-				error = true;
-				model.addAttribute("emailAlreadyInUse", "Email already in use for this project");
-			}
-			if (error) {
-				model.addAttribute("projectId", projectId);
-//				List<Project> projects = (List<Project>) projectService.getAllProjects();
-//				model.addAttribute("projects", projects);
-                            return "admin/formRegisterOperator";
-			}
+                credentials.setVisibleUsername(username);
+                username = username + "|" + projectName;
 
-			credentials.setUsername(username);
-			if (project.getName().equals("LTRAD")) {
-				credentials.setRole(Credentials.LTRAD_OPERATOR_ROLE);
-			}
-			if (project.getName().equals("FIRE")) {
-				credentials.setRole(Credentials.FIRE_OPERATOR_ROLE);
-			}
+                if (!bindingResult.hasErrors()) {
+                        if (!credentials.getPassword().equals(confirmPassword)) {
+                                error = true;
+                                model.addAttribute("passwordMismatchError", "Passwords do not match.");
+                        }
+                        if (credentialsService.existsByUsername(username)) {
+                                error = true;
+                                model.addAttribute("usernameAlreadyInUse", "Username already in use for this project");
+                        }
+                        if (credentialsService.existsByEmailAndProjectId(email, projectId)) {
+                                error = true;
+                                model.addAttribute("emailAlreadyInUse", "Email already in use for this project");
+                        }
+                        if (error) {
+                                model.addAttribute("projectId", projectId);
+                                // List<Project> projects = (List<Project>) projectService.getAllProjects();
+                                // model.addAttribute("projects", projects);
+                                return "admin/formRegisterOperator";
+                        }
+
+                        credentials.setUsername(username);
+                        if (project.getName().equals("LTRAD")) {
+                                credentials.setRole(Credentials.LTRAD_OPERATOR_ROLE);
+                        }
+                        if (project.getName().equals("FIRE")) {
+                                credentials.setRole(Credentials.FIRE_OPERATOR_ROLE);
+                        }
                         if (project.getName().equals("VOLCANO")) {
                                 credentials.setRole(Credentials.VOLCANO_OPERATOR_ROLE);
                         }
@@ -449,79 +472,90 @@ public class DeviceController {
                         model.addAttribute("project", project);
                         model.addAttribute("successMessage", "New operator created succesfully");
 
-			return "redirect:/admin/group/" + projectId;
-		}
-				
-            return "admin/formRegisterOperator";
+                        return "redirect:/admin/group/" + projectId;
+                }
 
-	}
+                return "admin/formRegisterOperator";
+
+        }
 
         @PostMapping("/admin/selectOperator/{macAddress}/{opId}/{projectId}")
-        public String assignOperatorToDevice(@PathVariable ("projectId") Long projectId, @PathVariable ("macAddress") String macAddress,
-                                                                                @PathVariable("opId") Long opId, RedirectAttributes ra) {
-                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        public String assignOperatorToDevice(@PathVariable("projectId") Long projectId,
+                        @PathVariable("macAddress") String macAddress,
+                        @PathVariable("opId") Long opId, RedirectAttributes ra) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
                 Credentials userCredentials = credentialsService.getCredentials(userDetails.getUsername());
                 if (!Objects.equals(userCredentials.getProjectId(), projectId)) {
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Operazione non autorizzata su questo progetto.");
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                        "Accesso negato: Operazione non autorizzata su questo progetto.");
                 }
                 String normalizedKey = MacAddressUtils.normalize(macAddress);
                 if (normalizedKey == null || normalizedKey.isBlank()) {
                         ra.addFlashAttribute("errorMessage", "Device not found.");
-                        return "redirect:/admin/group/"+projectId;
+                        return "redirect:/admin/group/" + projectId;
                 }
                 Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
                 if (deviceOpt.isEmpty()) {
                         ra.addFlashAttribute("errorMessage", "Device not found.");
-                        return "redirect:/admin/group/"+projectId;
+                        return "redirect:/admin/group/" + projectId;
                 }
                 Device d = deviceOpt.get();
-                // CONTROLLO DI COERENZA: Il dispositivo appartiene davvero al progetto passato nell'URL?
+                // CONTROLLO DI COERENZA: Il dispositivo appartiene davvero al progetto passato
+                // nell'URL?
                 if (d.getProject() == null || !Objects.equals(d.getProject().getId(), projectId)) {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incongruenza: Il dispositivo non appartiene a questo progetto.");
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                        "Incongruenza: Il dispositivo non appartiene a questo progetto.");
                 }
                 Credentials operator = credentialsService.findById(opId);
 
                 d.setOperator(operator);
                 deviceService.save(d);
 
-                return "redirect:/admin/group/"+projectId;
+                return "redirect:/admin/group/" + projectId;
         }
 
         @PostMapping("/admin/removeOperator/{macAddress}/{projectId}")
-        public String removeOperatorfromDevice(@PathVariable ("projectId") Long projectId, @PathVariable ("macAddress") String macAddress,
-                                                                                 RedirectAttributes ra) {
-                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        public String removeOperatorfromDevice(@PathVariable("projectId") Long projectId,
+                        @PathVariable("macAddress") String macAddress,
+                        RedirectAttributes ra) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
                 Credentials userCredentials = credentialsService.getCredentials(userDetails.getUsername());
                 if (!Objects.equals(userCredentials.getProjectId(), projectId)) {
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accesso negato: Operazione non autorizzata su questo progetto.");
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                                        "Accesso negato: Operazione non autorizzata su questo progetto.");
                 }
                 String normalizedKey = MacAddressUtils.normalize(macAddress);
                 if (normalizedKey == null || normalizedKey.isBlank()) {
                         ra.addFlashAttribute("errorMessage", "Device not found.");
-                        return "redirect:/admin/group/"+projectId;
+                        return "redirect:/admin/group/" + projectId;
                 }
                 Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedKey);
                 if (deviceOpt.isEmpty()) {
                         ra.addFlashAttribute("errorMessage", "Device not found.");
-                        return "redirect:/admin/group/"+projectId;
+                        return "redirect:/admin/group/" + projectId;
                 }
                 Device d = deviceOpt.get();
-                // CONTROLLO DI COERENZA: Il dispositivo appartiene davvero al progetto passato nell'URL?
+                // CONTROLLO DI COERENZA: Il dispositivo appartiene davvero al progetto passato
+                // nell'URL?
                 if (d.getProject() == null || !Objects.equals(d.getProject().getId(), projectId)) {
-                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incongruenza: Il dispositivo non appartiene a questo progetto.");
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                                        "Incongruenza: Il dispositivo non appartiene a questo progetto.");
                 }
                 d.setOperator(null);
                 d.setActivated(false);
                 deviceService.save(d);
                 ra.addFlashAttribute("successMessage", "Operator removed.");
-                return "redirect:/admin/group/"+projectId;
+                return "redirect:/admin/group/" + projectId;
         }
 
         @GetMapping("/admin/device-dashboard/{projectId}/{macAddress}")
         public String viewDeviceDashboard(@PathVariable("projectId") Long projectId,
-                                          @PathVariable("macAddress") String macAddress,
-                                          Model model) {
-                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+                        @PathVariable("macAddress") String macAddress,
+                        Model model) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
                 Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
                 model.addAttribute("user", credentials);
 
@@ -554,9 +588,51 @@ public class DeviceController {
                 String projectKey = project.getName() != null ? project.getName().toLowerCase(Locale.ROOT) : "default";
                 model.addAttribute("projectKey", projectKey);
                 model.addAttribute("specs", device.getTod() != null && device.getTod().getSpecs() != null
-                                ? device.getTod().getSpecs() : List.of());
+                                ? device.getTod().getSpecs()
+                                : List.of());
 
                 return "admin/deviceDashboard";
+        }
+
+        @GetMapping("/admin/device-history/{projectId}/{macAddress}")
+        public String viewDeviceHistory(@PathVariable("projectId") Long projectId,
+                        @PathVariable("macAddress") String macAddress,
+                        Model model) {
+                UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication()
+                                .getPrincipal();
+                Credentials credentials = credentialsService.getCredentials(userDetails.getUsername());
+                model.addAttribute("user", credentials);
+
+                if (credentials.getAdmin() == null) {
+                        return "error";
+                }
+
+                Project project = projectService.getProjectById(projectId);
+                if (project == null || !Objects.equals(project.getId(), credentials.getProjectId())) {
+                        return "error";
+                }
+
+                if (!isAdminRoleForProject(credentials.getRole(), project.getName())) {
+                        return "error";
+                }
+
+                String normalizedMac = MacAddressUtils.normalize(macAddress);
+                Optional<Device> deviceOpt = deviceService.findOptionalByDeviceKey(normalizedMac);
+                if (deviceOpt.isEmpty()) {
+                        return "error";
+                }
+
+                Device device = deviceOpt.get();
+                if (device.getProject() == null || !Objects.equals(device.getProject().getId(), projectId)) {
+                        return "error";
+                }
+
+                model.addAttribute("project", project);
+                model.addAttribute("device", device);
+                String projectKey = project.getName() != null ? project.getName().toLowerCase(Locale.ROOT) : "default";
+                model.addAttribute("projectKey", projectKey);
+
+                return "admin/deviceHistory";
         }
 
         private boolean isAdminRoleForProject(String role, String projectName) {
@@ -575,7 +651,8 @@ public class DeviceController {
         public void loadDeviceDTO(List<Device> devices, Model model) {
                 List<DeviceDTO> deviceDTOs = devices.stream().map(d -> new DeviceDTO(d.getId(), d.getName(),
                                 d.getMacAddress(), d.getEmailOwner(), d.getDevEui(), d.getLongitude(), d.getLatitude(),
-                                d.getTod() != null ? d.getTod().getName() : null, d.getVisibleUsername(), d.isActivated(),
+                                d.getTod() != null ? d.getTod().getName() : null, d.getVisibleUsername(),
+                                d.isActivated(),
                                 d.getGsheet()))
                                 .collect(Collectors.toList());
                 Comparator<DeviceDTO> cmp = Comparator.comparing(DeviceDTO::getEmailOwner,
