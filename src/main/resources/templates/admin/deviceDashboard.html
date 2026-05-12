@@ -154,6 +154,7 @@
                                         Critical threshold</label>
                                 <input id="modal-critical" type="number" step="any" placeholder="e.g. 5000"
                                         style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
+                                <p id="modal-range-hint" style="margin:0 0 1rem;font-size:0.75rem;color:rgba(255,255,255,0.35);"></p>
                         </div>
 
                         <!-- booleani -->
@@ -488,7 +489,9 @@
                                 <div class="metric-heading">
                                         <span class="metric-title">${title}</span>
                                         <span class="metric-subtitle" data-component></span>
-                                        <button class="alert-config-btn" onclick="openAlertModal('${descriptor.key}', 'numeric', '${title}')" title="Alert settings">⚙️</button>
+                                        <button class="alert-config-btn" 
+                                        onclick="openAlertModal('${descriptor.key}', '${title}', ${descriptor.min ?? 0}, ${descriptor.max ?? 100})" 
+                                        title="Alert settings">⚙️</button>
                                 </div>
                                 <div class="gauge-wrapper">
                                         <canvas id="gauge-${descriptor.key}" class="gauge-canvas"></canvas>
@@ -1049,9 +1052,31 @@
                         } catch (e) { console.warn('Alert config not loaded', e); }
                 }
 
-                function openAlertModal(signalKey, defaultType, title) {
+                // Default warning/critical come percentuale del range — speculare ad arcColor
+                const SIGNAL_DEFAULTS = {
+                        'co2concentration_ppm': { wPct: 0.2, cPct: 0.5 },
+                        'pm1_0_ugm3': { wPct: 0.2, cPct: 0.5 },
+                        'pm2_5_ugm3': { wPct: 0.2, cPct: 0.5 },
+                        'pm4_0_ugm3': { wPct: 0.2, cPct: 0.5 },
+                        'pm10_0_ugm3': { wPct: 0.2, cPct: 0.5 },
+                        'voc_index': { wPct: 0.3, cPct: 0.6 },
+                        'nox_index': { wPct: 0.3, cPct: 0.6 },
+                        'gasresistance_ohm': { wPct: 0.3, cPct: 0.6 }, // invertito: basso = cattivo
+                        'temperature_celsius': { wPct: 0.15, cPct: 0.85 },
+                        'humidity_percent': { wPct: 0.15, cPct: 0.85 },
+                        'pressure_hpa': { wPct: 0.25, cPct: 0.90 },
+                        'si_m_s': { wPct: 0.15, cPct: 0.40 },
+                        'pga_m_s2': { wPct: 0.15, cPct: 0.40 },
+                };
+
+                let _modalMin = 0;
+                let _modalMax = 100;
+
+                function openAlertModal(signalKey, title, min, max) {
                         _modalSignalKey = signalKey;
                         _modalSignalType = SIGNAL_TYPE_FOR_MODAL[signalKey.toLowerCase()] || 'numeric';
+                        _modalMin = min ?? 0;
+                        _modalMax = max ?? 100;
 
                         document.getElementById('modal-title').textContent = `Alert settings — ${title}`;
                         document.getElementById('modal-numeric').style.display = _modalSignalType === 'numeric' ? 'block' : 'none';
@@ -1059,15 +1084,31 @@
                         document.getElementById('modal-status').style.display = _modalSignalType === 'status' ? 'block' : 'none';
 
                         const cfg = _alertConfigs[signalKey] || {};
-                        document.getElementById('modal-warning').value = cfg.thresholdWarning ?? '';
-                        document.getElementById('modal-critical').value = cfg.thresholdCritical ?? '';
+
+                        // calcola default da percentuale
+                        const def = SIGNAL_DEFAULTS[signalKey.toLowerCase()];
+                        const defWarning = def ? Math.round(_modalMin + def.wPct * (_modalMax - _modalMin)) : null;
+                        const defCritical = def ? Math.round(_modalMin + def.cPct * (_modalMax - _modalMin)) : null;
+
+                        const wInput = document.getElementById('modal-warning');
+                        const cInput = document.getElementById('modal-critical');
+                        wInput.value = cfg.thresholdWarning ?? '';
+                        cInput.value = cfg.thresholdCritical ?? '';
+                        wInput.placeholder = defWarning != null ? `default: ${defWarning}` : `min: ${_modalMin}`;
+                        cInput.placeholder = defCritical != null ? `default: ${defCritical}` : `max: ${_modalMax}`;
+                        wInput.min = _modalMin; wInput.max = _modalMax;
+                        cInput.min = _modalMin; cInput.max = _modalMax;
+
                         document.getElementById('modal-trigger-bool').checked = cfg.triggerValue === 1;
                         document.getElementById('modal-trigger-status').value = cfg.triggerValue ?? '';
                         document.getElementById('modal-interval').value = cfg.intervalMin ?? '';
                         document.getElementById('modal-status-msg').style.display = 'none';
 
-                        const overlay = document.getElementById('alert-modal-overlay');
-                        overlay.style.display = 'flex';
+                        // mostra range sotto i campi
+                        document.getElementById('modal-range-hint').textContent =
+                                `Valid range: ${_modalMin} – ${_modalMax}`;
+
+                        document.getElementById('alert-modal-overlay').style.display = 'flex';
                 }
 
                 function closeAlertModal() {
@@ -1076,12 +1117,37 @@
 
                 async function saveSignalConfig() {
                         const body = { signalKey: _modalSignalKey };
+                        const msg = document.getElementById('modal-status-msg');
 
                         if (_modalSignalType === 'numeric') {
-                                const w = document.getElementById('modal-warning').value;
-                                const c = document.getElementById('modal-critical').value;
-                                body.thresholdWarning = w !== '' ? parseFloat(w) : null;
-                                body.thresholdCritical = c !== '' ? parseFloat(c) : null;
+                                const wVal = document.getElementById('modal-warning').value;
+                                const cVal = document.getElementById('modal-critical').value;
+                                const w = wVal !== '' ? parseFloat(wVal) : null;
+                                const c = cVal !== '' ? parseFloat(cVal) : null;
+
+                                // validazione range
+                                if (w !== null && (w < _modalMin || w > _modalMax)) {
+                                        msg.textContent = `⚠ Warning must be between ${_modalMin} and ${_modalMax}`;
+                                        msg.style.color = '#ffb300';
+                                        msg.style.display = 'block';
+                                        return;
+                                }
+                                if (c !== null && (c < _modalMin || c > _modalMax)) {
+                                        msg.textContent = `⚠ Critical must be between ${_modalMin} and ${_modalMax}`;
+                                        msg.style.color = '#ffb300';
+                                        msg.style.display = 'block';
+                                        return;
+                                }
+                                // warning < critical
+                                if (w !== null && c !== null && w >= c) {
+                                        msg.textContent = '⚠ Warning must be less than Critical';
+                                        msg.style.color = '#ffb300';
+                                        msg.style.display = 'block';
+                                        return;
+                                }
+                                body.thresholdWarning = w;
+                                body.thresholdCritical = c;
+
                         } else if (_modalSignalType === 'boolean') {
                                 body.triggerValue = document.getElementById('modal-trigger-bool').checked ? 1 : null;
                         } else {
@@ -1089,16 +1155,26 @@
                                 body.triggerValue = v !== '' ? parseInt(v) : null;
                         }
 
+                        // validazione intervallo
                         const iv = document.getElementById('modal-interval').value;
-                        body.intervalMin = iv !== '' ? parseInt(iv) : null;
+                        if (iv !== '') {
+                                const ivNum = parseInt(iv);
+                                if (isNaN(ivNum) || ivNum < 1) {
+                                        msg.textContent = '⚠ Interval must be a whole number ≥ 1 minute';
+                                        msg.style.color = '#ffb300';
+                                        msg.style.display = 'block';
+                                        return;
+                                }
+                                body.intervalMin = ivNum;
+                        } else {
+                                body.intervalMin = null;
+                        }
 
-                        const res = await fetch(`/api/admin/alert-config/${PROJECT_ID}/signal/${encodeURIComponent(_modalSignalKey)}`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(body)
-                        });
+                        const res = await fetch(
+                                `/api/admin/alert-config/${PROJECT_ID}/signal/${encodeURIComponent(_modalSignalKey)}`,
+                                { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+                        );
 
-                        const msg = document.getElementById('modal-status-msg');
                         if (res.ok) {
                                 _alertConfigs[_modalSignalKey] = body;
                                 msg.textContent = '✓ Saved';
