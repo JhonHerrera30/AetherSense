@@ -23,6 +23,12 @@ public class AlertConfigSignal {
     @Column(name = "threshold_critical")
     private Double thresholdCritical;
 
+    @Column(name = "threshold_warning_low")
+    private Double thresholdWarningLow;
+
+    @Column(name = "threshold_critical_low")
+    private Double thresholdCriticalLow;
+
     // per booleani/stati: valore che scatta l'alert (es. 1)
     @Column(name = "trigger_value")
     private Integer triggerValue;
@@ -70,6 +76,12 @@ public class AlertConfigSignal {
     public void setThresholdCritical(Double thresholdCritical) {
         this.thresholdCritical = thresholdCritical;
     }
+
+    public Double getThresholdWarningLow() { return thresholdWarningLow; }
+    public void setThresholdWarningLow(Double thresholdWarningLow) { this.thresholdWarningLow = thresholdWarningLow; }
+
+    public Double getThresholdCriticalLow() { return thresholdCriticalLow; }
+    public void setThresholdCriticalLow(Double thresholdCriticalLow) { this.thresholdCriticalLow = thresholdCriticalLow; }
 
     public Integer getTriggerValue() {
         return triggerValue;

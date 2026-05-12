@@ -48,6 +48,8 @@ public class AlertConfigDTO {
         private Double thresholdCritical;
         private Integer triggerValue;
         private Integer intervalMin; // null = usa globale
+        private Double thresholdWarningLow;
+        private Double thresholdCriticalLow;
 
         public String getSignalKey() {
             return signalKey;
@@ -87,6 +89,22 @@ public class AlertConfigDTO {
 
         public void setIntervalMin(Integer intervalMin) {
             this.intervalMin = intervalMin;
+        }
+
+        public Double getThresholdWarningLow() {
+            return thresholdWarningLow;
+        }
+
+        public void setThresholdWarningLow(Double v) {
+            this.thresholdWarningLow = v;
+        }
+
+        public Double getThresholdCriticalLow() {
+            return thresholdCriticalLow;
+        }
+
+        public void setThresholdCriticalLow(Double v) {
+            this.thresholdCriticalLow = v;
         }
     }
 

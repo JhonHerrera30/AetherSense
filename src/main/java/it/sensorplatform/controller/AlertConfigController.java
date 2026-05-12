@@ -72,6 +72,8 @@ public class AlertConfigController {
             sc.setThresholdCritical(s.getThresholdCritical());
             sc.setTriggerValue(s.getTriggerValue());
             sc.setIntervalMin(s.getIntervalMin());
+            sc.setThresholdWarningLow(s.getThresholdWarningLow());
+            sc.setThresholdCriticalLow(s.getThresholdCriticalLow());
             return sc;
         }).toList();
         dto.setSignals(signalDtos);
@@ -113,6 +115,8 @@ public class AlertConfigController {
         signal.setSignalKey(signalKey);
         signal.setThresholdWarning(body.getThresholdWarning());
         signal.setThresholdCritical(body.getThresholdCritical());
+        signal.setThresholdWarningLow(body.getThresholdWarningLow());
+        signal.setThresholdCriticalLow(body.getThresholdCriticalLow());
         signal.setTriggerValue(body.getTriggerValue());
         signal.setIntervalMin(body.getIntervalMin());
         signalRepo.save(signal);

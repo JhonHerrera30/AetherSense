@@ -144,17 +144,46 @@
 
                         <!-- segnali numerici -->
                         <div id="modal-numeric" style="display:none;">
+                                <!-- toggle one/both -->
+                                <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+                                        <button id="btn-only-high" onclick="setThresholdMode('high')"
+                                                style="flex:1;padding:0.4rem;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.15);color:#fff;cursor:pointer;font-size:0.8rem;">
+                                                Only high ↑
+                                        </button>
+                                        <button id="btn-both" onclick="setThresholdMode('both')"
+                                                style="flex:1;padding:0.4rem;border-radius:6px;border:1px solid rgba(255,255,255,0.2);background:none;color:rgba(255,255,255,0.5);cursor:pointer;font-size:0.8rem;">
+                                                Both ↑↓
+                                        </button>
+                                </div>
+
+                                <!-- high thresholds -->
                                 <label
                                         style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">⚠️
-                                        Warning threshold</label>
+                                        Warning — too high</label>
                                 <input id="modal-warning" type="number" step="any" placeholder="e.g. 1000"
-                                        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
+                                        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:0.75rem;font-size:0.9rem;">
                                 <label
                                         style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">🔴
-                                        Critical threshold</label>
+                                        Critical — too high</label>
                                 <input id="modal-critical" type="number" step="any" placeholder="e.g. 5000"
-                                        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
-                                <p id="modal-range-hint" style="margin:0 0 1rem;font-size:0.75rem;color:rgba(255,255,255,0.35);"></p>
+                                        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:0.5rem;font-size:0.9rem;">
+                                <p id="modal-range-hint"
+                                        style="margin:0 0 1rem;font-size:0.75rem;color:rgba(255,255,255,0.35);"></p>
+
+                                <!-- low thresholds — visibili solo in modalità "both" -->
+                                <div id="modal-low-section"
+                                        style="display:none;border-top:1px solid rgba(255,255,255,0.08);padding-top:0.75rem;">
+                                        <label
+                                                style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">⚠️
+                                                Warning — too low</label>
+                                        <input id="modal-warning-low" type="number" step="any" placeholder="e.g. 10"
+                                                style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:0.75rem;font-size:0.9rem;">
+                                        <label
+                                                style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">🔴
+                                                Critical — too low</label>
+                                        <input id="modal-critical-low" type="number" step="any" placeholder="e.g. 0"
+                                                style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
+                                </div>
                         </div>
 
                         <!-- booleani -->
@@ -1102,6 +1131,18 @@
                         document.getElementById('modal-trigger-bool').checked = cfg.triggerValue === 1;
                         document.getElementById('modal-trigger-status').value = cfg.triggerValue ?? '';
                         document.getElementById('modal-interval').value = cfg.intervalMin ?? '';
+
+                        // imposta modalità toggle e valori low
+                        const hasLow = cfg.thresholdWarningLow != null || cfg.thresholdCriticalLow != null;
+                        setThresholdMode(hasLow ? 'both' : 'high');
+                        document.getElementById('modal-warning-low').value = cfg.thresholdWarningLow ?? '';
+                        document.getElementById('modal-critical-low').value = cfg.thresholdCriticalLow ?? '';
+
+                        // placeholder low
+                        const wLowInput = document.getElementById('modal-warning-low');
+                        const cLowInput = document.getElementById('modal-critical-low');
+                        wLowInput.min = _modalMin; wLowInput.max = _modalMax;
+                        cLowInput.min = _modalMin; cLowInput.max = _modalMax;
                         document.getElementById('modal-status-msg').style.display = 'none';
 
                         // mostra range sotto i campi
@@ -1113,6 +1154,25 @@
 
                 function closeAlertModal() {
                         document.getElementById('alert-modal-overlay').style.display = 'none';
+                }
+
+                function setThresholdMode(mode) {
+                        const lowSection = document.getElementById('modal-low-section');
+                        const btnHigh = document.getElementById('btn-only-high');
+                        const btnBoth = document.getElementById('btn-both');
+                        if (mode === 'both') {
+                                lowSection.style.display = 'block';
+                                btnBoth.style.background = 'rgba(255,255,255,0.15)';
+                                btnBoth.style.color = '#fff';
+                                btnHigh.style.background = 'none';
+                                btnHigh.style.color = 'rgba(255,255,255,0.5)';
+                        } else {
+                                lowSection.style.display = 'none';
+                                btnHigh.style.background = 'rgba(255,255,255,0.15)';
+                                btnHigh.style.color = '#fff';
+                                btnBoth.style.background = 'none';
+                                btnBoth.style.color = 'rgba(255,255,255,0.5)';
+                        }
                 }
 
                 async function saveSignalConfig() {
@@ -1147,6 +1207,39 @@
                                 }
                                 body.thresholdWarning = w;
                                 body.thresholdCritical = c;
+
+                                // low thresholds — solo se la sezione è visibile
+                                const lowVisible = document.getElementById('modal-low-section').style.display !== 'none';
+                                if (lowVisible) {
+                                        const wlVal = document.getElementById('modal-warning-low').value;
+                                        const clVal = document.getElementById('modal-critical-low').value;
+                                        const wl = wlVal !== '' ? parseFloat(wlVal) : null;
+                                        const cl = clVal !== '' ? parseFloat(clVal) : null;
+
+                                        if (wl !== null && (wl < _modalMin || wl > _modalMax)) {
+                                                msg.textContent = `⚠ Warning Low must be between ${_modalMin} and ${_modalMax}`;
+                                                msg.style.color = '#ffb300';
+                                                msg.style.display = 'block';
+                                                return;
+                                        }
+                                        if (cl !== null && (cl < _modalMin || cl > _modalMax)) {
+                                                msg.textContent = `⚠ Critical Low must be between ${_modalMin} and ${_modalMax}`;
+                                                msg.style.color = '#ffb300';
+                                                msg.style.display = 'block';
+                                                return;
+                                        }
+                                        if (wl !== null && cl !== null && wl <= cl) {
+                                                msg.textContent = '⚠ Warning Low must be greater than Critical Low';
+                                                msg.style.color = '#ffb300';
+                                                msg.style.display = 'block';
+                                                return;
+                                        }
+                                        body.thresholdWarningLow = wl;
+                                        body.thresholdCriticalLow = cl;
+                                } else {
+                                        body.thresholdWarningLow = null;
+                                        body.thresholdCriticalLow = null;
+                                }
 
                         } else if (_modalSignalType === 'boolean') {
                                 body.triggerValue = document.getElementById('modal-trigger-bool').checked ? 1 : null;
@@ -1196,6 +1289,9 @@
                                 delete _alertConfigs[_modalSignalKey];
                                 document.getElementById('modal-warning').value = '';
                                 document.getElementById('modal-critical').value = '';
+                                document.getElementById('modal-warning-low').value = '';
+                                document.getElementById('modal-critical-low').value = '';
+                                setThresholdMode('high');
                                 document.getElementById('modal-trigger-bool').checked = false;
                                 document.getElementById('modal-trigger-status').value = '';
                                 document.getElementById('modal-interval').value = '';
