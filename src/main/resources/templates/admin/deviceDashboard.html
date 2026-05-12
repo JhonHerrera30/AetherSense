@@ -813,6 +813,9 @@
                                 flag.innerHTML = `
                                         <span class="flag-key">${displayLabel}</span>
                                         <span class="flag-value ${valueClass}">${normalizedValue}</span>
+                                        <button class="alert-config-btn" 
+                                            onclick="openAlertModal('${indicator.key}', '${displayLabel}', 0, 1)" 
+                                            title="Alert settings" style="margin-left:0.5rem;">⚙️</button>
                                 `;
                                 container.appendChild(flag);
                         });
