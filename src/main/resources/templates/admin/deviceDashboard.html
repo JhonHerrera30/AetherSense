@@ -203,8 +203,10 @@
                                 <label
                                         style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">Alert
                                         when state value ≥</label>
-                                <input id="modal-trigger-status" type="number" min="0" step="1" placeholder="e.g. 2"
+                                <select id="modal-trigger-status"
                                         style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
+                                        <option value="">-- no alert --</option>
+                                </select>
                         </div>
 
                         <!-- timer override -->
@@ -830,7 +832,8 @@
                                 component: spec.component,
                                 unit: spec.unit,
                                 min: spec.min,
-                                max: spec.max
+                                max: spec.max,
+                                stateLabels: spec.stateLabels || {}
                         };
                 }
 
@@ -1131,26 +1134,43 @@
                         wInput.min = _modalMin; wInput.max = _modalMax;
                         cInput.min = _modalMin; cInput.max = _modalMax;
 
+                        // boolean
                         document.getElementById('modal-trigger-bool').checked = cfg.triggerValue === 1;
-                        document.getElementById('modal-trigger-status').value = cfg.triggerValue ?? '';
+
+                        // status dropdown
+                        if (_modalSignalType === 'status') {
+                                const descriptor = state.specDescriptors.find(d => d.key === signalKey) || { stateLabels: {} };
+                                const labels = descriptor.stateLabels || {};
+                                const select = document.getElementById('modal-trigger-status');
+                                select.innerHTML = '<option value="">-- no alert --</option>';
+                                Object.entries(labels)
+                                        .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+                                        .forEach(([val, name]) => {
+                                                const opt = document.createElement('option');
+                                                opt.value = val;
+                                                opt.textContent = `${val} — ${name}`;
+                                                if (cfg.triggerValue != null && parseInt(val) === cfg.triggerValue) {
+                                                        opt.selected = true;
+                                                }
+                                                select.appendChild(opt);
+                                        });
+                        }
+
                         document.getElementById('modal-interval').value = cfg.intervalMin ?? '';
 
-                        // imposta modalità toggle e valori low
+                        // toggle low/high
                         const hasLow = cfg.thresholdWarningLow != null || cfg.thresholdCriticalLow != null;
                         setThresholdMode(hasLow ? 'both' : 'high');
                         document.getElementById('modal-warning-low').value = cfg.thresholdWarningLow ?? '';
                         document.getElementById('modal-critical-low').value = cfg.thresholdCriticalLow ?? '';
 
-                        // placeholder low
                         const wLowInput = document.getElementById('modal-warning-low');
                         const cLowInput = document.getElementById('modal-critical-low');
                         wLowInput.min = _modalMin; wLowInput.max = _modalMax;
                         cLowInput.min = _modalMin; cLowInput.max = _modalMax;
-                        document.getElementById('modal-status-msg').style.display = 'none';
 
-                        // mostra range sotto i campi
-                        document.getElementById('modal-range-hint').textContent =
-                                `Valid range: ${_modalMin} – ${_modalMax}`;
+                        document.getElementById('modal-status-msg').style.display = 'none';
+                        document.getElementById('modal-range-hint').textContent = `Valid range: ${_modalMin} – ${_modalMax}`;
 
                         document.getElementById('alert-modal-overlay').style.display = 'flex';
                 }

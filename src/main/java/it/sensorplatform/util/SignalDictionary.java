@@ -13,7 +13,13 @@ public class SignalDictionary {
                         String unit,
                         double defaultMin,
                         double defaultMax,
-                        boolean isIndicator) {
+                        boolean isIndicator,
+                        Map<Integer, String> stateLabels) {
+
+                public ChartConfig(String chartType, String displayName, String unit,
+                                double defaultMin, double defaultMax, boolean isIndicator) {
+                        this(chartType, displayName, unit, defaultMin, defaultMax, isIndicator, Map.of());
+                }
         }
 
         public static final Map<String, ChartConfig> SIGNALS = Map.ofEntries(
@@ -50,15 +56,14 @@ public class SignalDictionary {
                         Map.entry("collapse", new ChartConfig(
                                         "boolean", "Collapse", "", 0.0, 1.0, true)),
                         Map.entry("state", new ChartConfig(
-                                        "status", "Sensor State", "", 0.0, 7.0, true)),
+                                        "status", "Sensor State", "", 0.0, 7.0, true,
+                                        Map.of(0, "OK", 1, "Initializing", 2, "Warning",
+                                                        3, "Error", 4, "Critical", 5, "Maintenance",
+                                                        6, "Offline", 7, "Fault"))),
                         Map.entry("axis_state", new ChartConfig(
-                                        "status", "Axis State", "", 0.0, 3.0, true)));
-                                
-        /**
-         * Restituisce la configurazione per un segnale.
-         * Se il segnale non è nel dizionario, usa un fallback generico.
-         * Se il database ha min/max specifici, li usa al posto dei default.
-         */
+                                        "status", "Axis State", "", 0.0, 3.0, true,
+                                        Map.of(0, "OK", 1, "Tilted", 2, "Warning", 3, "Critical"))));
+
         public static ChartConfig getConfig(String signalKey,
                         Double minFromDb,
                         Double maxFromDb) {
@@ -75,7 +80,6 @@ public class SignalDictionary {
                                                 0.0, 100.0,
                                                 false));
 
-                // se il database ha min/max specifici sovrascrive i default
                 if (minFromDb != null && maxFromDb != null) {
                         return new ChartConfig(
                                         config.chartType(),
@@ -83,15 +87,12 @@ public class SignalDictionary {
                                         config.unit(),
                                         minFromDb,
                                         maxFromDb,
-                                        config.isIndicator());
+                                        config.isIndicator(),
+                                        config.stateLabels());
                 }
                 return config;
         }
 
-        /**
-         * Controlla se un segnale è un indicatore booleano/discreto.
-         * Usato dall'IngestService per classificare MEASUREMENT vs INDICATOR.
-         */
         public static boolean isIndicator(String signalKey) {
                 if (signalKey == null)
                         return false;

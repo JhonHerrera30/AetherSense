@@ -91,7 +91,8 @@ public class DeviceTelemetryController {
                             m.getComponent(),
                             config.unit(),
                             config.defaultMin(),
-                            config.defaultMax());
+                            config.defaultMax(),
+                            config.stateLabels());
                 })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(specs);
