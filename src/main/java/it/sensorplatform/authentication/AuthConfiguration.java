@@ -43,91 +43,89 @@ public class AuthConfiguration {
 	@Autowired
 	@Lazy
 	private CustomLoginSuccessHandler successHandler;
-	
+
 	@Autowired
 	@Lazy
 	private CustomAuthenticationFailureHandler failureHandler;
 
-
 	@Autowired
-    public void configureGlobal(AuthenticationManagerBuilder auth)
-            throws Exception {
-        auth.jdbcAuthentication()
-                .dataSource(dataSource)
-                .authoritiesByUsernameQuery("SELECT username, role from credentials WHERE username=?")
-                .usersByUsernameQuery("SELECT username, password, 1 as enabled FROM credentials WHERE username=?");
-    }
-    
-    @Bean
-    public PasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
-    }
+	public void configureGlobal(AuthenticationManagerBuilder auth)
+			throws Exception {
+		auth.jdbcAuthentication()
+				.dataSource(dataSource)
+				.authoritiesByUsernameQuery("SELECT username, role from credentials WHERE username=?")
+				.usersByUsernameQuery("SELECT username, password, 1 as enabled FROM credentials WHERE username=?");
+	}
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception{
-        return authenticationConfiguration.getAuthenticationManager();
-    }
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+			throws Exception {
+		return authenticationConfiguration.getAuthenticationManager();
+	}
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-
 		http
-		.csrf(csrf -> csrf
-    	.ignoringRequestMatchers(
-			"/api/packets",
-        	"/api/notifications/**" 
-    )
-)
+				.csrf(csrf -> csrf
+						.ignoringRequestMatchers(
+								"/api/packets",
+								"/api/notifications/**",
+								"/api/admin/**"))
 
-                .authorizeHttpRequests(auth -> auth
-                                .requestMatchers(HttpMethod.GET, "/", "/home", "/login", "/register", "/access", "/css/**", "/img/**", "/favicon.ico", "/videos/**", "/project/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/packets").permitAll()
-                                .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+				.authorizeHttpRequests(auth -> auth
+						.requestMatchers(HttpMethod.GET, "/", "/home", "/login", "/register", "/access", "/css/**",
+								"/img/**", "/favicon.ico", "/videos/**", "/project/**")
+						.permitAll()
+						.requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/packets").permitAll()
+						.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
 
-                                .requestMatchers(HttpMethod.GET, "/superadmin/**").hasAuthority(SUPERADMIN_ROLE)
-				.requestMatchers(HttpMethod.POST, "/superadmin/**").hasAuthority(SUPERADMIN_ROLE)
-				
-				.requestMatchers(HttpMethod.GET, "/admin/ltrad/**").hasAuthority(LTRAD_ADMIN_ROLE)
-				.requestMatchers(HttpMethod.POST, "/admin/ltrad/**").hasAuthority(LTRAD_ADMIN_ROLE)
-				
-				.requestMatchers(HttpMethod.GET, "/operator/ltrad/**").hasAuthority(LTRAD_OPERATOR_ROLE)
-				.requestMatchers(HttpMethod.POST, "/operator/ltrad/**").hasAuthority(LTRAD_OPERATOR_ROLE)
-				
-				.requestMatchers(HttpMethod.GET, "/admin/fire/**").hasAuthority(FIRE_ADMIN_ROLE)
-				.requestMatchers(HttpMethod.POST, "/admin/fire/**").hasAuthority(FIRE_ADMIN_ROLE)
-				
-				.requestMatchers(HttpMethod.GET, "/operator/fire/**").hasAuthority(FIRE_OPERATOR_ROLE)
-				.requestMatchers(HttpMethod.POST, "/operator/fire/**").hasAuthority(FIRE_OPERATOR_ROLE)
-				
-				.requestMatchers(HttpMethod.GET, "/admin/volcano/**").hasAuthority(VOLCANO_ADMIN_ROLE)
-				.requestMatchers(HttpMethod.POST, "/admin/volcano/**").hasAuthority(VOLCANO_ADMIN_ROLE)
-				
-				.requestMatchers(HttpMethod.GET, "/operator/volcano/**").hasAuthority(VOLCANO_OPERATOR_ROLE)
-				.requestMatchers(HttpMethod.POST, "/operator/volcano/**").hasAuthority(VOLCANO_OPERATOR_ROLE)
-				
-				.anyRequest().authenticated()
-				)
-		.formLogin(form -> form
-			    .loginPage("/login")
-			    .loginProcessingUrl("/login") 
-			    .successHandler(successHandler)
-			    .failureHandler(failureHandler) 
-			    .permitAll()
-			)
-		.logout(logout -> logout
-				.logoutUrl("/logout")
-				.logoutSuccessUrl("/")
-				.invalidateHttpSession(true)
-				.deleteCookies("JSESSIONID")
-				.permitAll()
-				)
-		.exceptionHandling(exception -> exception
-				.accessDeniedPage("/home")
-				)
-		;
+						.requestMatchers(HttpMethod.GET, "/superadmin/**").hasAuthority(SUPERADMIN_ROLE)
+						.requestMatchers(HttpMethod.POST, "/superadmin/**").hasAuthority(SUPERADMIN_ROLE)
+
+						.requestMatchers(HttpMethod.GET, "/admin/ltrad/**").hasAuthority(LTRAD_ADMIN_ROLE)
+						.requestMatchers(HttpMethod.POST, "/admin/ltrad/**").hasAuthority(LTRAD_ADMIN_ROLE)
+
+						.requestMatchers(HttpMethod.GET, "/operator/ltrad/**").hasAuthority(LTRAD_OPERATOR_ROLE)
+						.requestMatchers(HttpMethod.POST, "/operator/ltrad/**").hasAuthority(LTRAD_OPERATOR_ROLE)
+
+						.requestMatchers(HttpMethod.GET, "/admin/fire/**").hasAuthority(FIRE_ADMIN_ROLE)
+						.requestMatchers(HttpMethod.POST, "/admin/fire/**").hasAuthority(FIRE_ADMIN_ROLE)
+
+						.requestMatchers(HttpMethod.GET, "/operator/fire/**").hasAuthority(FIRE_OPERATOR_ROLE)
+						.requestMatchers(HttpMethod.POST, "/operator/fire/**").hasAuthority(FIRE_OPERATOR_ROLE)
+
+						.requestMatchers(HttpMethod.GET, "/admin/volcano/**").hasAuthority(VOLCANO_ADMIN_ROLE)
+						.requestMatchers(HttpMethod.POST, "/admin/volcano/**").hasAuthority(VOLCANO_ADMIN_ROLE)
+
+						.requestMatchers(HttpMethod.GET, "/operator/volcano/**").hasAuthority(VOLCANO_OPERATOR_ROLE)
+						.requestMatchers(HttpMethod.POST, "/operator/volcano/**").hasAuthority(VOLCANO_OPERATOR_ROLE)
+
+						.requestMatchers(HttpMethod.GET, "/api/admin/**").authenticated()
+						.requestMatchers(HttpMethod.PUT, "/api/admin/**").authenticated()
+						.requestMatchers(HttpMethod.DELETE, "/api/admin/**").authenticated()
+
+						.anyRequest().authenticated())
+				.formLogin(form -> form
+						.loginPage("/login")
+						.loginProcessingUrl("/login")
+						.successHandler(successHandler)
+						.failureHandler(failureHandler)
+						.permitAll())
+				.logout(logout -> logout
+						.logoutUrl("/logout")
+						.logoutSuccessUrl("/")
+						.invalidateHttpSession(true)
+						.deleteCookies("JSESSIONID")
+						.permitAll())
+				.exceptionHandling(exception -> exception
+						.accessDeniedPage("/home"));
 
 		return http.build();
 	}
