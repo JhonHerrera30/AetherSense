@@ -518,6 +518,27 @@
         display: none;
 }
 
+.alert-config-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+        opacity: 0.4;
+        padding: 0;
+        margin-left: auto;
+        transition: opacity 0.2s;
+}
+
+.alert-config-btn:hover {
+        opacity: 1;
+}
+
+.metric-heading {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+}
+
 @media (max-width: 768px) {
         .navbar {
                 flex-direction: column;

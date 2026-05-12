@@ -133,6 +133,69 @@
                 </section>
         </main>
 
+        <!-- Modal impostazioni segnale -->
+        <div id="alert-modal-overlay"
+                style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;">
+                <div
+                        style="background:#1e2a3a;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:1.5rem;width:min(420px,90vw);position:relative;">
+                        <button onclick="closeAlertModal()"
+                                style="position:absolute;top:0.75rem;right:0.75rem;background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.25rem;cursor:pointer;">✕</button>
+                        <h4 id="modal-title" style="margin:0 0 1.25rem;color:#fff;font-size:1rem;font-weight:600;"></h4>
+
+                        <!-- segnali numerici -->
+                        <div id="modal-numeric" style="display:none;">
+                                <label
+                                        style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">⚠️
+                                        Warning threshold</label>
+                                <input id="modal-warning" type="number" step="any" placeholder="e.g. 1000"
+                                        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
+                                <label
+                                        style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">🔴
+                                        Critical threshold</label>
+                                <input id="modal-critical" type="number" step="any" placeholder="e.g. 5000"
+                                        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
+                        </div>
+
+                        <!-- booleani -->
+                        <div id="modal-boolean" style="display:none;">
+                                <label
+                                        style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.5rem;">Alert
+                                        when signal is active (value = 1)</label>
+                                <label
+                                        style="display:flex;align-items:center;gap:0.5rem;color:#fff;margin-bottom:1rem;cursor:pointer;">
+                                        <input id="modal-trigger-bool" type="checkbox" style="width:16px;height:16px;">
+                                        <span>Enable alert on fault</span>
+                                </label>
+                        </div>
+
+                        <!-- stati discreti -->
+                        <div id="modal-status" style="display:none;">
+                                <label
+                                        style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">Alert
+                                        when state value ≥</label>
+                                <input id="modal-trigger-status" type="number" min="0" step="1" placeholder="e.g. 2"
+                                        style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
+                        </div>
+
+                        <!-- timer override -->
+                        <label
+                                style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">🕐
+                                Repeat alert every (minutes) — leave empty to use project default</label>
+                        <input id="modal-interval" type="number" min="1" step="1" placeholder="e.g. 15"
+                                style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1.25rem;font-size:0.9rem;">
+
+                        <div style="display:flex;gap:0.75rem;justify-content:flex-end;align-items:center;">
+                                <button onclick="resetSignalConfig()"
+                                        style="background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);border-radius:6px;padding:0.4rem 0.9rem;cursor:pointer;font-size:0.85rem;">Reset
+                                        to default</button>
+                                <button onclick="saveSignalConfig()"
+                                        style="background:#2d6cdf;border:none;color:#fff;border-radius:6px;padding:0.4rem 1.1rem;cursor:pointer;font-size:0.85rem;font-weight:600;">Save</button>
+                        </div>
+                        <p id="modal-status-msg"
+                                style="margin:0.75rem 0 0;font-size:0.8rem;color:#69db7c;display:none;"></p>
+                </div>
+        </div>
+
         <script th:inline="javascript">
                 /*<![CDATA[*/
                 const DEVICE_KEY = /*[[${device.deviceKey != null ? device.deviceKey : ''}]]*/ '';
@@ -186,6 +249,7 @@
                 async function initializeDashboard() {
                         await loadSpecs();
                         await loadHistory();
+                        await loadAlertConfigs();
                 }
 
                 async function loadSpecs() {
@@ -424,6 +488,7 @@
                                 <div class="metric-heading">
                                         <span class="metric-title">${title}</span>
                                         <span class="metric-subtitle" data-component></span>
+                                        <button class="alert-config-btn" onclick="openAlertModal('${descriptor.key}', 'numeric', '${title}')" title="Alert settings">⚙️</button>
                                 </div>
                                 <div class="gauge-wrapper">
                                         <canvas id="gauge-${descriptor.key}" class="gauge-canvas"></canvas>
@@ -961,7 +1026,118 @@
                         const banner = document.getElementById('dashboard-error');
                         banner.hidden = true;
                 }
+
+                // ── Alert config modal ──────────────────────────────────────────
+
+                const SIGNAL_TYPE_FOR_MODAL = {
+                        'earthquake_flag': 'boolean', 'shutoff': 'boolean', 'collapse': 'boolean',
+                        'state': 'status', 'axis_state': 'status'
+                };
+
+                let _modalSignalKey = null;
+                let _modalSignalType = null;
+                let _alertConfigs = {};
+
+                // carica tutte le config all'avvio
+                async function loadAlertConfigs() {
+                        try {
+                                const res = await fetch(`/api/admin/alert-config/${PROJECT_ID}`);
+                                if (!res.ok) return;
+                                const data = await res.json();
+                                _alertConfigs = {};
+                                (data.signals || []).forEach(s => { _alertConfigs[s.signalKey] = s; });
+                        } catch (e) { console.warn('Alert config not loaded', e); }
+                }
+
+                function openAlertModal(signalKey, defaultType, title) {
+                        _modalSignalKey = signalKey;
+                        _modalSignalType = SIGNAL_TYPE_FOR_MODAL[signalKey.toLowerCase()] || 'numeric';
+
+                        document.getElementById('modal-title').textContent = `Alert settings — ${title}`;
+                        document.getElementById('modal-numeric').style.display = _modalSignalType === 'numeric' ? 'block' : 'none';
+                        document.getElementById('modal-boolean').style.display = _modalSignalType === 'boolean' ? 'block' : 'none';
+                        document.getElementById('modal-status').style.display = _modalSignalType === 'status' ? 'block' : 'none';
+
+                        const cfg = _alertConfigs[signalKey] || {};
+                        document.getElementById('modal-warning').value = cfg.thresholdWarning ?? '';
+                        document.getElementById('modal-critical').value = cfg.thresholdCritical ?? '';
+                        document.getElementById('modal-trigger-bool').checked = cfg.triggerValue === 1;
+                        document.getElementById('modal-trigger-status').value = cfg.triggerValue ?? '';
+                        document.getElementById('modal-interval').value = cfg.intervalMin ?? '';
+                        document.getElementById('modal-status-msg').style.display = 'none';
+
+                        const overlay = document.getElementById('alert-modal-overlay');
+                        overlay.style.display = 'flex';
+                }
+
+                function closeAlertModal() {
+                        document.getElementById('alert-modal-overlay').style.display = 'none';
+                }
+
+                async function saveSignalConfig() {
+                        const body = { signalKey: _modalSignalKey };
+
+                        if (_modalSignalType === 'numeric') {
+                                const w = document.getElementById('modal-warning').value;
+                                const c = document.getElementById('modal-critical').value;
+                                body.thresholdWarning = w !== '' ? parseFloat(w) : null;
+                                body.thresholdCritical = c !== '' ? parseFloat(c) : null;
+                        } else if (_modalSignalType === 'boolean') {
+                                body.triggerValue = document.getElementById('modal-trigger-bool').checked ? 1 : null;
+                        } else {
+                                const v = document.getElementById('modal-trigger-status').value;
+                                body.triggerValue = v !== '' ? parseInt(v) : null;
+                        }
+
+                        const iv = document.getElementById('modal-interval').value;
+                        body.intervalMin = iv !== '' ? parseInt(iv) : null;
+
+                        const res = await fetch(`/api/admin/alert-config/${PROJECT_ID}/signal/${encodeURIComponent(_modalSignalKey)}`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body)
+                        });
+
+                        const msg = document.getElementById('modal-status-msg');
+                        if (res.ok) {
+                                _alertConfigs[_modalSignalKey] = body;
+                                msg.textContent = '✓ Saved';
+                                msg.style.color = '#69db7c';
+                                msg.style.display = 'block';
+                                setTimeout(closeAlertModal, 800);
+                        } else {
+                                msg.textContent = '✗ Error saving';
+                                msg.style.color = '#ef5350';
+                                msg.style.display = 'block';
+                        }
+                }
+
+                async function resetSignalConfig() {
+                        const res = await fetch(`/api/admin/alert-config/${PROJECT_ID}/signal/${encodeURIComponent(_modalSignalKey)}`, {
+                                method: 'DELETE'
+                        });
+                        if (res.ok) {
+                                delete _alertConfigs[_modalSignalKey];
+                                document.getElementById('modal-warning').value = '';
+                                document.getElementById('modal-critical').value = '';
+                                document.getElementById('modal-trigger-bool').checked = false;
+                                document.getElementById('modal-trigger-status').value = '';
+                                document.getElementById('modal-interval').value = '';
+                                const msg = document.getElementById('modal-status-msg');
+                                msg.textContent = '✓ Reset to default';
+                                msg.style.color = '#69db7c';
+                                msg.style.display = 'block';
+                                setTimeout(closeAlertModal, 800);
+                        }
+                }
+
+                // chiudi cliccando fuori dal modal
+                document.getElementById('alert-modal-overlay').addEventListener('click', function (e) {
+                        if (e.target === this) closeAlertModal();
+                });
+
         </script>
+
 </body>
 
 </html>
