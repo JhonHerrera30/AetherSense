@@ -563,5 +563,57 @@
                 align-items: flex-start;
         }
 
+        /* Alert modal — select e checkbox */
+        #modal-trigger-status {
+                width: 100%;
+                box-sizing: border-box;
+                background: #1e2a3a;
+                border: 1px solid rgba(255, 255, 255, 0.25);
+                border-radius: 6px;
+                color: #fff;
+                padding: 0.5rem 0.75rem;
+                margin-bottom: 1rem;
+                font-size: 0.9rem;
+                cursor: pointer;
+                appearance: none;
+                -webkit-appearance: none;
+                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><path d='M7 10l5 5 5-5z'/></svg>");
+                background-repeat: no-repeat;
+                background-position: right 0.75rem center;
+                background-size: 1rem;
+        }
+
+        #modal-trigger-status option {
+                background: #1e2a3a;
+                color: #fff;
+        }
+
+        #modal-trigger-bool {
+                appearance: none;
+                -webkit-appearance: none;
+                width: 18px;
+                height: 18px;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                border-radius: 4px;
+                background: rgba(255, 255, 255, 0.07);
+                cursor: pointer;
+                position: relative;
+                flex-shrink: 0;
+        }
+
+        #modal-trigger-bool:checked {
+                background: #2d6cdf;
+                border-color: #2d6cdf;
+        }
+
+        #modal-trigger-bool:checked::after {
+                content: '✓';
+                position: absolute;
+                color: white;
+                font-size: 12px;
+                top: -1px;
+                left: 2px;
+        }
+
 
 }

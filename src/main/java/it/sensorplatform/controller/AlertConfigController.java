@@ -17,9 +17,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/alert-config")
@@ -48,6 +50,22 @@ public class AlertConfigController {
         }
     }
 
+    // Default thresholds hardcodati (warning, critical)
+    private static final Map<String, double[]> SIGNAL_DEFAULT_THRESHOLDS = Map.ofEntries(
+            Map.entry("temperature_celsius", new double[] { -28.75, 72.25 }),
+            Map.entry("humidity_percent", new double[] { 15.0, 85.0 }),
+            Map.entry("co2concentration_ppm", new double[] { 1920.0, 4800.0 }),
+            Map.entry("pressure_hpa", new double[] { 500.0, 990.0 }),
+            Map.entry("gasresistance_ohm", new double[] { 150.0, 300.0 }),
+            Map.entry("voc_index", new double[] { 149.3, 299.0 }),
+            Map.entry("nox_index", new double[] { 149.3, 299.0 }),
+            Map.entry("pm1_0_ugm3", new double[] { 200.0, 500.0 }),
+            Map.entry("pm2_5_ugm3", new double[] { 200.0, 500.0 }),
+            Map.entry("pm4_0_ugm3", new double[] { 200.0, 500.0 }),
+            Map.entry("pm10_0_ugm3", new double[] { 200.0, 500.0 }),
+            Map.entry("si_m_s", new double[] { 15.0, 40.0 }),
+            Map.entry("pga_m_s2", new double[] { 3.0, 8.0 }));
+
     // GET configurazione completa per progetto
     @GetMapping("/{projectId}")
     public ResponseEntity<AlertConfigDTO> getConfig(
@@ -57,27 +75,60 @@ public class AlertConfigController {
         AlertConfigDTO dto = new AlertConfigDTO();
 
         // globale
-        AlertConfigGlobal global = globalRepo.findByProjectId(projectId)
-                .orElse(null);
+        AlertConfigGlobal global = globalRepo.findByProjectId(projectId).orElse(null);
         dto.setGlobalIntervalMin(global != null ? global.getIntervalMin() : 30);
         dto.setTelegramChatId(global != null ? global.getTelegramChatId() : null);
         dto.setTelegramInviteLink(global != null ? global.getTelegramInviteLink() : null);
 
-        // segnali
-        List<AlertConfigSignal> signals = signalRepo.findByProjectId(projectId);
-        List<AlertConfigDTO.SignalConfig> signalDtos = signals.stream().map(s -> {
-            AlertConfigDTO.SignalConfig sc = new AlertConfigDTO.SignalConfig();
-            sc.setSignalKey(s.getSignalKey());
-            sc.setThresholdWarning(s.getThresholdWarning());
-            sc.setThresholdCritical(s.getThresholdCritical());
-            sc.setTriggerValue(s.getTriggerValue());
-            sc.setIntervalMin(s.getIntervalMin());
-            sc.setThresholdWarningLow(s.getThresholdWarningLow());
-            sc.setThresholdCriticalLow(s.getThresholdCriticalLow());
-            return sc;
-        }).toList();
-        dto.setSignals(signalDtos);
+        List<AlertConfigDTO.SignalConfig> signalDtos = new ArrayList<>();
 
+        // segnali numerici con default
+        SIGNAL_DEFAULT_THRESHOLDS.forEach((signalKey, defaults) -> {
+            AlertConfigSignal saved = signalRepo
+                    .findByProjectIdAndSignalKey(projectId, signalKey).orElse(null);
+            AlertConfigDTO.SignalConfig sc = new AlertConfigDTO.SignalConfig();
+            sc.setSignalKey(signalKey);
+            if (saved != null) {
+                sc.setThresholdWarning(saved.getThresholdWarning());
+                sc.setThresholdCritical(saved.getThresholdCritical());
+                sc.setThresholdWarningLow(saved.getThresholdWarningLow());
+                sc.setThresholdCriticalLow(saved.getThresholdCriticalLow());
+                sc.setTriggerValue(saved.getTriggerValue());
+                sc.setIntervalMin(saved.getIntervalMin());
+            } else {
+                sc.setThresholdWarning(defaults[0]);
+                sc.setThresholdCritical(defaults[1]);
+                sc.setThresholdWarningLow(null);
+                sc.setThresholdCriticalLow(null);
+                sc.setTriggerValue(null);
+                sc.setIntervalMin(null);
+            }
+            signalDtos.add(sc);
+        });
+
+        // booleani — default triggerValue=1 (alert attivo su fault)
+        for (String key : List.of("earthquake_flag", "shutoff", "collapse")) {
+            AlertConfigSignal saved = signalRepo
+                    .findByProjectIdAndSignalKey(projectId, key).orElse(null);
+            AlertConfigDTO.SignalConfig sc = new AlertConfigDTO.SignalConfig();
+            sc.setSignalKey(key);
+            sc.setTriggerValue(saved != null ? saved.getTriggerValue() : 1);
+            sc.setIntervalMin(saved != null ? saved.getIntervalMin() : null);
+            signalDtos.add(sc);
+        }
+
+        // stati discreti — nessun default, l'admin sceglie
+        for (String key : List.of("state", "axis_state")) {
+            AlertConfigSignal saved = signalRepo
+                    .findByProjectIdAndSignalKey(projectId, key).orElse(null);
+            AlertConfigDTO.SignalConfig sc = new AlertConfigDTO.SignalConfig();
+            sc.setSignalKey(key);
+            sc.setTriggerValue(saved != null ? saved.getTriggerValue() : null);
+            sc.setIntervalMin(saved != null ? saved.getIntervalMin() : null);
+            signalDtos.add(sc);
+        }
+
+        dto.setSignals(signalDtos);
         return ResponseEntity.ok(dto);
     }
 
