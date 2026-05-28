@@ -509,14 +509,16 @@
                 function renderMetricCards() {
                         const container = document.getElementById('metrics-grid');
                         container.innerHTML = '';
-                        state.specDescriptors.forEach(descriptor => {
-                                const card = document.createElement('div');
-                                card.className = 'metric-card';
-                                card.dataset.specKey = descriptor.key;
-                                const component = getDescriptorComponent(descriptor);
-                                const title = getDescriptorTitle(descriptor);
-                                const unit = descriptor.unit ? descriptor.unit : '';
-                                card.innerHTML = `
+                        state.specDescriptors
+                                .filter(d => !['earthquake_flag', 'shutoff', 'collapse', 'state', 'axis_state'].includes(d.key))
+                                .forEach(descriptor => {
+                                        const card = document.createElement('div');
+                                        card.className = 'metric-card';
+                                        card.dataset.specKey = descriptor.key;
+                                        const component = getDescriptorComponent(descriptor);
+                                        const title = getDescriptorTitle(descriptor);
+                                        const unit = descriptor.unit ? descriptor.unit : '';
+                                        card.innerHTML = `
                                 <div class="metric-heading">
                                         <span class="metric-title">${title}</span>
                                         <span class="metric-subtitle" data-component></span>
@@ -529,13 +531,13 @@
                                 </div>
                                 <div class="metric-range" data-range>${formatRange(descriptor.min, descriptor.max, descriptor.unit)}</div>
                                 `;
-                                const subtitleEl = card.querySelector('[data-component]');
-                                if (subtitleEl) {
-                                        subtitleEl.textContent = component || '';
-                                        subtitleEl.hidden = !component;
-                                }
-                                container.appendChild(card);
-                        });
+                                        const subtitleEl = card.querySelector('[data-component]');
+                                        if (subtitleEl) {
+                                                subtitleEl.textContent = component || '';
+                                                subtitleEl.hidden = !component;
+                                        }
+                                        container.appendChild(card);
+                                });
                         state.specCardsRendered = true;
                 }
 
@@ -1135,7 +1137,7 @@
                         cInput.min = _modalMin; cInput.max = _modalMax;
 
                         // boolean
-                        document.getElementById('modal-trigger-bool').checked = cfg.triggerValue === 1;
+                        document.getElementById('modal-trigger-bool').checked = cfg.triggerValue === 1 || cfg.triggerValue == null;
 
                         // status dropdown
                         if (_modalSignalType === 'status') {
