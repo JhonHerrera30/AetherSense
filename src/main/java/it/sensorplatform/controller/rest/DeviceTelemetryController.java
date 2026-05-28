@@ -79,13 +79,13 @@ public class DeviceTelemetryController {
         }
         SampleEntity sample = samples.get(samples.size() - 1);
         List<SpecDTO> specs = sample.getMeasurements().stream()
-                .filter(m -> m.getType() == MeasurementEntity.MeasurementType.MEASUREMENT)
+                .filter(m -> m.getType() != null)
                 .map(m -> {
                     it.sensorplatform.util.SignalDictionary.ChartConfig config = it.sensorplatform.util.SignalDictionary
                             .getConfig(
                                     m.getKey(), m.getMin(), m.getMax());
                     return new SpecDTO(
-                            m.getKey(),
+                            m.getKey() != null ? m.getKey().toLowerCase(Locale.ROOT) : null,
                             config.displayName(),
                             config.displayName(),
                             m.getComponent(),
