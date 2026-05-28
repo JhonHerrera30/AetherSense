@@ -563,57 +563,70 @@
                 align-items: flex-start;
         }
 
-        /* Alert modal — select e checkbox */
-        #modal-trigger-status {
-                width: 100%;
-                box-sizing: border-box;
-                background: #1e2a3a;
-                border: 1px solid rgba(255, 255, 255, 0.25);
-                border-radius: 6px;
-                color: #fff;
-                padding: 0.5rem 0.75rem;
-                margin-bottom: 1rem;
-                font-size: 0.9rem;
-                cursor: pointer;
-                appearance: none;
-                -webkit-appearance: none;
-                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><path d='M7 10l5 5 5-5z'/></svg>");
-                background-repeat: no-repeat;
-                background-position: right 0.75rem center;
-                background-size: 1rem;
-        }
-
-        #modal-trigger-status option {
-                background: #1e2a3a;
-                color: #fff;
-        }
-
-        #modal-trigger-bool {
-                appearance: none;
-                -webkit-appearance: none;
-                width: 18px;
-                height: 18px;
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                border-radius: 4px;
-                background: rgba(255, 255, 255, 0.07);
-                cursor: pointer;
-                position: relative;
-                flex-shrink: 0;
-        }
-
-        #modal-trigger-bool:checked {
-                background: #2d6cdf;
-                border-color: #2d6cdf;
-        }
-
-        #modal-trigger-bool:checked::after {
-                content: '✓';
-                position: absolute;
-                color: white;
-                font-size: 12px;
-                top: -1px;
-                left: 2px;
-        }
 
 
+}
+
+/* Alert modal — select e checkbox */
+#modal-trigger-status {
+        width: 100%;
+        box-sizing: border-box;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 8px;
+        color: #fff;
+        padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.5)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 1rem;
+        transition: border-color 0.2s;
+}
+
+#modal-trigger-status:hover {
+        border-color: rgba(255, 255, 255, 0.35);
+}
+
+#modal-trigger-status:focus {
+        outline: none;
+        border-color: #2d6cdf;
+        box-shadow: 0 0 0 2px rgba(45, 108, 223, 0.25);
+}
+
+#modal-trigger-status option {
+        background: #1e2a3a;
+        color: #fff;
+        padding: 0.4rem;
+}
+
+#modal-trigger-bool {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.07);
+        cursor: pointer;
+        position: relative;
+        flex-shrink: 0;
+}
+
+#modal-trigger-bool:checked {
+        background: #2d6cdf;
+        border-color: #2d6cdf;
+}
+
+#modal-trigger-bool:checked::after {
+        content: '✓';
+        position: absolute;
+        color: white;
+        font-size: 12px;
+        top: -1px;
+        left: 2px;
 }
