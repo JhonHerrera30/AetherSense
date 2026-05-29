@@ -1,5 +1,7 @@
 package it.sensorplatform.model;
 
+import java.time.Instant;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -36,6 +38,17 @@ public class AlertConfigSignal {
     // null = usa il timer globale del progetto
     @Column(name = "interval_min")
     private Integer intervalMin;
+
+    @Column(name = "last_alert_sent_at")
+    private Instant lastAlertSentAt;
+
+    public Instant getLastAlertSentAt() {
+        return lastAlertSentAt;
+    }
+
+    public void setLastAlertSentAt(Instant lastAlertSentAt) {
+        this.lastAlertSentAt = lastAlertSentAt;
+    }
 
     public Long getId() {
         return id;
@@ -77,11 +90,21 @@ public class AlertConfigSignal {
         this.thresholdCritical = thresholdCritical;
     }
 
-    public Double getThresholdWarningLow() { return thresholdWarningLow; }
-    public void setThresholdWarningLow(Double thresholdWarningLow) { this.thresholdWarningLow = thresholdWarningLow; }
+    public Double getThresholdWarningLow() {
+        return thresholdWarningLow;
+    }
 
-    public Double getThresholdCriticalLow() { return thresholdCriticalLow; }
-    public void setThresholdCriticalLow(Double thresholdCriticalLow) { this.thresholdCriticalLow = thresholdCriticalLow; }
+    public void setThresholdWarningLow(Double thresholdWarningLow) {
+        this.thresholdWarningLow = thresholdWarningLow;
+    }
+
+    public Double getThresholdCriticalLow() {
+        return thresholdCriticalLow;
+    }
+
+    public void setThresholdCriticalLow(Double thresholdCriticalLow) {
+        this.thresholdCriticalLow = thresholdCriticalLow;
+    }
 
     public Integer getTriggerValue() {
         return triggerValue;

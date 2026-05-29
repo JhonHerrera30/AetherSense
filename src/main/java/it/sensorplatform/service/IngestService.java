@@ -82,8 +82,12 @@ public class IngestService {
 
     private final SampleRepository sampleRepository;
 
-    public IngestService(SampleRepository sampleRepository) {
+    private final AlertService alertService;
+
+    public IngestService(SampleRepository sampleRepository,
+            AlertService alertService) {
         this.sampleRepository = sampleRepository;
+        this.alertService = alertService;
     }
 
     /**
@@ -109,7 +113,7 @@ public class IngestService {
                 && device.getTod().getIndicators() != null
                         ? device.getTod().getIndicators()
                         : List.of();
-        process(deviceId, devEui, ts, metrics, specEntries, indicatorLabels, savedSpecs, savedIndicators);
+        process(device, deviceId, devEui, ts, metrics, specEntries, indicatorLabels, savedSpecs, savedIndicators);
     }
 
     public void process(String deviceId,
@@ -118,11 +122,11 @@ public class IngestService {
             Map<String, Object> metrics,
             List<PacketDTO.SpecEntry> specEntries,
             List<String> indicatorLabels) {
-        process(deviceId, devEui, ts, metrics, specEntries, indicatorLabels, List.of(), List.of());
+        process(null, deviceId, devEui, ts, metrics, specEntries, indicatorLabels, List.of(), List.of());
     }
 
     @Transactional
-    void process(String deviceId,
+    void process(Device device, String deviceId,
             String devEui,
             Instant ts,
             Map<String, Object> metrics,
@@ -198,6 +202,10 @@ public class IngestService {
                     MeasurementEntity.fromIndicator(i));
         }
         sampleRepository.save(sampleEntity);
+
+        if (device != null) {
+            alertService.evaluate(device, measurements, indicators);
+        }
 
         // mantieni buffer in memoria per compatibilità frontend
         Deque<Sample> queue = store.computeIfAbsent(
@@ -408,7 +416,7 @@ public class IngestService {
                 if (canonicalIndicatorHints.contains(canonical)) {
                     continue;
                 }
-                if(SignalDictionary.isIndicator(key)){
+                if (SignalDictionary.isIndicator(key)) {
                     continue;
                 }
                 keys.add(key);
