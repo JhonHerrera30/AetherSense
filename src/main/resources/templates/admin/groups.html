@@ -595,6 +595,15 @@
                 function closeAlertSettingsModal() {
                         document.getElementById('alert-settings-overlay').style.display = 'none';
                 }
+                function openChatIdGuide() {
+                        document.getElementById('chatid-guide-overlay').style.display = 'flex';
+                }
+                function closeChatIdGuide() {
+                        document.getElementById('chatid-guide-overlay').style.display = 'none';
+                }
+                document.getElementById('chatid-guide-overlay').addEventListener('click', function (e) {
+                        if (e.target === this) closeChatIdGuide();
+                });
 
                 async function saveAlertSettings() {
                         const msg = document.getElementById('alert-settings-msg');
@@ -623,7 +632,7 @@
                 document.getElementById('alert-settings-overlay').addEventListener('click', function (e) {
                         if (e.target === this) closeAlertSettingsModal();
                 });
-                
+
                 document.addEventListener('DOMContentLoaded', function () {
 
                         const LIST_OP_URL = `/api/projects/${PROJECT_ID}/operators`;
@@ -811,10 +820,13 @@
                                 style="position:absolute;top:0.75rem;right:0.75rem;background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.25rem;cursor:pointer;">✕</button>
                         <h4 style="margin:0 0 1.25rem;color:#fff;font-size:1rem;font-weight:600;">🔔 Alert Settings</h4>
 
-                        <label
-                                style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">
-                                Telegram Chat ID
-                        </label>
+                        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;">
+                                <label style="color:rgba(255,255,255,0.65);font-size:0.8rem;">
+                                        Telegram Chat ID
+                                </label>
+                                <button type="button" onclick="openChatIdGuide()"
+                                        style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:50%;width:18px;height:18px;color:#fff;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">?</button>
+                        </div>
                         <input id="alert-chat-id" type="text" placeholder="e.g. -1001234567890"
                                 style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
 
@@ -839,6 +851,34 @@
                                         style="background:#2d6cdf;border:none;color:#fff;border-radius:6px;padding:0.4rem 1.1rem;cursor:pointer;font-size:0.85rem;font-weight:600;">Save</button>
                         </div>
                         <p id="alert-settings-msg" style="margin:0.75rem 0 0;font-size:0.8rem;display:none;"></p>
+                </div>
+        </div>
+        <div id="chatid-guide-overlay"
+                style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:3000;align-items:center;justify-content:center;">
+                <div
+                        style="background:#1e2a3a;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:1.5rem;width:min(380px,90vw);position:relative;">
+                        <button onclick="closeChatIdGuide()"
+                                style="position:absolute;top:0.75rem;right:0.75rem;background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.25rem;cursor:pointer;">✕</button>
+                        <h4 style="margin:0 0 1rem;color:#fff;font-size:0.95rem;font-weight:600;">📋 Come trovare il
+                                Chat ID</h4>
+                        <ol
+                                style="color:rgba(255,255,255,0.8);font-size:0.85rem;line-height:1.7;padding-left:1.2rem;margin:0 0 1rem;">
+                                <li>Crea un gruppo Telegram per il progetto</li>
+                                <li>Aggiungi <strong style="color:#fff;">@aethersense_alert_bot</strong> al gruppo come
+                                        amministratore</li>
+                                <li>Aggiungi anche <strong style="color:#fff;">@myidbot</strong> al gruppo</li>
+                                <li>Scrivi <code
+                                                style="background:rgba(255,255,255,0.1);padding:0.1rem 0.3rem;border-radius:3px;">/getgroupid</code>
+                                        nel gruppo</li>
+                                <li>Il bot risponde con un numero negativo tipo <code
+                                                style="background:rgba(255,255,255,0.1);padding:0.1rem 0.3rem;border-radius:3px;">-1001234567890</code>
+                                </li>
+                                <li>Copia quel numero e incollalo nel campo Chat ID</li>
+                        </ol>
+                        <div style="display:flex;justify-content:flex-end;">
+                                <button onclick="closeChatIdGuide()"
+                                        style="background:#2d6cdf;border:none;color:#fff;border-radius:6px;padding:0.4rem 1.1rem;cursor:pointer;font-size:0.85rem;font-weight:600;">OK</button>
+                        </div>
                 </div>
         </div>
 </body>

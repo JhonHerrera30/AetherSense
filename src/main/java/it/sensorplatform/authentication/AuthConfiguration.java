@@ -111,6 +111,7 @@ public class AuthConfiguration {
 						.requestMatchers(HttpMethod.PUT, "/api/admin/**").authenticated()
 						.requestMatchers(HttpMethod.DELETE, "/api/admin/**").authenticated()
 
+						.requestMatchers(HttpMethod.GET, "/api/admin/alert-config/*/invite-link").authenticated()
 						.anyRequest().authenticated())
 				.formLogin(form -> form
 						.loginPage("/login")

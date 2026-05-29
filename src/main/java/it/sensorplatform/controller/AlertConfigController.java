@@ -196,4 +196,20 @@ public class AlertConfigController {
         });
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/{projectId}/invite-link")
+    public ResponseEntity<Map<String, String>> getInviteLink(
+            @PathVariable Long projectId) {
+        // solo verifica che l'utente appartenga al progetto, non richiede ruolo admin
+        Credentials c = getCurrentCredentials();
+        if (!Objects.equals(c.getProjectId(), projectId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        AlertConfigGlobal global = globalRepo.findByProjectId(projectId).orElse(null);
+        String link = global != null ? global.getTelegramInviteLink() : null;
+        if (link == null || link.isBlank()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(Map.of("inviteLink", link));
+    }
 }

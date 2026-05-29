@@ -2,9 +2,9 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
-	<title th:text="${project.name} + ' – Operator Map'">Operator Map</title>
-	<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+        <title th:text="${project.name} + ' – Operator Map'">Operator Map</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
 
         <!-- CSS per LTRAD -->
         <link rel="stylesheet" th:if="${project.id == 1}" th:href="@{/css/ltradOperator.css}" />
@@ -23,49 +23,63 @@
 </head>
 
 <body>
-	<header id="navbar" class="navbar">
-		<div class="nav-left">
-			<h1>
-				<a th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link"
-					th:text="${project.name}">PROJECT</a>
-			</h1>
-		</div>
-		<div class="nav-right">
+        <header id="navbar" class="navbar">
+                <div class="nav-left">
+                        <h1>
+                                <a th:href="@{'/success'(projectId=${project.id})}" class="nav-title-link"
+                                        th:text="${project.name}">PROJECT</a>
+                        </h1>
+                </div>
+                <div class="nav-right">
                         <div sec:authorize="isAuthenticated()" class="auth-user dropdown">
-                                <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true" aria-expanded="false">
+                                <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true"
+                                        aria-expanded="false">
                                         Hi, <strong th:text="${user.visibleUsername}">utente</strong>
-                                        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
-                                                height="16" fill="white">
+                                        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg"
+                                                viewBox="0 0 24 24" width="16" height="16" fill="white">
                                                 <path d="M7 10l5 5 5-5z" />
                                         </svg>
                                 </button>
-                                <div class="dropdown-menu" id="userDropdownMenu" role="menu" aria-labelledby="userDropdown">
-                                        <a th:href="@{/personal-area}" class="dropdown-link" role="menuitem">Personal Area</a>
+                                <div class="dropdown-menu" id="userDropdownMenu" role="menu"
+                                        aria-labelledby="userDropdown">
+                                        <a th:href="@{/personal-area}" class="dropdown-link" role="menuitem">Personal
+                                                Area</a>
                                         <form th:action="@{/logout}" method="post" th:csrf="true">
-                                                <button type="submit" class="dropdown-logout" role="menuitem">Logout</button>
+                                                <button type="submit" class="dropdown-logout"
+                                                        role="menuitem">Logout</button>
                                         </form>
                                 </div>
                         </div>
-			<!--a href="/" class="home-button" title="Homepage"-->
-			<form th:action="@{/logout}" method="post" th:csrf="true">
-				<button type="submit" class="home-button" title="Logout and back to home">
-					<svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
-						<path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-					</svg>
-				</button>
-			</form>
-			<!--/a-->
-		</div>
-	</header>  
-      <div class="main-layout">
-		<!-- Colonna sinistra -->
+                        <!--a href="/" class="home-button" title="Homepage"-->
+                        <form th:action="@{/logout}" method="post" th:csrf="true">
+                                <button type="submit" class="home-button" title="Logout and back to home">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
+                                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                                        </svg>
+                                </button>
+                        </form>
+                        <!--/a-->
+                </div>
+        </header>
+        <div class="main-layout">
+                <!-- Colonna sinistra -->
                 <div class="group-panel">
-					  <h1 class="page-title">Operator Dashboard</h1>
+                        <h1 class="page-title">Operator Dashboard</h1>
+                        <div id="telegram-invite-wrapper"
+                                style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:rgba(255,255,255,0.04);border-radius:0.8rem;border:1px solid rgba(255,255,255,0.08);">
+                                <p style="margin:0 0 0.4rem;font-size:0.8rem;color:rgba(255,255,255,0.5);">📣 Project
+                                        Alert Group</p>
+                                <a id="telegram-invite-link" href="#" target="_blank" rel="noopener noreferrer"
+                                        style="color:#4dabf7;font-size:0.9rem;text-decoration:none;font-weight:500;">
+                                        Join Telegram group →
+                                </a>
+                        </div>
                         <div class="title-with-search">
                                 <h2 class="section-title">Activation Requests</h2>
                         </div>
                         <div id="activation-requests-wrapper" class="activation-requests-wrapper">
-                                <a th:href="@{'/operator/' + ${project.id} + '/activations'}" class="activation-requests-link">
+                                <a th:href="@{'/operator/' + ${project.id} + '/activations'}"
+                                        class="activation-requests-link">
                                         <span class="activation-requests-icon" aria-hidden="true">⚡</span>
                                         <span>Open activation requests</span>
                                 </a>
@@ -74,17 +88,19 @@
                         <div class="title-with-search">
                                 <h2>Your Devices on Map</h2>
                                 <form th:action="@{'/operator/' + ${project.id}}" method="get" class="search-form">
-                                        <input type="text" name="deviceInfo"
-                                                placeholder="Search by name or DevEUI..."
+                                        <input type="text" name="deviceInfo" placeholder="Search by name or DevEUI..."
                                                 th:value="${param.deviceInfo}" />
-					<button type="submit" title="Search">
-						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 24 24">
-							<circle cx="11" cy="11" r="8" stroke="white" stroke-width="2" fill="none" />
-							<line x1="17" y1="17" x2="22" y2="22" stroke="white" stroke-width="2" />
-						</svg>
-					</button>
-				</form>
-			</div>
+                                        <button type="submit" title="Search">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                        fill="white" viewBox="0 0 24 24">
+                                                        <circle cx="11" cy="11" r="8" stroke="white" stroke-width="2"
+                                                                fill="none" />
+                                                        <line x1="17" y1="17" x2="22" y2="22" stroke="white"
+                                                                stroke-width="2" />
+                                                </svg>
+                                        </button>
+                                </form>
+                        </div>
 
                         <div id="user-devices-wrapper">
                                 <div th:if="${devices.isEmpty()}" id="user-devices-empty">No positioned devices</div>
@@ -107,124 +123,124 @@
                                                 </tr>
                                         </tbody>
                                 </table>
-			</div>
-		</div>
+                        </div>
+                </div>
 
-		<!-- Mappa -->
-		<div id="map"></div>
-	</div>
+                <!-- Mappa -->
+                <div id="map"></div>
+        </div>
 
-	
-<script th:inline="javascript">
-        /*<![CDATA[*/
-        const initialDevices = [[${devices}]];
-        /*]]>*/
 
-        const map = L.map('map').setView([41.89, 12.48], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
+        <script th:inline="javascript">
+                /*<![CDATA[*/
+                const initialDevices = [[${ devices }]];
+                /*]]>*/
 
-        const markerByKey = new Map();
-        const markerStatusIcons = {
-                unknown: createDeviceIcon('unknown'),
-                ok: createDeviceIcon('ok'),
-                alert: createDeviceIcon('alert')
-        };
+                const map = L.map('map').setView([41.89, 12.48], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
 
-        function formatMac(mac) {
-                if (!mac) {
-                        return '';
+                const markerByKey = new Map();
+                const markerStatusIcons = {
+                        unknown: createDeviceIcon('unknown'),
+                        ok: createDeviceIcon('ok'),
+                        alert: createDeviceIcon('alert')
+                };
+
+                function formatMac(mac) {
+                        if (!mac) {
+                                return '';
+                        }
+                        const cleaned = mac.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
+                        const pairs = cleaned.match(/.{1,2}/g);
+                        return pairs ? pairs.join(':') : '';
                 }
-                const cleaned = mac.replace(/[^a-fA-F0-9]/g, '').toUpperCase();
-                const pairs = cleaned.match(/.{1,2}/g);
-                return pairs ? pairs.join(':') : '';
-        }
 
-        function resolveDeviceKey(device) {
-                if (!device) {
+                function resolveDeviceKey(device) {
+                        if (!device) {
+                                return null;
+                        }
+                        if (device.macAddress) {
+                                return device.macAddress.toUpperCase();
+                        }
+                        if (device.devEui) {
+                                return device.devEui.toUpperCase();
+                        }
+                        if (device.deviceId) {
+                                return `DEVICE-${device.deviceId}`;
+                        }
+                        if (device.id) {
+                                return `DEVICE-${device.id}`;
+                        }
                         return null;
                 }
-                if (device.macAddress) {
-                        return device.macAddress.toUpperCase();
-                }
-                if (device.devEui) {
-                        return device.devEui.toUpperCase();
-                }
-                if (device.deviceId) {
-                        return `DEVICE-${device.deviceId}`;
-                }
-                if (device.id) {
-                        return `DEVICE-${device.id}`;
-                }
-                return null;
-        }
 
-        function buildPopupContent(device) {
-                const name = device.name || 'Device';
-                const mac = formatMac(device.macAddress);
-                const lat = device.latitude != null ? device.latitude : 'n/a';
-                const lon = device.longitude != null ? device.longitude : 'n/a';
-                return `Device: ${name}<br>MacAddress: ${mac}<br>Latitude: ${lat}<br>Longitude: ${lon}`;
-        }
+                function buildPopupContent(device) {
+                        const name = device.name || 'Device';
+                        const mac = formatMac(device.macAddress);
+                        const lat = device.latitude != null ? device.latitude : 'n/a';
+                        const lon = device.longitude != null ? device.longitude : 'n/a';
+                        return `Device: ${name}<br>MacAddress: ${mac}<br>Latitude: ${lat}<br>Longitude: ${lon}`;
+                }
 
-        function createDeviceIcon(status) {
-                const safeStatus = typeof status === 'string' ? status : 'unknown';
-                return L.divIcon({
-                        className: `device-marker-icon device-marker-icon--${safeStatus}`,
-                        html: '<span class="device-marker-pin"></span>',
-                        iconSize: [26, 26],
-                        iconAnchor: [13, 13],
-                        popupAnchor: [0, -13]
-                });
-        }
+                function createDeviceIcon(status) {
+                        const safeStatus = typeof status === 'string' ? status : 'unknown';
+                        return L.divIcon({
+                                className: `device-marker-icon device-marker-icon--${safeStatus}`,
+                                html: '<span class="device-marker-pin"></span>',
+                                iconSize: [26, 26],
+                                iconAnchor: [13, 13],
+                                popupAnchor: [0, -13]
+                        });
+                }
 
-        function determineDeviceStatus(device) {
-                if (!device || typeof device.status !== 'string') {
+                function determineDeviceStatus(device) {
+                        if (!device || typeof device.status !== 'string') {
+                                return 'unknown';
+                        }
+                        const normalized = device.status.toLowerCase();
+                        if (normalized === 'ok' || normalized === 'alert') {
+                                return normalized;
+                        }
                         return 'unknown';
                 }
-                const normalized = device.status.toLowerCase();
-                if (normalized === 'ok' || normalized === 'alert') {
-                        return normalized;
-                }
-                return 'unknown';
-        }
 
-        function addOrUpdateDeviceMarker(device) {
-                if (!device || device.latitude == null || device.longitude == null) {
-                        return;
+                function addOrUpdateDeviceMarker(device) {
+                        if (!device || device.latitude == null || device.longitude == null) {
+                                return;
+                        }
+                        const key = resolveDeviceKey(device);
+                        if (!key) {
+                                return;
+                        }
+                        const latlng = [device.latitude, device.longitude];
+                        let marker = markerByKey.get(key);
+                        if (!marker) {
+                                marker = L.marker(latlng, { icon: markerStatusIcons.unknown }).addTo(map);
+                                marker.on('mouseover', function () { this.openPopup(); });
+                                marker.on('mouseout', function () { this.closePopup(); });
+                                markerByKey.set(key, marker);
+                        } else {
+                                marker.setLatLng(latlng);
+                        }
+                        const status = determineDeviceStatus(device);
+                        marker.setIcon(markerStatusIcons[status] || markerStatusIcons.unknown);
+                        marker.bindPopup(buildPopupContent(device));
                 }
-                const key = resolveDeviceKey(device);
-                if (!key) {
-                        return;
-                }
-                const latlng = [device.latitude, device.longitude];
-                let marker = markerByKey.get(key);
-                if (!marker) {
-                        marker = L.marker(latlng, { icon: markerStatusIcons.unknown }).addTo(map);
-                        marker.on('mouseover', function () { this.openPopup(); });
-                        marker.on('mouseout', function () { this.closePopup(); });
-                        markerByKey.set(key, marker);
-                } else {
-                        marker.setLatLng(latlng);
-                }
-                const status = determineDeviceStatus(device);
-                marker.setIcon(markerStatusIcons[status] || markerStatusIcons.unknown);
-                marker.bindPopup(buildPopupContent(device));
-        }
 
-        function recalculateBounds() {
-                const latLngs = Array.from(markerByKey.values()).map(marker => marker.getLatLng());
-                if (latLngs.length > 0) {
-                        const bounds = L.latLngBounds(latLngs);
-                        map.fitBounds(bounds, {padding: [30, 30]});
+                function recalculateBounds() {
+                        const latLngs = Array.from(markerByKey.values()).map(marker => marker.getLatLng());
+                        if (latLngs.length > 0) {
+                                const bounds = L.latLngBounds(latLngs);
+                                map.fitBounds(bounds, { padding: [30, 30] });
+                        }
                 }
-        }
 
-        initialDevices.forEach(addOrUpdateDeviceMarker);
-        recalculateBounds();
+                initialDevices.forEach(addOrUpdateDeviceMarker);
+                recalculateBounds();
 
-</script>
+        </script>
 
 
         <script>
@@ -250,6 +266,18 @@
                                 }
                         });
                 });
+                // mostra link invito Telegram se disponibile
+                fetch(`/api/admin/alert-config/${[[${ project.id }]]}/invite-link`)
+                        .then(r => r.ok ? r.json() : null)
+                        .then(data => {
+                                if (data && data.inviteLink) {
+                                        const wrapper = document.getElementById('telegram-invite-wrapper');
+                                        const link = document.getElementById('telegram-invite-link');
+                                        link.href = data.inviteLink;
+                                        wrapper.style.display = 'block';
+                                }
+                        })
+                        .catch(() => { });
         </script>
 
 </body>
