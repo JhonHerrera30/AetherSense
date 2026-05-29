@@ -143,9 +143,14 @@ public class AlertService {
 
         // costruisci messaggio unico
         StringBuilder msg = new StringBuilder();
+        String deviceLabel = device.getName() != null && !device.getName().isBlank()
+                ? device.getName()
+                : (device.getMacAddress() != null ? device.getMacAddress()
+                        : (device.getDevEui() != null ? device.getDevEui() : "Unknown"));
+
         msg.append("🔴 <b>ALERT — ")
                 .append(device.getProject().getName()).append(" / ")
-                .append(device.getName()).append("</b>\n");
+                .append(deviceLabel).append("</b>\n");
 
         if (device.getLatitude() != null && device.getLongitude() != null) {
             msg.append("📍 Lat: ").append(String.format("%.4f", device.getLatitude()))
