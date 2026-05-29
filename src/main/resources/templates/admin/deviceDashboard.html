@@ -1312,33 +1312,36 @@
                 }
 
                 async function resetSignalConfig() {
-                        const res = await fetch(`/api/admin/alert-config/${PROJECT_ID}/signal/${encodeURIComponent(_modalSignalKey)}`, {
-                                method: 'DELETE'
-                        });
-                        if (res.ok) {
-                                // ricarica i default dal backend invece di cancellare
-                                try {
-                                        const cfgRes = await fetch(`/api/admin/alert-config/${PROJECT_ID}`);
-                                        if (cfgRes.ok) {
-                                                const data = await cfgRes.json();
-                                                _alertConfigs = {};
-                                                (data.signals || []).forEach(s => { _alertConfigs[s.signalKey] = s; });
-                                        }
-                                } catch (e) { }
-                                document.getElementById('modal-warning').value = '';
-                                document.getElementById('modal-critical').value = '';
-                                document.getElementById('modal-warning-low').value = '';
-                                document.getElementById('modal-critical-low').value = '';
-                                setThresholdMode('high');
-                                document.getElementById('modal-trigger-bool').checked = false;
-                                document.getElementById('modal-trigger-status').value = '';
-                                document.getElementById('modal-interval').value = '';
-                                const msg = document.getElementById('modal-status-msg');
-                                msg.textContent = '✓ Reset to default';
-                                msg.style.color = '#69db7c';
-                                msg.style.display = 'block';
-                                setTimeout(closeAlertModal, 800);
-                        }
+                        const res = await fetch(
+                                `/api/admin/alert-config/${PROJECT_ID}/signal/${encodeURIComponent(_modalSignalKey)}`,
+                                { method: 'DELETE' }
+                        );
+                        if (!res.ok) return;
+
+                        // ricarica dal backend
+                        try {
+                                const cfgRes = await fetch(`/api/admin/alert-config/${PROJECT_ID}`);
+                                if (cfgRes.ok) {
+                                        const data = await cfgRes.json();
+                                        _alertConfigs = {};
+                                        (data.signals || []).forEach(s => { _alertConfigs[s.signalKey] = s; });
+                                }
+                        } catch (e) { }
+
+                        // riapri il modal con i valori aggiornati (default dal backend)
+                        const msg = document.getElementById('modal-status-msg');
+                        msg.textContent = '✓ Reset to default';
+                        msg.style.color = '#69db7c';
+                        msg.style.display = 'block';
+
+                        // aggiorna i campi con i nuovi valori
+                        const cfg = _alertConfigs[_modalSignalKey] || {};
+                        document.getElementById('modal-warning').value = cfg.thresholdWarning ?? '';
+                        document.getElementById('modal-critical').value = cfg.thresholdCritical ?? '';
+                        document.getElementById('modal-warning-low').value = cfg.thresholdWarningLow ?? '';
+                        document.getElementById('modal-critical-low').value = cfg.thresholdCriticalLow ?? '';
+                        setThresholdMode(cfg.thresholdWarningLow != null || cfg.thresholdCriticalLow != null ? 'both' : 'high');
+                        document.getElementById('modal-interval').value = cfg.intervalMin ?? '';
                 }
 
                 // chiudi cliccando fuori dal modal
