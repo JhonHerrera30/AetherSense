@@ -12,10 +12,15 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {
-	
+
 	@Override
 	public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException exception) throws IOException, ServletException {
-		response.sendRedirect("/login?error=true");
+		String projectId = request.getParameter("projectId");
+		if (projectId != null && !projectId.isBlank()) {
+			response.sendRedirect("/login?error=true&projectId=" + projectId);
+		} else {
+			response.sendRedirect("/login?error=true");
+		}
 	}
 }

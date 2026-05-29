@@ -73,6 +73,16 @@
 				const selectedProjectId = projectSelect.value;
 				signupLink.href = '/register?projectId=' + encodeURIComponent(selectedProjectId);
 			}
+			// pre-seleziona il progetto se arriva dall'URL dopo errore login
+			const urlParams = new URLSearchParams(window.location.search);
+			const projectIdParam = urlParams.get('projectId');
+			if (projectIdParam) {
+				const option = projectSelect.querySelector(`option[value="${projectIdParam}"]`);
+				if (option) {
+					projectSelect.value = projectIdParam;
+					updateSignupLink();
+				}
+			}
 
 			// Esegui aggiornamento al cambio di selezione
 			projectSelect.addEventListener('change', updateSignupLink);
