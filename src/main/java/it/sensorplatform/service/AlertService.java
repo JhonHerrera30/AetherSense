@@ -7,6 +7,7 @@ import it.sensorplatform.repository.AlertConfigSignalRepository;
 import it.sensorplatform.repository.AlertConfigGlobalRepository;
 import it.sensorplatform.service.IngestService.MeasurementSample;
 import it.sensorplatform.service.IngestService.IndicatorSample;
+import it.sensorplatform.util.AlertDefaults;
 import it.sensorplatform.util.SignalDictionary;
 import org.springframework.stereotype.Service;
 
@@ -20,21 +21,6 @@ import java.util.Map;
 public class AlertService {
 
     private static final int DEFAULT_INTERVAL_MIN = 30;
-
-    private static final Map<String, double[]> SIGNAL_DEFAULT_THRESHOLDS = Map.ofEntries(
-            Map.entry("temperature_celsius", new double[] { -28.75, 72.25 }),
-            Map.entry("humidity_percent", new double[] { 15.0, 85.0 }),
-            Map.entry("co2concentration_ppm", new double[] { 1920.0, 4800.0 }),
-            Map.entry("pressure_hpa", new double[] { 500.0, 990.0 }),
-            Map.entry("gasresistance_ohm", new double[] { 150.0, 300.0 }),
-            Map.entry("voc_index", new double[] { 149.3, 299.0 }),
-            Map.entry("nox_index", new double[] { 149.3, 299.0 }),
-            Map.entry("pm1_0_ugm3", new double[] { 200.0, 500.0 }),
-            Map.entry("pm2_5_ugm3", new double[] { 200.0, 500.0 }),
-            Map.entry("pm4_0_ugm3", new double[] { 200.0, 500.0 }),
-            Map.entry("pm10_0_ugm3", new double[] { 200.0, 500.0 }),
-            Map.entry("si_m_s", new double[] { 15.0, 40.0 }),
-            Map.entry("pga_m_s2", new double[] { 3.0, 8.0 }));
 
     private final AlertConfigSignalRepository signalRepo;
     private final AlertConfigGlobalRepository globalRepo;
@@ -79,8 +65,14 @@ public class AlertService {
             Double critical = cfg != null && cfg.getThresholdCritical() != null
                     ? cfg.getThresholdCritical()
                     : defaultCritical(key);
-            Double warningLow = cfg != null ? cfg.getThresholdWarningLow() : null;
-            Double criticalLow = cfg != null ? cfg.getThresholdCriticalLow() : null;
+            Double warningLow = cfg != null ? cfg.getThresholdWarningLow()
+                    : (AlertDefaults.get("default", key) != null
+                            ? AlertDefaults.get("default", key).warningLow()
+                            : null);
+            Double criticalLow = cfg != null ? cfg.getThresholdCriticalLow()
+                    : (AlertDefaults.get("default", key) != null
+                            ? AlertDefaults.get("default", key).criticalLow()
+                            : null);
 
             if (warning == null && critical == null
                     && warningLow == null && criticalLow == null)
@@ -213,13 +205,13 @@ public class AlertService {
     }
 
     private Double defaultWarning(String key) {
-        double[] d = SIGNAL_DEFAULT_THRESHOLDS.get(key);
-        return d != null ? d[0] : null;
+        AlertDefaults.Thresholds t = AlertDefaults.get("default", key);
+        return t != null ? t.warningHigh() : null;
     }
 
     private Double defaultCritical(String key) {
-        double[] d = SIGNAL_DEFAULT_THRESHOLDS.get(key);
-        return d != null ? d[1] : null;
+        AlertDefaults.Thresholds t = AlertDefaults.get("default", key);
+        return t != null ? t.criticalHigh() : null;
     }
 
     private String formatValue(double v) {

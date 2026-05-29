@@ -574,7 +574,8 @@
 
                                 // usa soglie configurate dall'admin se disponibili
                                 const cfg = _alertConfigs[key];
-                                if (cfg && (cfg.thresholdWarning != null || cfg.thresholdCritical != null)) {
+                                if (cfg && (cfg.thresholdWarning != null || cfg.thresholdCritical != null ||
+                                        cfg.thresholdWarningLow != null || cfg.thresholdCriticalLow != null)) {
                                         const range = max - min;
                                         if (range <= 0) return '#4caf50';
 
@@ -1315,7 +1316,15 @@
                                 method: 'DELETE'
                         });
                         if (res.ok) {
-                                delete _alertConfigs[_modalSignalKey];
+                                // ricarica i default dal backend invece di cancellare
+                                try {
+                                        const cfgRes = await fetch(`/api/admin/alert-config/${PROJECT_ID}`);
+                                        if (cfgRes.ok) {
+                                                const data = await cfgRes.json();
+                                                _alertConfigs = {};
+                                                (data.signals || []).forEach(s => { _alertConfigs[s.signalKey] = s; });
+                                        }
+                                } catch (e) { }
                                 document.getElementById('modal-warning').value = '';
                                 document.getElementById('modal-critical').value = '';
                                 document.getElementById('modal-warning-low').value = '';
