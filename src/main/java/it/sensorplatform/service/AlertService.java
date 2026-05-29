@@ -141,6 +141,29 @@ public class AlertService {
         if (alertLines.isEmpty())
             return;
 
+        // calcola intervallo minimo tra i segnali in allarme
+        int minInterval = globalInterval;
+        for (MeasurementSample m : measurements) {
+            String key = m.key() != null ? m.key().toLowerCase(Locale.ROOT) : null;
+            if (key == null)
+                continue;
+            AlertConfigSignal cfg = signalRepo
+                    .findByProjectIdAndSignalKey(projectId, key).orElse(null);
+            if (cfg != null && cfg.getIntervalMin() != null) {
+                minInterval = Math.min(minInterval, cfg.getIntervalMin());
+            }
+        }
+        for (IndicatorSample i : indicators) {
+            String key = i.key() != null ? i.key().toLowerCase(Locale.ROOT) : null;
+            if (key == null)
+                continue;
+            AlertConfigSignal cfg = signalRepo
+                    .findByProjectIdAndSignalKey(projectId, key).orElse(null);
+            if (cfg != null && cfg.getIntervalMin() != null) {
+                minInterval = Math.min(minInterval, cfg.getIntervalMin());
+            }
+        }
+
         // costruisci messaggio unico
         StringBuilder msg = new StringBuilder();
         String deviceLabel = device.getName() != null && !device.getName().isBlank()
@@ -161,7 +184,8 @@ public class AlertService {
         for (String line : alertLines) {
             msg.append(line).append("\n");
         }
-        msg.append("\n⏱ Prossimo check tra ").append(globalInterval).append(" min");
+
+        msg.append("\n⏱ Prossimo check tra ").append(minInterval).append(" min");
 
         telegramBotService.sendMessage(chatId, msg.toString());
     }
