@@ -21,7 +21,7 @@ class IngestServiceTests {
     @Test
     void usesSavedSpecsForMeasurementMetadata() {
         SampleRepository mockRepo = Mockito.mock(SampleRepository.class);
-        IngestService ingestService = new IngestService(mockRepo);
+        IngestService ingestService = new IngestService(mockRepo, Mockito.mock(AlertService.class));
 
         Spec spec = new Spec();
         spec.setMeasurement("ambient_carbon");
@@ -65,7 +65,7 @@ class IngestServiceTests {
     @Test
     void fallsBackToSpecsWhenPacketDoesNotProvideLabel() {
         SampleRepository mockRepo = Mockito.mock(SampleRepository.class);
-        IngestService ingestService = new IngestService(mockRepo);
+        IngestService ingestService = new IngestService(mockRepo, Mockito.mock(AlertService.class));
 
         Spec spec = new Spec();
         spec.setMeasurement("voc_index");
@@ -101,7 +101,7 @@ class IngestServiceTests {
     @Test
     void usesSavedIndicatorsForLabels() {
         SampleRepository mockRepo = Mockito.mock(SampleRepository.class);
-        IngestService ingestService = new IngestService(mockRepo);
+        IngestService ingestService = new IngestService(mockRepo, Mockito.mock(AlertService.class));
 
         Indicator indicator = new Indicator();
         indicator.setKey("sen55_fan_err");
@@ -134,7 +134,7 @@ class IngestServiceTests {
     @Test
     void buildsMeasurementsAndIndicatorsFromPacketSpec() {
         SampleRepository mockRepo = Mockito.mock(SampleRepository.class);
-        IngestService ingestService = new IngestService(mockRepo);
+        IngestService ingestService = new IngestService(mockRepo, Mockito.mock(AlertService.class));
 
         PacketDTO.SpecEntry specEntry = new PacketDTO.SpecEntry();
         specEntry.setKey("SEN55-PM2.5-ug/m3");
@@ -174,7 +174,7 @@ class IngestServiceTests {
     @Test
     void mergesIndicatorKeysWithDifferentCasing() {
         SampleRepository mockRepo = Mockito.mock(SampleRepository.class);
-        IngestService ingestService = new IngestService(mockRepo);
+        IngestService ingestService = new IngestService(mockRepo, Mockito.mock(AlertService.class));
 
         Indicator indicator = new Indicator();
         indicator.setKey("sen55-fanerror-none");
