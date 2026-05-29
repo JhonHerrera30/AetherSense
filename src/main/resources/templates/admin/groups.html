@@ -18,6 +18,9 @@
         <!-- CSS per progetto VOLCANO -->
         <link rel="stylesheet" th:if="${project.id == 101}" th:href="@{/css/volcanoGroups.css}" />
 
+        <!-- CSS generico per il pulsante del bot-->
+        <link rel="stylesheet" th:href="@{/css/groupsCommon.css}" />
+
         <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 </head>
 
@@ -52,6 +55,10 @@
                                         </form>
                                 </div>
                         </div>
+                        <button type="button" class="alert-settings-btn" onclick="openAlertSettingsModal()"
+                                title="Alert Settings">
+                                🔔
+                        </button>
                         <a href="/" class="home-button" title="Homepage">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24">
                                         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
@@ -570,7 +577,53 @@
         </script>
 
         <script th:inline="javascript">
+
                 /*<![CDATA[*/
+
+                async function openAlertSettingsModal() {
+                        try {
+                                const res = await fetch(`/api/admin/alert-config/${PROJECT_ID}`);
+                                if (!res.ok) return;
+                                const data = await res.json();
+                                document.getElementById('alert-chat-id').value = data.telegramChatId || '';
+                                document.getElementById('alert-invite-link').value = data.telegramInviteLink || '';
+                                document.getElementById('alert-interval').value = data.globalIntervalMin || 30;
+                        } catch (e) { console.warn('Could not load alert config', e); }
+                        document.getElementById('alert-settings-overlay').style.display = 'flex';
+                }
+
+                function closeAlertSettingsModal() {
+                        document.getElementById('alert-settings-overlay').style.display = 'none';
+                }
+
+                async function saveAlertSettings() {
+                        const msg = document.getElementById('alert-settings-msg');
+                        const body = {
+                                telegramChatId: document.getElementById('alert-chat-id').value.trim(),
+                                telegramInviteLink: document.getElementById('alert-invite-link').value.trim(),
+                                intervalMin: parseInt(document.getElementById('alert-interval').value) || 30
+                        };
+                        const res = await fetch(`/api/admin/alert-config/${PROJECT_ID}/global`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(body)
+                        });
+                        if (res.ok) {
+                                msg.textContent = '✓ Saved';
+                                msg.style.color = '#69db7c';
+                                msg.style.display = 'block';
+                                setTimeout(closeAlertSettingsModal, 800);
+                        } else {
+                                msg.textContent = '✗ Error saving';
+                                msg.style.color = '#ef5350';
+                                msg.style.display = 'block';
+                        }
+                }
+
+                document.getElementById('alert-settings-overlay').addEventListener('click', function (e) {
+                        if (e.target === this) closeAlertSettingsModal();
+                });
+                
                 document.addEventListener('DOMContentLoaded', function () {
 
                         const LIST_OP_URL = `/api/projects/${PROJECT_ID}/operators`;
@@ -747,6 +800,45 @@
                                         </div>
                                 </form>
                         </div>
+                </div>
+        </div>
+        <!-- Modal Alert Settings globali -->
+        <div id="alert-settings-overlay"
+                style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center;">
+                <div
+                        style="background:#1e2a3a;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:1.5rem;width:min(420px,90vw);position:relative;">
+                        <button onclick="closeAlertSettingsModal()"
+                                style="position:absolute;top:0.75rem;right:0.75rem;background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.25rem;cursor:pointer;">✕</button>
+                        <h4 style="margin:0 0 1.25rem;color:#fff;font-size:1rem;font-weight:600;">🔔 Alert Settings</h4>
+
+                        <label
+                                style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">
+                                Telegram Chat ID
+                        </label>
+                        <input id="alert-chat-id" type="text" placeholder="e.g. -1001234567890"
+                                style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
+
+                        <label
+                                style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">
+                                Telegram Invite Link (opzionale)
+                        </label>
+                        <input id="alert-invite-link" type="text" placeholder="e.g. https://t.me/..."
+                                style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1rem;font-size:0.9rem;">
+
+                        <label
+                                style="color:rgba(255,255,255,0.65);font-size:0.8rem;display:block;margin-bottom:0.25rem;">
+                                🕐 Default alert interval (minutes)
+                        </label>
+                        <input id="alert-interval" type="number" min="1" step="1" placeholder="30"
+                                style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;padding:0.5rem 0.75rem;margin-bottom:1.25rem;font-size:0.9rem;">
+
+                        <div style="display:flex;gap:0.75rem;justify-content:flex-end;align-items:center;">
+                                <button onclick="closeAlertSettingsModal()"
+                                        style="background:none;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.5);border-radius:6px;padding:0.4rem 0.9rem;cursor:pointer;font-size:0.85rem;">Cancel</button>
+                                <button onclick="saveAlertSettings()"
+                                        style="background:#2d6cdf;border:none;color:#fff;border-radius:6px;padding:0.4rem 1.1rem;cursor:pointer;font-size:0.85rem;font-weight:600;">Save</button>
+                        </div>
+                        <p id="alert-settings-msg" style="margin:0.75rem 0 0;font-size:0.8rem;display:none;"></p>
                 </div>
         </div>
 </body>

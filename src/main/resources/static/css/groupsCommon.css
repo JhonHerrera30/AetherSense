@@ -1,0 +1,14 @@
+.alert-settings-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+    padding: 0 0.5rem;
+}
+
+.alert-settings-btn:hover {
+    opacity: 1;
+}
