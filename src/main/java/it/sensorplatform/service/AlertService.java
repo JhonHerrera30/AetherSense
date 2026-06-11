@@ -106,9 +106,9 @@ public class AlertService {
             AlertConfigSignal cfg = signalRepo
                     .findByProjectIdAndSignalKey(projectId, key).orElse(null);
 
-            Integer triggerValue = cfg != null ? cfg.getTriggerValue() : 1;
-            if (triggerValue == null)
-                continue;
+            Integer triggerValue = cfg != null && cfg.getTriggerValue() != null
+                    ? cfg.getTriggerValue()
+                    : 1;
             if (!shouldAlert(cfg, globalInterval))
                 continue;
 
