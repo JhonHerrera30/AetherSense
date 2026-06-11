@@ -126,13 +126,13 @@ public class AlertService {
                 if (value >= triggerValue) {
                     String stateName = getStateName(key, value);
                     alertLines.add("🚨 <b>" + displayName + ":</b> " + stateName
-                            + " (≥ " + triggerValue + ")");
+                            + " (threshold ≥ " + triggerValue + ")");
                     updateLastAlertSent(cfg, projectId, key, globalInterval);
                 }
             } else {
                 // booleano: alert se value == 1
                 if (value == 1) {
-                    alertLines.add("🚨 <b>" + displayName + ":</b> Issue");
+                    alertLines.add("🚨 <b>" + displayName + ":</b> Fault detected");
                     updateLastAlertSent(cfg, projectId, key, globalInterval);
                 }
             }
@@ -167,27 +167,39 @@ public class AlertService {
         // costruisci messaggio unico
         StringBuilder msg = new StringBuilder();
         String deviceLabel = device.getName() != null && !device.getName().isBlank()
-                ? device.getName()
-                : (device.getMacAddress() != null ? device.getMacAddress()
-                        : (device.getDevEui() != null ? device.getDevEui() : "Unknown"));
+                ? device.getName() + " (" + formatIdentifier(device) + ")"
+                : formatIdentifier(device);
 
         msg.append("🔴 <b>ALERT — ")
                 .append(device.getProject().getName()).append(" / ")
                 .append(deviceLabel).append("</b>\n");
 
         if (device.getLatitude() != null && device.getLongitude() != null) {
-            msg.append("📍 Lat: ").append(String.format("%.4f", device.getLatitude()))
-                    .append(", Lng: ").append(String.format("%.4f", device.getLongitude()))
-                    .append("\n");
+            String lat = String.format("%.4f", device.getLatitude());
+            String lng = String.format("%.4f", device.getLongitude());
+            msg.append("📍 <a href=\"https://maps.google.com/?q=")
+                    .append(lat).append(",").append(lng)
+                    .append("\">").append(lat).append(", ").append(lng)
+                    .append("</a>\n");
         }
         msg.append("\n");
         for (String line : alertLines) {
             msg.append(line).append("\n");
         }
-
-        msg.append("\n⏱ Prossimo check tra ").append(minInterval).append(" min");
-
+        msg.append("\n⏱ Next possible alert in ").append(minInterval).append(" min");
         telegramBotService.sendMessage(chatId, msg.toString());
+    }
+
+    private String formatIdentifier(Device device) {
+        String id = device.getMacAddress() != null ? device.getMacAddress()
+                : (device.getDevEui() != null ? device.getDevEui() : null);
+        if (id == null)
+            return "Unknown";
+        String clean = id.replaceAll("[^a-fA-F0-9]", "").toUpperCase();
+        if (clean.length() == 12) {
+            return clean.replaceAll("(.{2})", "$1:").replaceAll(":$", "");
+        }
+        return id;
     }
 
     private String buildNumericAlertLine(String name, double value, String unit,
@@ -196,16 +208,17 @@ public class AlertService {
         String formatted = formatValue(value) + (unit.isBlank() ? "" : " " + unit);
 
         if (critical != null && value >= critical) {
-            return "🔴 <b>" + name + ":</b> " + formatted + " (critical &gt; " + formatValue(critical) + ")";
+            return "🔴 <b>" + name + ":</b> " + formatted + " (critical &gt; " + formatValue(critical) + " threshold)";
         }
         if (criticalLow != null && value <= criticalLow) {
-            return "🔴 <b>" + name + ":</b> " + formatted + " (critical &lt; " + formatValue(criticalLow) + ")";
+            return "🔴 <b>" + name + ":</b> " + formatted + " (critical &lt; " + formatValue(criticalLow)
+                    + " threshold)";
         }
         if (warning != null && value >= warning) {
-            return "⚠️ <b>" + name + ":</b> " + formatted + " (warning &gt; " + formatValue(warning) + ")";
+            return "⚠️ <b>" + name + ":</b> " + formatted + " (warning &gt; " + formatValue(warning) + " threshold)";
         }
         if (warningLow != null && value <= warningLow) {
-            return "⚠️ <b>" + name + ":</b> " + formatted + " (warning &lt; " + formatValue(warningLow) + ")";
+            return "⚠️ <b>" + name + ":</b> " + formatted + " (warning &lt; " + formatValue(warningLow) + " threshold)";
         }
         return null;
     }
