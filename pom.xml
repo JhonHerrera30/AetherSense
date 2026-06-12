@@ -89,6 +89,16 @@
 					<mainClass>it.sensorplatform.SensorPlatformApplication</mainClass>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>10.0.3</version>
+				<configuration>
+					<format>HTML</format>
+					<outputDirectory>${project.basedir}/target/dependency-check</outputDirectory>
+					<failBuildOnCVSS>9</failBuildOnCVSS>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
