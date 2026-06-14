@@ -1,5 +1,7 @@
 package it.sensorplatform.controller;
 
+import it.sensorplatform.service.TotpService;
+import dev.samstevens.totp.exceptions.QrGenerationException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,6 +48,9 @@ public class PersonalAreaController {
 
     @Autowired
     private ProjectService projectService;
+
+    @Autowired
+    private TotpService totpService;
 
     @GetMapping
     public String showPersonalArea(@RequestParam(value = "projectId", required = false) Long projectId,
@@ -258,4 +263,61 @@ public class PersonalAreaController {
         }
         return visibleUsername + "|" + suffix;
     }
+
+    @GetMapping("/2fa/setup")
+    public String setup2fa(Model model) throws QrGenerationException {
+        Credentials credentials = getCurrentCredentials();
+        if (credentials == null)
+            return "redirect:/login";
+
+        String secret = totpService.generateSecret();
+        String qrUri = totpService.generateQrCodeDataUri(secret, credentials.getVisibleUsername());
+
+        model.addAttribute("qrCodeDataUri", qrUri);
+        model.addAttribute("secret", secret);
+        model.addAttribute("totpEnabled", credentials.isTotpEnabled());
+        return "2fa-setup";
+    }
+
+    @PostMapping("/2fa/enable")
+    public String enable2fa(@RequestParam String secret,
+            @RequestParam String code,
+            @RequestParam(required = false) Long projectId,
+            RedirectAttributes redirectAttributes) {
+        Credentials credentials = getCurrentCredentials();
+        if (credentials == null)
+            return "redirect:/login";
+
+        if (!totpService.verifyCode(secret, code)) {
+            redirectAttributes.addFlashAttribute("totpError", "Codice non valido. Riprova.");
+            return "redirect:/personal-area/2fa/setup";
+        }
+
+        credentials.setTotpSecret(secret);
+        credentials.setTotpEnabled(true);
+        credentialsService.updateCredentials(credentials, null);
+
+        redirectAttributes.addFlashAttribute("totpSuccess", "2FA attivato con successo.");
+        if (projectId != null)
+            redirectAttributes.addAttribute("projectId", projectId);
+        return "redirect:/personal-area";
+    }
+
+    @PostMapping("/2fa/disable")
+    public String disable2fa(@RequestParam(required = false) Long projectId,
+            RedirectAttributes redirectAttributes) {
+        Credentials credentials = getCurrentCredentials();
+        if (credentials == null)
+            return "redirect:/login";
+
+        credentials.setTotpSecret(null);
+        credentials.setTotpEnabled(false);
+        credentialsService.updateCredentials(credentials, null);
+
+        redirectAttributes.addFlashAttribute("totpSuccess", "2FA disattivato.");
+        if (projectId != null)
+            redirectAttributes.addAttribute("projectId", projectId);
+        return "redirect:/personal-area";
+    }
+
 }

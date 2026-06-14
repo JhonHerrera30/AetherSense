@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two-Factor Authentication Setup – AetherSense</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/personalArea.css}">
+</head>
+
+<body class="personal-area theme-superadmin">
+    <header id="navbar" class="navbar">
+        <div class="nav-left">
+            <h1>AetherSense</h1>
+        </div>
+        <div class="nav-right">
+            <a class="home-button" th:href="@{/personal-area}" title="Back to Personal Area">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon-home" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" fill="currentColor" />
+                </svg>
+            </a>
+        </div>
+    </header>
+
+    <main class="personal-area-content">
+        <section class="forms-grid">
+            <article class="card">
+                <header class="card-header">
+                    <h2>Two-Factor Authentication</h2>
+                    <p>Scan the QR code with Google Authenticator or a compatible app, then enter the 6-digit code to
+                        confirm activation.</p>
+                </header>
+
+                <div th:if="${totpError}" class="alert error" th:text="${totpError}"></div>
+
+                <div style="text-align: center; margin: 1.5rem 0;">
+                    <img th:src="${qrCodeDataUri}" alt="QR Code 2FA" style="width: 200px; height: 200px;" />
+                </div>
+
+                <p style="text-align: center; font-size: 0.85rem; color: var(--text-muted);">
+                    Can't scan? Enter this code manually: <strong th:text="${secret}"></strong>
+                </p>
+
+                <form th:action="@{/personal-area/2fa/enable}" method="post" th:csrf="true" class="form"
+                    style="margin-top: 1.5rem;">
+                    <input type="hidden" name="secret" th:value="${secret}" />
+
+                    <div class="form-group">
+                        <label for="code">Verification code</label>
+                        <input type="text" id="code" name="code" maxlength="6" inputmode="numeric" pattern="[0-9]{6}"
+                            placeholder="000000" autocomplete="one-time-code" />
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="primary-button">Activate 2FA</button>
+                        <a th:href="@{/personal-area}" class="secondary-button" style="margin-left: 1rem;">Cancel</a>
+                    </div>
+                </form>
+            </article>
+        </section>
+    </main>
+</body>
+
+</html>

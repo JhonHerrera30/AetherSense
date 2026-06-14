@@ -16,7 +16,7 @@ import jakarta.validation.constraints.NotBlank;
 
 @Entity
 public class Credentials {
-	
+
 	public static final String LTRAD_OPERATOR_ROLE = "LTRAD_OPERATOR";
 	public static final String FIRE_OPERATOR_ROLE = "FIRE_OPERATOR";
 	public static final String VOLCANO_OPERATOR_ROLE = "VOLCANO_OPERATOR";
@@ -24,78 +24,77 @@ public class Credentials {
 	public static final String FIRE_ADMIN_ROLE = "FIRE_ADMIN";
 	public static final String VOLCANO_ADMIN_ROLE = "VOLCANO_ADMIN";
 	public static final String SUPERADMIN_ROLE = "SUPERADMIN";
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	
+
 	@Column(nullable = false)
 	@NotBlank
 	private String username;
-	
+
 	@Column(nullable = false)
 	@NotBlank
 	private String email;
-	
+
 	@Column(nullable = false)
 	@NotBlank
 	private String password;
-	
+
 	@Column(nullable = false)
 	private String role;
-	
+
 	@OneToOne(cascade = CascadeType.ALL)
 	private User user;
-	
-	private Long projectId;	
-	
+
+	private Long projectId;
+
 	@Column(nullable = true)
 	private String visibleUsername;
-	
-        @OneToMany
-        private List<Device> device;
 
-        @OneToOne(mappedBy = "credentials")
-        private Admin admin;
+	@OneToMany
+	private List<Device> device;
 
-        @OneToOne(mappedBy = "credentials")
-        private Superadmin superadmin;
+	@OneToOne(mappedBy = "credentials")
+	private Admin admin;
 
-        @ManyToOne
-        private Admin employer;
-	
-	
+	@OneToOne(mappedBy = "credentials")
+	private Superadmin superadmin;
+
+	@ManyToOne
+	private Admin employer;
+
 	public List<Device> getDevice() {
 		return device;
 	}
 
-        public void setDevice(List<Device> device) {
-                this.device = device;
-        }
+	public void setDevice(List<Device> device) {
+		this.device = device;
+	}
 
-        public Admin getAdmin() {
-                return admin;
-        }
+	public Admin getAdmin() {
+		return admin;
+	}
 
-        public void setAdmin(Admin admin) {
-                this.admin = admin;
-        }
+	public void setAdmin(Admin admin) {
+		this.admin = admin;
+	}
 
-        public Superadmin getSuperadmin() {
-                return superadmin;
-        }
+	public Superadmin getSuperadmin() {
+		return superadmin;
+	}
 
-        public void setSuperadmin(Superadmin superadmin) {
-                this.superadmin = superadmin;
-        }
+	public void setSuperadmin(Superadmin superadmin) {
+		this.superadmin = superadmin;
+	}
 
-        public Admin getEmployer() {
-                return employer;
-        }
+	public Admin getEmployer() {
+		return employer;
+	}
 
-        public void setEmployer(Admin employer) {
-                this.employer = employer;
-        }
+	public void setEmployer(Admin employer) {
+		this.employer = employer;
+	}
 
 	public User getUser() {
 		return user;
@@ -112,15 +111,15 @@ public class Credentials {
 	public void setEmail(String email) {
 		this.email = email;
 	}
-	
+
 	public String getPassword() {
 		return password;
 	}
-	
+
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
+
 	public Long getId() {
 		return id;
 	}
@@ -145,7 +144,6 @@ public class Credentials {
 		this.role = role;
 	}
 
-
 	public Long getProjectId() {
 		return projectId;
 	}
@@ -154,13 +152,34 @@ public class Credentials {
 		this.projectId = projectId;
 	}
 
-
 	public String getVisibleUsername() {
 		return visibleUsername;
 	}
 
 	public void setVisibleUsername(String visibleUsername) {
 		this.visibleUsername = visibleUsername;
+	}
+
+	@Column(name = "totp_secret", nullable = true)
+	private String totpSecret;
+
+	@Column(name = "totp_enabled", nullable = false)
+	private boolean totpEnabled = false;
+
+	public String getTotpSecret() {
+		return totpSecret;
+	}
+
+	public void setTotpSecret(String totpSecret) {
+		this.totpSecret = totpSecret;
+	}
+
+	public boolean isTotpEnabled() {
+		return totpEnabled;
+	}
+
+	public void setTotpEnabled(boolean totpEnabled) {
+		this.totpEnabled = totpEnabled;
 	}
 
 	@Override
@@ -180,7 +199,5 @@ public class Credentials {
 		return Objects.equals(email, other.email) && Objects.equals(id, other.id)
 				&& Objects.equals(password, other.password) && Objects.equals(username, other.username);
 	}
-	
-	
-	
+
 }
