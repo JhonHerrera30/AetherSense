@@ -1,6 +1,7 @@
 package it.sensorplatform.controller.rest;
 
 import it.sensorplatform.dto.PacketDTO;
+import it.sensorplatform.filter.RawBodyCachingFilter;
 import it.sensorplatform.model.Project;
 import it.sensorplatform.service.PacketService;
 import it.sensorplatform.service.ProjectService;
@@ -10,9 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/packets")
@@ -59,27 +57,24 @@ public class PacketControllerRest {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Verifica API key SHA-256
         String incomingHash = ApiKeyUtil.hashKey(apiKey);
         if (!incomingHash.equals(project.getApiKeyHash())) {
             System.out.println("PacketControllerRest.handle - invalid API key for project " + project.getName());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Verifica HMAC se presente
         if (hmacSignature != null && !hmacSignature.isBlank()) {
-            try {
-                String rawBody = httpRequest.getAttribute("rawBody") != null
-                        ? (String) httpRequest.getAttribute("rawBody")
-                        : readBody(httpRequest);
-
-                if (!ApiKeyUtil.verifyHmac(rawBody, apiKey, hmacSignature)) {
-                    System.out.println("PacketControllerRest.handle - invalid HMAC for project " + project.getName());
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-                }
-            } catch (IOException e) {
-                System.out.println("PacketControllerRest.handle - error reading body for HMAC");
+            String rawBody = null;
+            if (httpRequest instanceof RawBodyCachingFilter.CachedBodyHttpServletRequest cached) {
+                rawBody = cached.getRawBody();
+            }
+            if (rawBody == null || rawBody.isBlank()) {
+                System.out.println("PacketControllerRest.handle - cannot read body for HMAC");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+            if (!ApiKeyUtil.verifyHmac(rawBody, apiKey, hmacSignature)) {
+                System.out.println("PacketControllerRest.handle - invalid HMAC for project " + project.getName());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         }
 
@@ -87,11 +82,5 @@ public class PacketControllerRest {
         PacketService.Result result = packetService.handlePacket(packet);
         System.out.println("PacketControllerRest.handle - processing result: " + result);
         return ResponseEntity.ok(result);
-    }
-
-    private String readBody(HttpServletRequest request) throws IOException {
-        try (BufferedReader reader = request.getReader()) {
-            return reader.lines().collect(Collectors.joining("\n"));
-        }
     }
 }
