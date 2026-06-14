@@ -16,14 +16,14 @@ public class Project {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	
+
 	@Column(nullable = false)
 	private String name;
-	
+
 	@OneToMany
-	@JoinColumn(name="group_id")
-	private List <Group> groups;
-	
+	@JoinColumn(name = "group_id")
+	private List<Group> groups;
+
 	@OneToMany
 	private List<TypeOfDevice> tods;
 
@@ -50,7 +50,7 @@ public class Project {
 	public void setGroups(List<Group> groups) {
 		this.groups = groups;
 	}
-	
+
 	public List<TypeOfDevice> getTods() {
 		return tods;
 	}
@@ -75,6 +75,16 @@ public class Project {
 		Project other = (Project) obj;
 		return Objects.equals(id, other.id);
 	}
-	
-	
+
+	@Column(name = "api_key_hash", length = 64)
+	private String apiKeyHash;
+
+	public String getApiKeyHash() {
+		return apiKeyHash;
+	}
+
+	public void setApiKeyHash(String apiKeyHash) {
+		this.apiKeyHash = apiKeyHash;
+	}
+
 }
