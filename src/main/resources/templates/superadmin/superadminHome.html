@@ -16,22 +16,24 @@
 		<div class="nav-left">
 			<h1>AetherSense <span class="admin-label">SuperAdmin</span></h1>
 		</div>
-                <div class="nav-right">
-                        <div sec:authorize="isAuthenticated()" class="auth-user dropdown">
-                                <button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true" aria-expanded="false">
-                                        Hi, <strong th:text="${user.visibleUsername}">utente</strong>
-                                        <svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
-                                                <path d="M7 10l5 5 5-5z" />
-                                        </svg>
-                                </button>
-                                <div class="dropdown-menu" id="userDropdownMenu" role="menu" aria-labelledby="userDropdown">
-                                        <a th:href="@{/personal-area}" class="dropdown-link" role="menuitem">Personal Area</a>
-                                        <form th:action="@{/logout}" method="post" th:csrf="true" class="logout-form">
-                                                <button type="submit" class="dropdown-logout" role="menuitem">Logout</button>
-                                        </form>
-                                </div>
-                        </div>
-                </div>
+		<div class="nav-right">
+			<div sec:authorize="isAuthenticated()" class="auth-user dropdown">
+				<button type="button" class="dropdown-toggle" id="userDropdown" aria-haspopup="true"
+					aria-expanded="false">
+					Hi, <strong th:text="${user.visibleUsername}">utente</strong>
+					<svg class="dropdown-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16"
+						height="16" fill="currentColor" aria-hidden="true">
+						<path d="M7 10l5 5 5-5z" />
+					</svg>
+				</button>
+				<div class="dropdown-menu" id="userDropdownMenu" role="menu" aria-labelledby="userDropdown">
+					<a th:href="@{/personal-area}" class="dropdown-link" role="menuitem">Personal Area</a>
+					<form th:action="@{/logout}" method="post" th:csrf="true" class="logout-form">
+						<button type="submit" class="dropdown-logout" role="menuitem">Logout</button>
+					</form>
+				</div>
+			</div>
+		</div>
 	</header>
 	<section class="hero">
 		<video class="hero_video" autoplay muted loop playsinline preload="auto">
@@ -106,38 +108,95 @@
 				eruptions and supports evacuation planning with real-time alerts.</p>
 		</div>
 	</section>
+	<section class="projects-manager">
+		<h2 class="admin-title">Create new project</h2>
+		<div th:if="${successMessage}" class="alert-success" th:text="${successMessage}"
+			style="background:#2d6a4f;color:#fff;padding:1rem;border-radius:8px;margin:1rem auto;max-width:600px;text-align:center;">
+		</div>
+		<div th:if="${errorMessage}" class="alert-error" th:text="${errorMessage}"
+			style="background:#c0392b;color:#fff;padding:1rem;border-radius:8px;margin:1rem auto;max-width:600px;text-align:center;">
+		</div>
+		<div th:if="${newProjectResult}"
+			style="background:#1a1a2e;border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:1.5rem;margin:1rem auto;max-width:600px;">
+			<h3 style="color:#fff;margin-bottom:1rem;">⚠️ Save these credentials — they won't be shown again</h3>
+			<p style="color:rgba(255,255,255,0.8);">Project: <strong th:text="${newProjectResult.projectName}"></strong>
+			</p>
+			<p style="color:rgba(255,255,255,0.8);">Admin username: <strong
+					th:text="${newProjectResult.adminUsername}"></strong></p>
+			<p style="color:rgba(255,255,255,0.8);">Admin password: <strong
+					th:text="${newProjectResult.adminPassword}"></strong></p>
+			<p style="color:rgba(255,255,255,0.8);">API Key: <strong th:text="${newProjectResult.apiKey}"></strong></p>
+		</div>
+		<form th:action="@{/superadmin/create-project}" method="post" th:csrf="true"
+			style="max-width:600px;margin:1rem auto;display:flex;flex-direction:column;gap:1rem;">
+			<div style="display:flex;flex-direction:column;gap:0.5rem;">
+				<label style="color:rgba(255,255,255,0.8);">Project name</label>
+				<input type="text" name="projectName" required placeholder="e.g. VOLCANO_2"
+					style="padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:#fff;font-size:1rem;" />
+			</div>
+			<div style="display:flex;flex-direction:column;gap:0.5rem;">
+				<label style="color:rgba(255,255,255,0.8);">Admin email</label>
+				<input type="email" name="adminEmail" required placeholder="admin@example.com"
+					style="padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:#fff;font-size:1rem;" />
+			</div>
+			<div style="display:flex;flex-direction:column;gap:0.5rem;">
+				<label style="color:rgba(255,255,255,0.8);">Admin username</label>
+				<input type="text" name="adminUsername" required placeholder="admin_volcano2"
+					style="padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.07);color:#fff;font-size:1rem;" />
+			</div>
+			<button type="submit"
+				style="padding:0.75rem;border-radius:8px;border:none;background:#2d6cdf;color:#fff;font-size:1rem;font-weight:600;cursor:pointer;">
+				Create Project
+			</button>
+		</form>
+
+		<h2 class="admin-title" style="margin-top:2rem;">Dynamic projects</h2>
+		<div class="projects" th:if="${dynamicProjects != null and !#lists.isEmpty(dynamicProjects)}">
+			<div class="project-box volcano" th:each="proj : ${dynamicProjects}">
+				<h3 th:text="${proj.name}">Project</h3>
+				<div class="admin-buttons">
+					<button th:data-href="@{'/superadmin/manageProjectDevices/' + ${proj.id}}"
+						onclick="window.location.href=this.dataset.href">
+						Manage Devices
+					</button>
+				</div>
+			</div>
+		</div>
+		<p th:if="${dynamicProjects == null or #lists.isEmpty(dynamicProjects)}"
+			style="color:rgba(255,255,255,0.5);text-align:center;">No dynamic projects yet.</p>
+	</section>
 	<section class="contact">
 		<p>Interested in our projects? <a href="https://www.4spark.it/" target="_blank">Contact us</a>.</p>
 	</section>
 
-        <footer>
-                <p>&copy; 2025 - 4Spark Sensor Platform</p>
-        </footer>
+	<footer>
+		<p>&copy; 2025 - 4Spark Sensor Platform</p>
+	</footer>
 
-        <script>
-        document.addEventListener('DOMContentLoaded', function () {
-                const toggle = document.getElementById('userDropdown');
-                const menu = document.getElementById('userDropdownMenu');
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			const toggle = document.getElementById('userDropdown');
+			const menu = document.getElementById('userDropdownMenu');
 
-                if (!toggle || !menu) {
-                        return;
-                }
+			if (!toggle || !menu) {
+				return;
+			}
 
-                toggle.addEventListener('click', function (event) {
-                        event.stopPropagation();
-                        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-                        toggle.setAttribute('aria-expanded', (!isExpanded).toString());
-                        menu.classList.toggle('show');
-                });
+			toggle.addEventListener('click', function (event) {
+				event.stopPropagation();
+				const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+				toggle.setAttribute('aria-expanded', (!isExpanded).toString());
+				menu.classList.toggle('show');
+			});
 
-                document.addEventListener('click', function (event) {
-                        if (!menu.contains(event.target) && event.target !== toggle) {
-                                menu.classList.remove('show');
-                                toggle.setAttribute('aria-expanded', 'false');
-                        }
-                });
-        });
-</script>
+			document.addEventListener('click', function (event) {
+				if (!menu.contains(event.target) && event.target !== toggle) {
+					menu.classList.remove('show');
+					toggle.setAttribute('aria-expanded', 'false');
+				}
+			});
+		});
+	</script>
 
 </body>
 

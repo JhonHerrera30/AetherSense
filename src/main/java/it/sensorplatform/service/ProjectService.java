@@ -8,22 +8,24 @@ import it.sensorplatform.repository.ProjectRepository;
 
 @Service
 public class ProjectService {
-	
-	@Autowired 
+
+	@Autowired
 	private ProjectRepository projectRepository;
-	
+
 	public Project getProjectByName(String name) {
 		return this.projectRepository.findByName(name);
 	}
-	
+
 	public Project getProjectById(Long id) {
 		return this.projectRepository.findById(id).get();
 	}
-	
-	public Iterable<Project> getAllProjects(){
+
+	public Iterable<Project> getAllProjects() {
 		return this.projectRepository.findAll();
 	}
-	
-	
-	
+
+	public Project save(Project project) {
+		return this.projectRepository.save(project);
+	}
+
 }
