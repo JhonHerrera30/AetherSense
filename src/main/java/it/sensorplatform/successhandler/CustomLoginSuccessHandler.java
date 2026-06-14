@@ -12,11 +12,13 @@ import it.sensorplatform.service.CredentialsService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.context.annotation.Lazy;
 
 @Component
 public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Autowired
+    @Lazy
     private CredentialsService credentialsService;
 
     @Override
