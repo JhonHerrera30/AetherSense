@@ -83,6 +83,8 @@ public class AuthConfiguration {
 								"/img/**", "/favicon.ico", "/videos/**", "/project/**")
 						.permitAll()
 						.requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
+						.requestMatchers(HttpMethod.GET, "/2fa/verify").permitAll()
+						.requestMatchers(HttpMethod.POST, "/2fa/verify").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/packets").permitAll()
 						.dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
 
