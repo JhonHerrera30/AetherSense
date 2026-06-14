@@ -200,4 +200,7 @@ public class Credentials {
 				&& Objects.equals(password, other.password) && Objects.equals(username, other.username);
 	}
 
+	public static final String ADMIN_ROLE = "ADMIN";
+	public static final String OPERATOR_ROLE = "OPERATOR";
+
 }

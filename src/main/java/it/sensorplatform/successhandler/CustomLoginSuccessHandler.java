@@ -63,6 +63,23 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         }
 
         Long projectId = Long.parseLong(projectIdParam);
-        response.sendRedirect("/success?projectId=" + projectId);
+
+        // Nuovi ruoli dinamici
+        if (authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ADMIN"))) {
+            request.getSession().setMaxInactiveInterval(1800);
+            response.sendRedirect("/admin/group/" + projectId);
+            return;
+        }
+
+        if (authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("OPERATOR"))) {
+            request.getSession().setMaxInactiveInterval(7200);
+            response.sendRedirect("/operator/" + projectId);
+            return;
+        }
+
+        String url = "/success?projectId=" + projectId;
+        response.sendRedirect(url);
     }
 }

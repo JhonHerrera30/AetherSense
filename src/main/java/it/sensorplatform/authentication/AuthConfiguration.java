@@ -31,6 +31,8 @@ import static it.sensorplatform.model.Credentials.VOLCANO_ADMIN_ROLE;
 import static it.sensorplatform.model.Credentials.LTRAD_OPERATOR_ROLE;
 import static it.sensorplatform.model.Credentials.FIRE_OPERATOR_ROLE;
 import static it.sensorplatform.model.Credentials.VOLCANO_OPERATOR_ROLE;
+import static it.sensorplatform.model.Credentials.ADMIN_ROLE;
+import static it.sensorplatform.model.Credentials.OPERATOR_ROLE;
 
 @Configuration
 @EnableWebSecurity
@@ -108,6 +110,14 @@ public class AuthConfiguration {
 
 						.requestMatchers(HttpMethod.GET, "/operator/volcano/**").hasAuthority(VOLCANO_OPERATOR_ROLE)
 						.requestMatchers(HttpMethod.POST, "/operator/volcano/**").hasAuthority(VOLCANO_OPERATOR_ROLE)
+						.requestMatchers(HttpMethod.GET, "/admin/group/**").hasAnyAuthority(
+								SUPERADMIN_ROLE, LTRAD_ADMIN_ROLE, FIRE_ADMIN_ROLE, VOLCANO_ADMIN_ROLE, ADMIN_ROLE)
+						.requestMatchers(HttpMethod.POST, "/admin/group/**").hasAnyAuthority(
+								SUPERADMIN_ROLE, LTRAD_ADMIN_ROLE, FIRE_ADMIN_ROLE, VOLCANO_ADMIN_ROLE, ADMIN_ROLE)
+						.requestMatchers(HttpMethod.GET, "/operator/**").hasAnyAuthority(
+								LTRAD_OPERATOR_ROLE, FIRE_OPERATOR_ROLE, VOLCANO_OPERATOR_ROLE, OPERATOR_ROLE)
+						.requestMatchers(HttpMethod.POST, "/operator/**").hasAnyAuthority(
+								LTRAD_OPERATOR_ROLE, FIRE_OPERATOR_ROLE, VOLCANO_OPERATOR_ROLE, OPERATOR_ROLE)
 
 						.requestMatchers(HttpMethod.GET, "/api/admin/**").authenticated()
 						.requestMatchers(HttpMethod.PUT, "/api/admin/**").authenticated()
