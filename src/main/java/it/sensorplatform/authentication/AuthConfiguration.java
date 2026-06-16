@@ -82,7 +82,7 @@ public class AuthConfiguration {
 
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.GET, "/", "/home", "/login", "/register", "/access", "/css/**",
-								"/img/**", "/favicon.ico", "/videos/**", "/project/**")
+								"/img/**", "/favicon.ico", "/favicon.ico","/videos/**", "/project/**")
 						.permitAll()
 						.requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
 						.requestMatchers(HttpMethod.GET, "/2fa/verify").permitAll()
