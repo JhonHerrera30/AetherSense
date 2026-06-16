@@ -27,6 +27,11 @@ public class GlobalExceptionHandler {
     public Object handleGenericErrors(Exception ex, HttpServletRequest request) {
         String path = request.getRequestURI();
 
+        // Ignora favicon
+        if (path.equals("/favicon.ico")) {
+            return ResponseEntity.notFound().build();
+        }
+
         // Solo per le API restituisce JSON
         if (path.startsWith("/api/")) {
             Map<String, Object> body = new HashMap<>();
