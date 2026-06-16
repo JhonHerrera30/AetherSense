@@ -140,7 +140,6 @@ public class AuthConfiguration {
 				.exceptionHandling(exception -> exception
 						.accessDeniedPage("/home"));
 
-		http.headers(headers -> headers.disable());
 		return http.build();
 	}
 
