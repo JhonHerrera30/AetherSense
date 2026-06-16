@@ -140,11 +140,7 @@ public class AuthConfiguration {
 				.exceptionHandling(exception -> exception
 						.accessDeniedPage("/home"));
 
-		http.headers(headers -> headers
-				.frameOptions(frame -> frame.sameOrigin())
-				.contentSecurityPolicy(csp -> csp
-						.policyDirectives(
-								"default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.tile.openstreetmap.org https://unpkg.com; connect-src 'self' https://unpkg.com; frame-ancestors 'self'; form-action 'self' https://sensors.joinyourteam.it;")));
+		http.headers(headers -> headers.disable());
 		return http.build();
 	}
 
