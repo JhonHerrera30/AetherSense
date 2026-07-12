@@ -538,7 +538,6 @@
                                                 subtitleEl.hidden = !component;
                                         }
                                         container.appendChild(card);
-                                        card.style.display = 'none'; // nascosta di default, mostrata da updateMetricCards
                                 });
                         state.specCardsRendered = true;
                 }
@@ -777,28 +776,31 @@
                 }
 
                 function updateMetricCards(measurements) {
-                        state.specDescriptors
-                                .filter(d => !['earthquake_flag', 'shutoff', 'collapse', 'state', 'axis_state'].includes(d.key))
-                                .forEach(descriptor => {
-                                        const card = document.querySelector(`.metric-card[data-spec-key="${descriptor.key}"]`);
-                                        if (!card) return;
-                                        const measurement = measurements.get(descriptor.key);
-                                        if (!measurement) {
-                                                card.style.display = 'none';
-                                                return;
-                                        }
-                                        card.style.display = '';
-                                        const rangeEl = card.querySelector('[data-range]');
-                                        const min = measurement.min ?? descriptor.min ?? 0;
-                                        const max = measurement.max ?? descriptor.max ?? 100;
-                                        renderGauge(
-                                                `gauge-${descriptor.key}`,
-                                                toNumber(measurement.value) ?? 0,
-                                                min, max,
-                                                measurement.unit || descriptor.unit || ''
-                                        );
-                                        if (rangeEl) rangeEl.textContent = formatRange(min, max, measurement.unit || descriptor.unit);
-                                });
+                        state.specDescriptors.forEach(descriptor => {
+                                const card = document.querySelector(`.metric-card[data-spec-key="${descriptor.key}"]`);
+                                if (!card) return;
+
+                                const rangeEl = card.querySelector('[data-range]');
+                                const measurement = measurements.get(descriptor.key);
+
+                                if (!measurement) {
+                                        // Nascondi la card se il segnale non è presente nell'ultimo pacchetto
+                                        card.style.display = 'none';
+                                        return;
+                                }
+                                // Mostra la card se il segnale è presente
+                                card.style.display = '';
+
+                                const min = measurement.min ?? descriptor.min ?? 0;
+                                const max = measurement.max ?? descriptor.max ?? 100;
+                                renderGauge(
+                                        `gauge-${descriptor.key}`,
+                                        toNumber(measurement.value) ?? 0,
+                                        min, max,
+                                        measurement.unit || descriptor.unit || ''
+                                );
+                                if (rangeEl) rangeEl.textContent = formatRange(min, max, measurement.unit || descriptor.unit);
+                        });
                 }
 
                 function updateStatusFlags(indicators) {
