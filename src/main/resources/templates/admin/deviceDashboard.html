@@ -512,6 +512,13 @@
                         container.innerHTML = '';
                         state.specDescriptors
                                 .filter(d => !['earthquake_flag', 'shutoff', 'collapse', 'state', 'axis_state'].includes(d.key))
+                                .filter(d => {
+                                        // Mostra solo i segnali presenti nell'ultimo pacchetto
+                                        if (state.lastSamples.length === 0) return true;
+                                        const latest = state.lastSamples[state.lastSamples.length - 1];
+                                        if (!latest || !Array.isArray(latest.measurements)) return true;
+                                        return latest.measurements.some(m => m.key === d.key);
+                                })
                                 .forEach(descriptor => {
                                         const card = document.createElement('div');
                                         card.className = 'metric-card';
