@@ -69,46 +69,48 @@ public class AlertConfigController {
 
         // segnali numerici con default
         // segnali numerici con default
-List<String> numericSignals = List.of(
-    "temperature_celsius", "humidity_percent", "co2concentration_ppm",
-    "pressure_hpa", "gasresistance_ohm", "voc_index", "nox_index",
-    "pm1_0_ugm3", "pm2_5_ugm3", "pm4_0_ugm3", "pm10_0_ugm3",
-    "si_m_s", "pga_m_s2");
+        List<String> numericSignals = List.of(
+                "temperature_celsius", "humidity_percent", "co2concentration_ppm",
+                "pressure_hpa", "gasresistance_ohm", "voc_index", "nox_index",
+                "pm1_0_ugm3", "pm2_5_ugm3", "pm4_0_ugm3", "pm10_0_ugm3",
+                "si_m_s", "pga_m_s2");
 
-// recupera il projectKey dal progetto
-String projectKey = "default";
-try {
-    Project proj = projectService.getProjectById(projectId);
-    if (proj != null && proj.getName() != null) {
-        projectKey = proj.getName().toLowerCase();
-    }
-} catch (Exception ignored) {}
+        // recupera il projectKey dal progetto
+        String projectKey = "default";
+        try {
+            Project proj = projectService.getProjectById(projectId);
+            if (proj != null && proj.getName() != null) {
+                projectKey = proj.getName().toLowerCase();
+            }
+        } catch (Exception ignored) {
+        }
 
-final String finalProjectKey = projectKey;
+        final String finalProjectKey = projectKey;
 
-for (String signalKey : numericSignals) {
-    AlertConfigSignal saved = signalRepo
-        .findByProjectIdAndSignalKey(projectId, signalKey).orElse(null);
-    AlertConfigDTO.SignalConfig sc = new AlertConfigDTO.SignalConfig();
-    sc.setSignalKey(signalKey);
-    if (saved != null) {
-        sc.setThresholdWarning(saved.getThresholdWarning());
-        sc.setThresholdCritical(saved.getThresholdCritical());
-        sc.setThresholdWarningLow(saved.getThresholdWarningLow());
-        sc.setThresholdCriticalLow(saved.getThresholdCriticalLow());
-        sc.setTriggerValue(saved.getTriggerValue());
-        sc.setIntervalMin(saved.getIntervalMin());
-    } else {
-        AlertDefaults.Thresholds def = AlertDefaults.get(finalProjectKey, signalKey);
-        sc.setThresholdWarning(def != null ? def.warningHigh() : null);
-        sc.setThresholdCritical(def != null ? def.criticalHigh() : null);
-        sc.setThresholdWarningLow(def != null ? def.warningLow() : null);
-        sc.setThresholdCriticalLow(def != null ? def.criticalLow() : null);
-        sc.setTriggerValue(null);
-        sc.setIntervalMin(null);
-    }
-    signalDtos.add(sc);
-    };
+        for (String signalKey : numericSignals) {
+            AlertConfigSignal saved = signalRepo
+                    .findByProjectIdAndSignalKey(projectId, signalKey).orElse(null);
+            AlertConfigDTO.SignalConfig sc = new AlertConfigDTO.SignalConfig();
+            sc.setSignalKey(signalKey);
+            if (saved != null) {
+                sc.setThresholdWarning(saved.getThresholdWarning());
+                sc.setThresholdCritical(saved.getThresholdCritical());
+                sc.setThresholdWarningLow(saved.getThresholdWarningLow());
+                sc.setThresholdCriticalLow(saved.getThresholdCriticalLow());
+                sc.setTriggerValue(saved.getTriggerValue());
+                sc.setIntervalMin(saved.getIntervalMin());
+            } else {
+                AlertDefaults.Thresholds def = AlertDefaults.get(finalProjectKey, signalKey);
+                sc.setThresholdWarning(def != null ? def.warningHigh() : null);
+                sc.setThresholdCritical(def != null ? def.criticalHigh() : null);
+                sc.setThresholdWarningLow(def != null ? def.warningLow() : null);
+                sc.setThresholdCriticalLow(def != null ? def.criticalLow() : null);
+                sc.setTriggerValue(null);
+                sc.setIntervalMin(null);
+            }
+            signalDtos.add(sc);
+        }
+        ;
 
         // booleani — default triggerValue=1 (alert attivo su fault)
         for (String key : List.of("earthquake_flag", "shutoff", "collapse")) {
@@ -116,7 +118,7 @@ for (String signalKey : numericSignals) {
                     .findByProjectIdAndSignalKey(projectId, key).orElse(null);
             AlertConfigDTO.SignalConfig sc = new AlertConfigDTO.SignalConfig();
             sc.setSignalKey(key);
-            sc.setTriggerValue(saved != null ? saved.getTriggerValue() : 1);
+            sc.setTriggerValue(saved != null && saved.getTriggerValue() != null ? saved.getTriggerValue() : 1);
             sc.setIntervalMin(saved != null ? saved.getIntervalMin() : null);
             signalDtos.add(sc);
         }
