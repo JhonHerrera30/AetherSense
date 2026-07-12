@@ -46,4 +46,14 @@ public class GlobalExceptionHandler {
         mav.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         return mav;
     }
+
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public Object handleResponseStatus(org.springframework.web.server.ResponseStatusException ex,
+            HttpServletRequest request) {
+        log.error("ResponseStatusException on {}: {} {}", request.getRequestURI(), ex.getStatusCode(), ex.getReason());
+        Map<String, Object> body = new HashMap<>();
+        body.put("success", false);
+        body.put("message", ex.getReason());
+        return new ResponseEntity<>(body, ex.getStatusCode());
+    }
 }
