@@ -27,12 +27,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Object handleGenericErrors(Exception ex, HttpServletRequest request) {
-        log.error("Unhandled exception on {}: ", request.getRequestURI(), ex);
         String path = request.getRequestURI();
 
         if (path.equals("/favicon.ico")) {
             return ResponseEntity.notFound().build();
         }
+
+        log.error("Exception on {}: {}", request.getRequestURI(), ex.getMessage(), ex);
 
         if (path.startsWith("/api/")) {
             Map<String, Object> body = new HashMap<>();
