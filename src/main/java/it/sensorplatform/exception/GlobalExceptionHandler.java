@@ -25,14 +25,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Object handleGenericErrors(Exception ex, HttpServletRequest request) {
+        ex.printStackTrace(); // log temporaneo
         String path = request.getRequestURI();
 
-        // Ignora favicon
         if (path.equals("/favicon.ico")) {
             return ResponseEntity.notFound().build();
         }
 
-        // Solo per le API restituisce JSON
         if (path.startsWith("/api/")) {
             Map<String, Object> body = new HashMap<>();
             body.put("success", false);
@@ -40,7 +39,6 @@ public class GlobalExceptionHandler {
             return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        // Per le pagine web mostra error.html
         ModelAndView mav = new ModelAndView("error");
         mav.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         return mav;
