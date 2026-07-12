@@ -784,9 +784,12 @@
                                 const measurement = measurements.get(descriptor.key);
 
                                 if (!measurement) {
-                                        if (rangeEl) rangeEl.textContent = formatRange(descriptor.min, descriptor.max, descriptor.unit);
+                                        // Nascondi la card se il segnale non è presente nell'ultimo pacchetto
+                                        card.style.display = 'none';
                                         return;
                                 }
+                                // Mostra la card se il segnale è presente
+                                card.style.display = '';
 
                                 const min = measurement.min ?? descriptor.min ?? 0;
                                 const max = measurement.max ?? descriptor.max ?? 100;
