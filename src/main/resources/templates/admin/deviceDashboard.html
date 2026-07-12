@@ -512,13 +512,6 @@
                         container.innerHTML = '';
                         state.specDescriptors
                                 .filter(d => !['earthquake_flag', 'shutoff', 'collapse', 'state', 'axis_state'].includes(d.key))
-                                .filter(d => {
-                                        // Mostra solo i segnali presenti nell'ultimo pacchetto
-                                        if (state.lastSamples.length === 0) return true;
-                                        const latest = state.lastSamples[state.lastSamples.length - 1];
-                                        if (!latest || !Array.isArray(latest.measurements)) return true;
-                                        return latest.measurements.some(m => m.key === d.key);
-                                })
                                 .forEach(descriptor => {
                                         const card = document.createElement('div');
                                         card.className = 'metric-card';
@@ -783,31 +776,59 @@
                 }
 
                 function updateMetricCards(measurements) {
-                        state.specDescriptors.forEach(descriptor => {
-                                const card = document.querySelector(`.metric-card[data-spec-key="${descriptor.key}"]`);
-                                if (!card) return;
+                        const container = document.getElementById('metrics-grid');
 
-                                const rangeEl = card.querySelector('[data-range]');
-                                const measurement = measurements.get(descriptor.key);
+                        state.specDescriptors
+                                .filter(d => !['earthquake_flag', 'shutoff', 'collapse', 'state', 'axis_state'].includes(d.key))
+                                .forEach(descriptor => {
+                                        const measurement = measurements.get(descriptor.key);
+                                        let card = container.querySelector(`.metric-card[data-spec-key="${descriptor.key}"]`);
 
-                                if (!measurement) {
-                                        // Nascondi la card se il segnale non è presente nell'ultimo pacchetto
-                                        card.style.display = 'none';
-                                        return;
-                                }
-                                // Mostra la card se il segnale è presente
-                                card.style.display = '';
+                                        if (!measurement) {
+                                                // Rimuovi la card se il segnale non è presente
+                                                if (card) card.remove();
+                                                return;
+                                        }
 
-                                const min = measurement.min ?? descriptor.min ?? 0;
-                                const max = measurement.max ?? descriptor.max ?? 100;
-                                renderGauge(
-                                        `gauge-${descriptor.key}`,
-                                        toNumber(measurement.value) ?? 0,
-                                        min, max,
-                                        measurement.unit || descriptor.unit || ''
-                                );
-                                if (rangeEl) rangeEl.textContent = formatRange(min, max, measurement.unit || descriptor.unit);
-                        });
+                                        // Crea la card se non esiste
+                                        if (!card) {
+                                                card = document.createElement('div');
+                                                card.className = 'metric-card';
+                                                card.dataset.specKey = descriptor.key;
+                                                const component = getDescriptorComponent(descriptor);
+                                                const title = getDescriptorTitle(descriptor);
+                                                card.innerHTML = `
+                    <div class="metric-heading">
+                        <span class="metric-title">${title}</span>
+                        <span class="metric-subtitle" data-component></span>
+                        <button class="alert-config-btn" 
+                        onclick="openAlertModal('${descriptor.key}', '${title}', ${descriptor.min ?? 0}, ${descriptor.max ?? 100})" 
+                        title="Alert settings">⚙️</button>
+                    </div>
+                    <div class="gauge-wrapper">
+                        <canvas id="gauge-${descriptor.key}" class="gauge-canvas"></canvas>
+                    </div>
+                    <div class="metric-range" data-range></div>
+                `;
+                                                const subtitleEl = card.querySelector('[data-component]');
+                                                if (subtitleEl) {
+                                                        subtitleEl.textContent = component || '';
+                                                        subtitleEl.hidden = !component;
+                                                }
+                                                container.appendChild(card);
+                                        }
+
+                                        const rangeEl = card.querySelector('[data-range]');
+                                        const min = measurement.min ?? descriptor.min ?? 0;
+                                        const max = measurement.max ?? descriptor.max ?? 100;
+                                        renderGauge(
+                                                `gauge-${descriptor.key}`,
+                                                toNumber(measurement.value) ?? 0,
+                                                min, max,
+                                                measurement.unit || descriptor.unit || ''
+                                        );
+                                        if (rangeEl) rangeEl.textContent = formatRange(min, max, measurement.unit || descriptor.unit);
+                                });
                 }
 
                 function updateStatusFlags(indicators) {
