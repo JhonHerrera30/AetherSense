@@ -538,6 +538,7 @@
                                                 subtitleEl.hidden = !component;
                                         }
                                         container.appendChild(card);
+                                        card.style.display = 'none'; // nascosta di default, mostrata da updateMetricCards
                                 });
                         state.specCardsRendered = true;
                 }
@@ -776,48 +777,17 @@
                 }
 
                 function updateMetricCards(measurements) {
-                        const container = document.getElementById('metrics-grid');
-
                         state.specDescriptors
                                 .filter(d => !['earthquake_flag', 'shutoff', 'collapse', 'state', 'axis_state'].includes(d.key))
                                 .forEach(descriptor => {
+                                        const card = document.querySelector(`.metric-card[data-spec-key="${descriptor.key}"]`);
+                                        if (!card) return;
                                         const measurement = measurements.get(descriptor.key);
-                                        let card = container.querySelector(`.metric-card[data-spec-key="${descriptor.key}"]`);
-
                                         if (!measurement) {
-                                                // Rimuovi la card se il segnale non è presente
-                                                if (card) card.remove();
+                                                card.style.display = 'none';
                                                 return;
                                         }
-
-                                        // Crea la card se non esiste
-                                        if (!card) {
-                                                card = document.createElement('div');
-                                                card.className = 'metric-card';
-                                                card.dataset.specKey = descriptor.key;
-                                                const component = getDescriptorComponent(descriptor);
-                                                const title = getDescriptorTitle(descriptor);
-                                                card.innerHTML = `
-                    <div class="metric-heading">
-                        <span class="metric-title">${title}</span>
-                        <span class="metric-subtitle" data-component></span>
-                        <button class="alert-config-btn" 
-                        onclick="openAlertModal('${descriptor.key}', '${title}', ${descriptor.min ?? 0}, ${descriptor.max ?? 100})" 
-                        title="Alert settings">⚙️</button>
-                    </div>
-                    <div class="gauge-wrapper">
-                        <canvas id="gauge-${descriptor.key}" class="gauge-canvas"></canvas>
-                    </div>
-                    <div class="metric-range" data-range></div>
-                `;
-                                                const subtitleEl = card.querySelector('[data-component]');
-                                                if (subtitleEl) {
-                                                        subtitleEl.textContent = component || '';
-                                                        subtitleEl.hidden = !component;
-                                                }
-                                                container.appendChild(card);
-                                        }
-
+                                        card.style.display = '';
                                         const rangeEl = card.querySelector('[data-range]');
                                         const min = measurement.min ?? descriptor.min ?? 0;
                                         const max = measurement.max ?? descriptor.max ?? 100;
