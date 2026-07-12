@@ -14,6 +14,8 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, Object>> handleJsonErrors(
             HttpMessageNotReadableException ex) {
@@ -25,7 +27,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Object handleGenericErrors(Exception ex, HttpServletRequest request) {
-        ex.printStackTrace(); // log temporaneo
+        log.error("Unhandled exception on {}: ", request.getRequestURI(), ex);
         String path = request.getRequestURI();
 
         if (path.equals("/favicon.ico")) {
