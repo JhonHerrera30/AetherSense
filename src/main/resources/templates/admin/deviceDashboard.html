@@ -767,6 +767,27 @@
                         if (!sample || !Array.isArray(sample.measurements)) {
                                 return;
                         }
+
+                        // Aggiorna i descriptor se il sample ha nuovi segnali
+                        const currentKeys = new Set(state.specDescriptors.map(d => d.key));
+                        const newDescriptors = sample.measurements
+                                .filter(m => m && m.key && !currentKeys.has(m.key))
+                                .map(m => ({
+                                        key: m.key,
+                                        label: m.label,
+                                        displayName: m.displayName || prettifyKey(m.label || m.key),
+                                        component: m.component,
+                                        unit: m.unit,
+                                        min: m.min,
+                                        max: m.max
+                                }));
+
+                        if (newDescriptors.length > 0) {
+                                state.specDescriptors = [...state.specDescriptors, ...newDescriptors];
+                                state.specCardsRendered = false;
+                                renderMetricCards();
+                        }
+
                         const measurementMap = mapMeasurements(sample.measurements);
                         updateMetricCards(measurementMap);
                         updateStatusFlags(sample.indicators);
