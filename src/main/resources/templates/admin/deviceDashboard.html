@@ -562,8 +562,7 @@
                         const r = Math.min(W / 2 - 32, cy - 8);
 
                         function fmtTick(v) {
-                                if (Math.abs(v) >= 10000) return (v / 1000).toFixed(0) + 'k';
-                                if (Math.abs(v) >= 1000) return (v / 1000).toFixed(1) + 'k';
+
                                 if (!Number.isInteger(v)) return v.toFixed(1);
                                 return String(v);
                         }
