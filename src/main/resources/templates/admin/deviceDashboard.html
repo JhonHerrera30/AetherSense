@@ -730,13 +730,12 @@
                                 ctx.fillStyle = '#ffffff';
                                 ctx.fillText(fmtTick(value), cx, cy + 22);
 
-                                /* unità a destra del numero */
+                                /* unità sotto il numero */
                                 if (unit) {
-                                        const numWidth = ctx.measureText(fmtTick(value)).width;
                                         ctx.font = `400 ${Math.max(10, vSize * 0.4)}px Roboto, sans-serif`;
                                         ctx.fillStyle = 'rgba(255,255,255,0.5)';
-                                        ctx.textAlign = 'left';
-                                        ctx.fillText(unit, cx + numWidth / 2 + 3, cy + 22 - vSize * 0.3);
+                                        ctx.textAlign = 'center';
+                                        ctx.fillText(unit, cx, cy + 22 + Math.max(10, vSize * 0.4) + 2);
                                 }
 
                                 /* ── etichette min / mid / max ── */
