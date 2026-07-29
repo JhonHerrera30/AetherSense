@@ -833,7 +833,17 @@
                         }
 
                         emptyState.hidden = true;
+                        const seenIndicators = new Set();
                         indicators.forEach(indicator => {
+                                const identifier = typeof indicator.key === 'string' && indicator.key.trim().length
+                                        ? indicator.key.trim()
+                                        : (typeof indicator.label === 'string' ? indicator.label.trim() : '');
+                                if (identifier && seenIndicators.has(identifier)) {
+                                        return;
+                                }
+                                if (identifier) {
+                                        seenIndicators.add(identifier);
+                                }
                                 const flag = document.createElement('div');
                                 flag.className = 'status-flag';
                                 const numeric = toNumber(indicator.value);
