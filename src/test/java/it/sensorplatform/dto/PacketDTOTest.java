@@ -5,6 +5,7 @@ import it.sensorplatform.model.Indicator;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -51,5 +52,21 @@ class PacketDTOTest {
         dto.setIndicator(List.of(indicator));
 
         assertEquals(List.of("pojo_key:Pojo Name"), dto.getIndicator());
+    }
+
+    @Test
+    void deserializesIndicatorPayloadMap() throws Exception {
+        String json = """
+                {
+                  "indicatorPayload": {
+                    "fan_err": 1,
+                    "laser_err": 0
+                  }
+                }
+                """;
+
+        PacketDTO dto = objectMapper.readValue(json, PacketDTO.class);
+
+        assertEquals(Map.of("fan_err", 1, "laser_err", 0), dto.getIndicatorPayload());
     }
 }
