@@ -137,21 +137,13 @@ public class NotificationControllerRest {
                     continue;
                 }
                 Spec spec = new Spec();
-                if (label != null) {
-                    String[] parts = label.split("-");
-                    spec.setComponent(parts.length > 0 ? sanitize(parts[0]) : "");
-                    String measurementPart = parts.length > 1 ? sanitize(parts[1]) : "";
-                    spec.setMeasurement(specKey != null ? specKey : measurementPart);
-                    spec.setUnitOfMeasurement(parts.length > 2 ? sanitize(parts[2]) : "");
-                } else {
-                    spec.setMeasurement(specKey != null ? specKey : "");
-                }
-                if (spec.getComponent() == null) {
-                    spec.setComponent("");
-                }
-                if (spec.getUnitOfMeasurement() == null) {
-                    spec.setUnitOfMeasurement("");
-                }
+                LabelParts parts = parseLabel(label);
+                spec.setComponent(parts.component());
+                spec.setUnitOfMeasurement(parts.unitOfMeasurement());
+                String normalizedMeasurement = parts.measurement() != null
+                        ? parts.measurement()
+                        : normalizeMeasurement(specKey);
+                spec.setMeasurement(normalizedMeasurement != null ? normalizedMeasurement : "");
                 Spec managedSpec = specService.findByFields(spec)
                         .orElseGet(() -> specService.save(spec));
                 if (!specs.contains(managedSpec)) {
@@ -164,6 +156,41 @@ public class NotificationControllerRest {
             tod.setSpecs(specs);
         }
         return updated;
+    }
+
+    private String normalizeMeasurement(String value) {
+        String sanitized = sanitize(value);
+        return sanitized != null ? sanitized.toLowerCase(Locale.ROOT) : null;
+    }
+
+    private LabelParts parseLabel(String rawLabel) {
+        String sanitizedLabel = sanitize(rawLabel);
+        if (sanitizedLabel == null) {
+            return new LabelParts("", null, "");
+        }
+        int firstHyphen = sanitizedLabel.indexOf('-');
+        int lastHyphen = sanitizedLabel.lastIndexOf('-');
+        String component = firstHyphen > 0
+                ? sanitize(sanitizedLabel.substring(0, firstHyphen))
+                : sanitize(sanitizedLabel);
+        String unit = lastHyphen >= 0 && lastHyphen < sanitizedLabel.length() - 1
+                ? sanitize(sanitizedLabel.substring(lastHyphen + 1))
+                : "";
+        String measurement = null;
+        if (firstHyphen >= 0 && lastHyphen > firstHyphen) {
+            String betweenHyphens = sanitizedLabel.substring(firstHyphen + 1, lastHyphen);
+            measurement = normalizeMeasurement(betweenHyphens);
+        }
+        if (component == null) {
+            component = "";
+        }
+        if (unit == null) {
+            unit = "";
+        }
+        return new LabelParts(component, measurement, unit);
+    }
+
+    private record LabelParts(String component, String measurement, String unitOfMeasurement) {
     }
 
     private boolean ensureIndicators(TypeOfDevice tod, List<String> indicatorEntries) {
