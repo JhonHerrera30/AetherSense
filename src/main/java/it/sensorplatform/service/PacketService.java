@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.List;
@@ -105,7 +106,7 @@ public class PacketService {
 
         System.out.println("PacketService.handlePacket - forwarding data to IngestService for device: " + device.getMacAddress());
         // Case 3: normal data packet -> forward metrics to ingest service
-        Map<String, Object> payload = packet.getPayload();
+        Map<String, Object> payload = mergeMetrics(packet.getPayload(), packet.getIndicatorPayload());
         ingestService.process(
                 device,
                 Instant.now(),
@@ -114,6 +115,28 @@ public class PacketService {
                 packet.getIndicator()
         );
         return Result.DATA;
+    }
+
+    private Map<String, Object> mergeMetrics(Map<String, Object> payload,
+                                             Map<String, Object> indicatorPayload) {
+        if (indicatorPayload == null || indicatorPayload.isEmpty()) {
+            return payload;
+        }
+        Map<String, Object> merged = new LinkedHashMap<>();
+        if (payload != null && !payload.isEmpty()) {
+            merged.putAll(payload);
+        }
+        for (Map.Entry<String, Object> entry : indicatorPayload.entrySet()) {
+            String key = entry.getKey();
+            if (!StringUtils.hasText(key)) {
+                continue;
+            }
+            String trimmedKey = key.trim();
+            if (!trimmedKey.isEmpty()) {
+                merged.put(trimmedKey, entry.getValue());
+            }
+        }
+        return merged;
     }
 
     private void notifyOperators(Device device, PacketDTO packet) {

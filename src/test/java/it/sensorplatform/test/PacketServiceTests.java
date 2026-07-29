@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -103,6 +104,39 @@ class PacketServiceTests {
         assertFalse(updated.isActivated());
         assertEquals(0d, updated.getLatitude());
         assertEquals(0d, updated.getLongitude());
+    }
+
+    @Test
+    void mergesIndicatorPayloadIntoMetrics() {
+        Project project = new Project();
+        project.setName("demo");
+        projectRepository.save(project);
+
+        Device device = new Device();
+        device.setName("indicator-device");
+        device.setMacAddress("AA:11:22");
+        device.setEmailOwner("");
+        device.setActivated(true);
+        device.setLatitude(0d);
+        device.setLongitude(0d);
+        device.setProject(project);
+        deviceRepository.save(device);
+
+        PacketDTO dto = new PacketDTO();
+        dto.setMacAddress("AA:11:22");
+        dto.setPayload(Map.of("temperature", 21));
+        dto.setIndicator(List.of("alarm_flag"));
+        dto.setIndicatorPayload(Map.of("alarm_flag", 1));
+
+        PacketService.Result res = packetService.handlePacket(dto);
+        assertEquals(PacketService.Result.DATA, res);
+
+        var samples = ingestService.last(MacAddressUtils.normalize("AA:11:22"), 1);
+        assertEquals(1, samples.size());
+        var indicatorSamples = samples.get(0).indicators();
+        assertEquals(1, indicatorSamples.size());
+        assertEquals("alarm_flag", indicatorSamples.get(0).key());
+        assertEquals(1, indicatorSamples.get(0).value());
     }
 }
 
